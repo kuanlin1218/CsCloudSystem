@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <script src="config.js"></script>
   <link rel="stylesheet" href="共用風格.css">
+  <link id="dynamic-favicon" rel="icon" type="image/x-icon">
 
   <style>
     body {
@@ -86,7 +87,7 @@
 </head>
 
 <body>
-  <img src="https://kuanlin1218.github.io/CNC_QS/CNC%E5%8A%A0%E5%B7%A5%E6%95%B8%E9%87%8F%E7%B5%B1%E8%A8%88_ver_2/logo_S.png" alt="Logo" class="logo">
+  <img id="brandLogo" alt="Logo" class="logo">
   <h1>
     詮栩 CNC 雲端系統
   </h1>
@@ -97,6 +98,11 @@
     <a href="加工數量登記.html" class="btn btn-menu btn-數量登記">📋 加工數量登記</a>
     <a href="加工數量查詢.html" class="btn btn-menu btn-數量查詢">👨🏻‍💻 加工數量查詢</a>
   </div>
-
+  <script>
+    // 設定 LOGO 圖片來源
+    document.getElementById("brandLogo").src = LOGO_URL;
+    // 設定 favicon 圖示
+    document.getElementById("dynamic-favicon").href = FAVICON_URL;
+  </script>
 </body>
 </html>
