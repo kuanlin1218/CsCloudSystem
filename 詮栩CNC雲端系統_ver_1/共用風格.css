@@ -71,10 +71,10 @@ h2{
     height: 40px;
   }
 
-  @media (min-width: 768px) {
+  @media (max-width: 767px) {
     .input-group-text {
-        min-width: 20%; /* 桌機時寬一點 */
-        font-size: 17px; 
+        min-width: 20%;  /* 手機時縮小 */
+        font-size: 18px; 
     }
   }
 
