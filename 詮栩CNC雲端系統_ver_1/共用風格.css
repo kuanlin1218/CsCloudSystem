@@ -58,12 +58,6 @@ h2{
     font-weight:600; /*字體粗細100-900*/
     height: 40px;
   }
-  
-  @media (min-width: 768px) {
-    .input-group-text {
-      min-width: 20%; /* 桌機時寬一點 */
-    }
-  }
 
   /* 輸入框風格設定--------------------------------------------- */
   .custom {
@@ -75,6 +69,13 @@ h2{
     appearance: none; /* 移除瀏覽器預設樣式 (選用) */
     font-size: 18px; 
     height: 40px;
+  }
+
+  @media (min-width: 768px) {
+    .input-group-text {
+        min-width: 20%; /* 桌機時寬一點 */
+        font-size: 17px; 
+    }
   }
 
   
