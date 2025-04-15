@@ -67,6 +67,18 @@
             font-size:18px;
         }
 
+        .info-box {
+            background-color: #478648;
+            border: 1px solid #ccc;    /* 淡灰邊框線 */
+            padding: 8px;
+            white-space: nowrap;       /* 防止自動換行（讓欄位撐開） */
+            text-align: center;        /* 文字置中 */
+            height: 40px;
+            font-size: 18px;
+            color: white;              /* 白色字體 */
+            font-weight: bold;         /* 加粗字體 */
+        }
+
     </style>
 </head>
 
@@ -123,6 +135,13 @@
                 <span class="input-group-text">訂單編號</span>
                 <select id="od" class="form-select custom" required><option>載入中...</option></select>
             </div>
+            <!-- 查詢中提示 -->
+            <div id="loading" class="text-center my-3" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">查詢中...</span>
+                </div>
+                <div>查詢中，請稍候...</div>
+            </div>
             <div class="d-flex justify-content-center my-3">
                 <button type="submit" class="btn btn-藍 ms-2">日期區間查詢</button>
                 <button type="button" class="btn btn-紫 ms-2" onclick="searchlastValues(event)">查詢最後一筆</button>
@@ -134,13 +153,7 @@
 
         </form>
         <hr>
-        <!-- 查詢中提示 -->
-        <div id="loading" class="text-center my-3" style="display: none;">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">查詢中...</span>
-            </div>
-            <div>查詢中，請稍候...</div>
-        </div>
+        
         <!-- 顯示表格內容 -->
         <div class="table-container" id="result"></div>
         <br>
@@ -329,7 +342,7 @@
             let dateSet = new Set();
 
             let html = `
-                <div style="margin-bottom: 10px; font-weight: bold;">
+                <div class="info-box">
                 產品編號：${pd}　　訂單編號：${od}
                 </div>
                 <table id="dataTable">

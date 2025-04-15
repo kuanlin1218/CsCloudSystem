@@ -126,18 +126,19 @@
       </div>
       <div class="alert alert-success d-none" id="successMessage">資料已成功傳送！</div>
       <div class="alert alert-danger d-none" id="errorMessage"></div>
+      <!-- 送出中提示 -->
+      <div id="loading" class="text-center my-3" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">送出中...</span>
+        </div>
+        <div>送出中，請稍候...</div>
+      </div>
       <button type="submit" class="btn btn-綠">送出</button>
       <button type="button" id="deleteButton" class="btn btn-紅 mt-2">刪除最後一筆</button>
       
     </form>
     <hr>
-    <!-- 送出中提示 -->
-    <div id="loading" class="text-center my-3" style="display: none;">
-      <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">送出中...</span>
-      </div>
-      <div>送出中，請稍候...</div>
-    </div>
+    
   </div>
   <!-- 刪除確認 Modal -->
   <div class="modal fade" id="confirmDeleteModal" tabindex="-1">

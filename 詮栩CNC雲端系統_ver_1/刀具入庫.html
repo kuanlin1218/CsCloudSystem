@@ -131,6 +131,14 @@
         <span class="input-group-text custom-t">備註</span>
         <textarea class="form-control custom-c" name="note" id="note" rows="1"></textarea>
       </div>
+
+      <!-- 送出中提示 -->
+      <div id="loading" class="text-center my-3" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">送出中...</span>
+        </div>
+        <div>送出中，請稍候...</div>
+      </div>
       
       <!-- 送出 -->
       <div class="row">
@@ -142,13 +150,7 @@
       </div>
     </form>
     <hr>
-    <!-- 送出中提示 -->
-    <div id="loading" class="text-center my-3" style="display: none;">
-      <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">送出中...</span>
-      </div>
-      <div>送出中，請稍候...</div>
-    </div>
+    
     <!-- 顯示表格內容 -->
     <div class="table-container" id="result"></div>
     <br>

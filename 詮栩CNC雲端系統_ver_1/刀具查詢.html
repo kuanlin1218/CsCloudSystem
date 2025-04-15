@@ -89,7 +89,7 @@
     <div class="container">
         <form action="" id="stockForm">
             <h2> 🔍 CNC刀具查詢 🔍 </h2>
-            
+            <hr>
             <!-- 類別查詢 -->
             <div class="input-group my-3">
                 <span class="input-group-text">依照類別</span>
@@ -102,6 +102,14 @@
                 <input type="text" id="keywordInput" class="form-control custom" placeholder="輸入關鍵字，用 + 分隔">
             </div>
 
+            <!-- 查詢中提示 -->
+            <div id="loading" class="text-center my-3" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">查詢中...</span>
+                </div>
+                <div>查詢中，請稍候...</div>
+            </div>
+
             <div class="d-flex justify-content-center my-3">
                 <button type="button" id="submitButton" class="btn btn-藍 ms-2" onclick="searchByCategory()">類別查詢</button>
                 <button type="button" id="SB" class="btn btn-綠 ms-2" onclick="searchByKeyword()">庫存搜尋</button>
@@ -110,13 +118,7 @@
 
         </form>
         <hr>
-        <!-- 查詢中提示 -->
-        <div id="loading" class="text-center my-3" style="display: none;">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">查詢中...</span>
-            </div>
-            <div>查詢中，請稍候...</div>
-        </div>
+        
         <!-- 顯示表格內容 -->
         <div class="table-container" id="result"></div>
         <br>
