@@ -11,7 +11,11 @@
 
   <style>
     body {
+      height: 100%;
+      margin: 0;
       background-image: linear-gradient(to right, #ffecd2 0%, #fcb69f 100%);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
     }
 
     .input-group-text {
@@ -20,7 +24,7 @@
 
     .btn-綠 {
       width:100%;
-      font-size:20px;
+      font-size:22px;
       padding:5px;
       height: 40px;
       font-weight: bold;
@@ -28,7 +32,7 @@
 
     .btn-紅 {
       width:100%;
-      font-size:20px;
+      font-size:22px;
       padding:5px;
       height: 40px;
       font-weight: bold;
@@ -36,6 +40,17 @@
 
     .alert {
       padding: 5px;
+    }
+
+    .custom-t {
+      height: 50px;
+    }
+    .custom-c {
+      background-color: none; 
+      text-align: left; /*文字置中*/
+      appearance: none; /* 移除瀏覽器預設樣式 (選用) */
+      font-size: 18px; 
+      height: 50px;
     }
 
   </style>
@@ -76,7 +91,8 @@
 
   <div class="container">
     <form id="myForm">
-      <h2 class="text-center">✍️ 加工數量登記 ✍️</h2><hr>
+      <h2 class="text-center">✍️ 加工數量登記 ✍️</h2>
+      <hr>
       <div class="input-group my-3">
         <span class="input-group-text">日期</span>
         <input type="date" id="dt" class="form-control custom" required>
@@ -104,14 +120,23 @@
         <input type="number" id="num" class="form-control custom" required>
       </div>
       <div class="input-group my-3">
-        <span class="input-group-text">備註</span>
-        <textarea id="comments" class="form-control custom" rows="2"></textarea>
+        <span class="input-group-text custom-t">備註</span>
+        <textarea id="comments" class="form-control custom-c" rows="2"></textarea>
       </div>
       <div class="alert alert-success d-none" id="successMessage">資料已成功傳送！</div>
       <div class="alert alert-danger d-none" id="errorMessage"></div>
       <button type="submit" class="btn btn-綠">送出</button>
       <button type="button" id="deleteButton" class="btn btn-紅 mt-2">刪除最後一筆</button>
+      
     </form>
+    <hr>
+    <!-- 送出中提示 -->
+    <div id="loading" class="text-center my-3" style="display: none;">
+      <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">送出中...</span>
+      </div>
+      <div>送出中，請稍候...</div>
+    </div>
   </div>
   <!-- 刪除確認 Modal -->
   <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
@@ -138,6 +163,15 @@
       loadMachineList();
       loadProductList();
     };
+
+    function showLoading() {
+        document.getElementById("loading").style.display = "block";
+        // document.getElementById("result").innerHTML = "";
+    }
+
+    function hideLoading() {
+        document.getElementById("loading").style.display = "none";
+    }
 
     /** 設定昨天日期為預設值 */
     function setYesterdayDate(inputId) {
@@ -228,12 +262,16 @@
         mc, pd, or, hr, min, num, comments
       };
 
+      // 👉 顯示送出中動畫
+      showLoading();
+
       fetch(scriptUrl, {
         method: "POST",
         body: JSON.stringify(rowData)
       })
       .then(res => res.json())
       .then(result => {
+        hideLoading();
         if (result.success) {
           showSuccessMessage();
 
@@ -255,7 +293,10 @@
           showErrorMessage("已有重複資料！");
         }
       })
-      .catch(() => showErrorMessage("送出失敗"));
+      .catch(() => {
+        hideLoading(); // 👉 隱藏動畫
+        showErrorMessage("送出失敗");
+      });
     });
 
     /** 顯示成功訊息 */

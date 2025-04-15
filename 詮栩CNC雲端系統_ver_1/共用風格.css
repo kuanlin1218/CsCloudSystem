@@ -53,7 +53,7 @@ h2{
     align-items: center;
     justify-content: center;
     text-align: center; 
-    font-size: 18px; 
+    font-size: 20px; 
     letter-spacing: 1px; /*文字間距*/
     font-weight:600; /*字體粗細100-900*/
     height: 40px;
@@ -67,7 +67,7 @@ h2{
     justify-content: center;
     text-align-last: center; /* 修正選中的文字置中 */
     appearance: none; /* 移除瀏覽器預設樣式 (選用) */
-    font-size: 16px; 
+    font-size: 18px; 
     height: 40px;
   }
 

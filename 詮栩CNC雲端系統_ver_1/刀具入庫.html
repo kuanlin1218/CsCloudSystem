@@ -10,8 +10,12 @@
   <link rel="stylesheet" href="共用風格.css">
 
   <style>
-    body{
-      background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+    body {
+        height: 100%;
+        margin: 0;
+        background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
     }
 
     input[type="number"]::-webkit-inner-spin-button,
@@ -30,6 +34,17 @@
       padding:5px;
       letter-spacing: 8px; /*文字間距*/
       font-weight:600; /*字體粗細100-900*/ 
+    }
+
+    .custom-t {
+      height: 45px;
+    }
+    .custom-c {
+      background-color: none; 
+      text-align: left; /*文字置中*/
+      appearance: none; /* 移除瀏覽器預設樣式 (選用) */
+      font-size: 18px; 
+      height: 45px;
     }
 
   </style>
@@ -118,8 +133,8 @@
       </div>
       <!-- 備註 -->
       <div class="input-group my-3">
-        <span class="input-group-text">備註</span>
-        <textarea class="form-control custom" name="note" id="note" rows="2"></textarea>
+        <span class="input-group-text custom-t">備註</span>
+        <textarea class="form-control custom-c" name="note" id="note" rows="1"></textarea>
       </div>
       
       <!-- 送出 -->
@@ -132,6 +147,13 @@
       </div>
     </form>
     <hr>
+    <!-- 送出中提示 -->
+    <div id="loading" class="text-center my-3" style="display: none;">
+      <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">送出中...</span>
+      </div>
+      <div>送出中，請稍候...</div>
+    </div>
     <!-- 顯示表格內容 -->
     <div class="table-container" id="result"></div>
     <br>
@@ -144,6 +166,15 @@
       setTodayDate();         // 預設今天日期
       loadDropdownData();     // 載入下拉選單（含品名）
     };
+
+    function showLoading() {
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("result").innerHTML = "";
+    }
+
+    function hideLoading() {
+        document.getElementById("loading").style.display = "none";
+    }
 
     function setTodayDate() {
       const today = new Date();
@@ -208,12 +239,14 @@
         const d = new Date(data.date);
         data.date = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
       }
+      showLoading();
       fetch(scriptUrl, {
         method: 'POST',
         body: JSON.stringify(data)
       })
       .then(res => res.json())
       .then(result => {
+        hideLoading();
         if (result.success) {
           const stock = result.stock;
           const tableHtml = `
@@ -242,6 +275,7 @@
         }
       })
       .catch(err => {
+        hideLoading();
         console.error("送出失敗：", err);
       });
     });

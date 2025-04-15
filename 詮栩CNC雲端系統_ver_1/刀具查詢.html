@@ -10,8 +10,12 @@
     <link rel="stylesheet" href="共用風格.css">
 
     <style>
-        body{
+        body {
+            height: 100%;
+            margin: 0;
             background-image: linear-gradient(to top, #9890e3 0%, #b1f4cf 100%);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
 
         input[type="number"]::-webkit-inner-spin-button,
@@ -25,24 +29,24 @@
         }
 
         .btn-綠 {
-            width:90px;
-            font-size:17px;
+            width:30%;
+            font-size:20px;
             padding:5px;
             height: 40px;
             font-weight: bold;
          }
 
          .btn-藍 {
-            width:90px;
-            font-size:17px;
+            width:30%;
+            font-size:20px;
             padding:5px;
             height: 40px;
             font-weight: bold;
          }
 
          .btn-黃 {
-            width:90px;
-            font-size:17px;
+            width:30%;
+            font-size:20px;
             padding:5px;
             height: 40px;
             font-weight: bold;
@@ -90,21 +94,25 @@
     <div class="container">
         <form action="" id="stockForm">
             <h2> 🔍 CNC刀具查詢 🔍 </h2>
-            <hr>
+            
             <!-- 類別查詢 -->
             <div class="input-group my-3">
                 <span class="input-group-text">依照類別</span>
                 <select name="category" id="category" class="form-select custom" required></select>
-                <button type="button" id="submitButton" class="btn btn-藍 ms-2" onclick="searchByCategory()">類別查詢</button>
             </div>
-            <hr>
+
             <!-- 關鍵字搜尋 -->
             <div class="input-group my-3">
                 <span class="input-group-text">依關鍵字</span>
                 <input type="text" id="keywordInput" class="form-control custom" placeholder="輸入關鍵字，用 + 分隔">
+            </div>
+
+            <div class="d-flex justify-content-center my-3">
+                <button type="button" id="submitButton" class="btn btn-藍 ms-2" onclick="searchByCategory()">類別查詢</button>
                 <button type="button" id="SB" class="btn btn-綠 ms-2" onclick="searchByKeyword()">庫存搜尋</button>
                 <button type="button" id="PRB" class="btn btn-黃 ms-2" onclick="searchInDetailSheet()">價格搜尋</button>
             </div>
+
         </form>
         <hr>
         <!-- 查詢中提示 -->
