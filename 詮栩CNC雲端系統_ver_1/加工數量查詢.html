@@ -227,13 +227,18 @@
                 document.getElementById("loading").style.display = "none";
             }
 
+            //依日期區間.產品.訂單查最後一筆
             function searchValues(event) {
                 event.preventDefault();
-                document.getElementById("exportBtn").disabled = true; // 禁用匯出按鈕
+                document.getElementById("exportBtn").disabled = true;
+
                 const dt1 = document.getElementById("dt1").value;
                 const dt2 = document.getElementById("dt2").value;
                 const pd = document.getElementById("pd").value;
+                const od = document.getElementById("od").value;
+
                 if (!pd) return alert("請選擇產品編號");
+                if (!od) return alert("請輸入訂單編號");
 
                 const d1 = new Date(dt1);
                 const d2 = new Date(dt2);
@@ -241,33 +246,39 @@
                 const f2 = `${d2.getFullYear()}/${d2.getMonth() + 1}/${d2.getDate()}`;
 
                 showLoading();
-                fetch(`${scriptUrl}?page=production_query&pd=${encodeURIComponent(pd)}&dt1=${f1}&dt2=${f2}`)
+                fetch(`${scriptUrl}?page=production_query&pd=${encodeURIComponent(pd)}&od=${encodeURIComponent(od)}&dt1=${f1}&dt2=${f2}`)
                     .then(res => res.json())
                     .then(rows => {
-                        hideLoading();
-                        displayTable(rows);
+                    hideLoading();
+                    displayTable(rows);
                     })
                     .catch(() => {
-                        hideLoading();
-                        alert("查詢失敗");
+                    hideLoading();
+                    alert("查詢失敗");
                     });
             }
 
+            //依產品.訂單查最後一筆
             function searchlastValues(event) {
                 event.preventDefault();
-                document.getElementById("exportBtn").disabled = true; // 禁用匯出按鈕
+                document.getElementById("exportBtn").disabled = true;
+
                 const pd = document.getElementById("pd").value;
-                if (!pd) return alert("請選擇產品編號");
+                const od = document.getElementById("od").value;
+
+                if (!pd || !od) return alert("請選擇產品編號與訂單編號");
+
                 showLoading();
-                fetch(`${scriptUrl}?page=production_query&mode=latest&pd=${encodeURIComponent(pd)}`)
+
+                fetch(`${scriptUrl}?page=production_query&mode=latest&pd=${encodeURIComponent(pd)}&od=${encodeURIComponent(od)}`)
                     .then(res => res.json())
                     .then(data => {
-                        hideLoading();
-                        displayTable(data);
+                    hideLoading();
+                    displayTable(data);
                     })
                     .catch(() => {
-                        hideLoading();
-                        alert("查詢失敗");
+                    hideLoading();
+                    alert("查詢失敗");
                     });
             }
 
