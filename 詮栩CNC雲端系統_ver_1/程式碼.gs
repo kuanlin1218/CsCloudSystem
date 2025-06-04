@@ -10,7 +10,8 @@ function doGet(e) {
   const page = e.parameter.page;
   const keyword = e.parameter.keyword;
 
-  if (page === 'inventory') return getDropdownData();
+  if (page === 'inventory') return getDropdownData(e);
+  if (page === 'load_tool_fields' && e.parameter.category) return getToolFieldLists(e.parameter.category);
   if (page === 'check') return handleToolCheck(keyword, e.parameter);
   if (page === 'production_entry') {
     if (e.parameter.type === 'last_submitted') return getLastSubmittedProduction();
@@ -53,41 +54,110 @@ function doPost(e) {
     .setMimeType(ContentService.MimeType.JSON); // 回傳格式為 JSON
 }
 
-/**
- * 📥 getDropdownData：取得刀具入庫頁面所需下拉選單資料
- * 說明：從「data」工作表取得 類別、廠牌、廠商，
- *      並從「刀具庫存表」中取得所有品名規格（自動去重與過濾空白）
- * 回傳格式：{ categories:[], brands:[], vendors:[], specs:[] }（JSON）
- */
-function getDropdownData() {
-  // 取得「data」工作表（內含類別、廠牌、廠商資料）
-  const sheet = SpreadsheetApp.getActive().getSheetByName("data");
-  // 取得整張表的所有資料，並略過第1列（標題列）
-  const values = sheet.getDataRange().getValues().slice(1);
-  // 使用 Set 結構儲存不重複的選項（自動去重）
-  const categories = new Set(), brands = new Set(), vendors = new Set();
-  // 遍歷每一列資料，依照欄位加入 Set 中
-  values.forEach(r => {
-    if (r[0]) categories.add(r[0]); // A欄：類別
-    if (r[1]) brands.add(r[1]);     // B欄：廠牌
-    if (r[2]) vendors.add(r[2]);    // C欄：廠商
-  });
-  // 再從「刀具庫存表」抓取 C 欄（第 3 欄）的品名規格資料
-  const specSheet = SpreadsheetApp.getActive().getSheetByName("刀具庫存表");
-  let specs = [];
-  if (specSheet) {
-    // 取得第2列起所有品名規格欄的值（第3欄），忽略空白與重複
-    const specValues = specSheet.getRange(2, 3, specSheet.getLastRow() - 1 || 1).getValues();
-    specs = [...new Set(specValues.flat().filter(v => v))]; // 展平、過濾空白、去重
+function getToolFieldLists(category) {
+  try {
+    // 定義一個對應表，根據傳入的類別(category)取得對應的工作表名稱
+    const map = {
+      "A.刀片": "A.刀片庫存表",
+      "B.鑽頭銑刀": "B.鑽頭銑刀庫存表",
+      "C.刀柄": "C.刀柄庫存表",
+      "D.其他": "D.其他庫存表"
+    };
+
+    // 根據類別取得對應的工作表名稱
+    const sheetName = map[category];
+    // 若傳入的類別不在 map 中，則拋出錯誤
+    if (!sheetName) throw new Error("invalid category");
+
+    // 取得目前使用的 Spreadsheet，並透過工作表名稱抓取該工作表
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    // 取得整張工作表的所有資料（包含表頭）
+    const data = sheet.getDataRange().getValues();
+
+    // 建立三個陣列來儲存「形狀」、「槽型」、「材質」的欄位資料
+    const shape = [], groove = [], material = [];
+
+    // 從第2列開始迴圈（跳過標題列）
+    for (let i = 1; i < data.length; i++) {
+      if (category === "A.刀片") {
+        // A.刀片的格式：B欄=形狀、D欄=槽型、E欄=材質
+        if (data[i][1]) shape.push(data[i][1]);     // B欄：形狀
+        if (data[i][3]) groove.push(data[i][3]);    // D欄：槽型
+        if (data[i][4]) material.push(data[i][4]);  // E欄：材質
+      } else {
+        // 其他類別格式：B欄=形狀、D欄=材質（不包含槽型）
+        if (data[i][1]) shape.push(data[i][1]);     // B欄：形狀
+        if (data[i][3]) material.push(data[i][3]);  // D欄：材質
+      }
+    }
+
+    // 將三個陣列轉換成 JSON 格式回傳給前端
+    return ContentService.createTextOutput(JSON.stringify({
+      shape, groove, material
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (err) {
+    // 若發生錯誤，回傳錯誤訊息（JSON格式）
+    return ContentService.createTextOutput(JSON.stringify({ error: err.message }))
+                         .setMimeType(ContentService.MimeType.JSON);
   }
-  // 最後將所有下拉選單資料組成 JSON 格式並回傳給前端
-  return ContentService.createTextOutput(JSON.stringify({
-    categories: [...categories], // 類別選單
-    brands: [...brands],         // 廠牌選單
-    vendors: [...vendors],       // 廠商選單
-    specs                        // 品名規格選單
-  })).setMimeType(ContentService.MimeType.JSON); // 指定回傳格式為 JSON
 }
+
+
+/**
+ * 📥 getDropdownData：取得刀具入庫頁面所需的下拉選單資料
+ * 可接受參數：category → 若有，則只載入該類別對應的品名規格（specs）
+ * 回傳格式：{ categories, brands, vendors, specs }（JSON）
+ */
+function getDropdownData(e) {
+  const sheet = SpreadsheetApp.getActive().getSheetByName("data");
+  const values = sheet.getDataRange().getValues().slice(1); // 略過標題列
+
+  // 三大下拉選單：類別、廠牌、廠商
+  const categories = new Set(), brands = new Set(), vendors = new Set();
+  values.forEach(row => {
+    if (row[0]) categories.add(row[0]); // A欄：類別
+    if (row[1]) brands.add(row[1]);     // B欄：廠牌
+    if (row[2]) vendors.add(row[2]);    // C欄：廠商
+  });
+
+  // 類別對應的 [工作表名稱, 欄位編號]
+  const sheetMap = {
+    "A.刀片": ["A.刀片庫存表", 3],   // C欄
+    "B.鑽頭銑刀": ["B.鑽頭銑刀庫存表", 3],
+    "C.刀柄": ["C.刀柄庫存表", 3],
+    "D.其他": ["D.其他庫存表", 2]     // B欄
+  };
+
+  const specsSet = new Set();
+  const selectedCategory = e?.parameter?.category;  // 若有參數只處理指定類別
+  const categoriesToProcess = selectedCategory ? [selectedCategory] : Object.keys(sheetMap);
+
+  categoriesToProcess.forEach(category => {
+    const [sheetName, colIndex] = sheetMap[category] || [];
+    const specSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+
+    if (specSheet && colIndex && specSheet.getLastRow() > 1) {
+      const numRows = specSheet.getLastRow() - 1;
+      const values = specSheet.getRange(2, colIndex, numRows).getValues();
+      values.flat().forEach(v => {
+        if (v && typeof v === 'string') specsSet.add(v.trim());
+      });
+    }
+  });
+
+  // 🔍 DEBUG（可選）：Log specsSet 內容
+  // Logger.log([...specsSet]);
+
+  return ContentService.createTextOutput(JSON.stringify({
+    categories: selectedCategory ? undefined : [...categories],
+    brands: selectedCategory ? undefined : [...brands],
+    vendors: selectedCategory ? undefined : [...vendors],
+    specs: [...specsSet]
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+
 
 /**
  * 🔍 handleToolCheck：處理刀具查詢請求
@@ -108,11 +178,11 @@ function handleToolCheck(keyword, params) {
       .setMimeType(ContentService.MimeType.JSON); // 指定格式為 JSON
   }
   // ✅ 若只有 keyword（但沒有 detail），代表查的是「刀具庫存表」模糊比對
-  else if (keyword) {
-    return ContentService.createTextOutput(JSON.stringify(searchStock(keyword))) // 回傳庫存查詢結果
-      .setMimeType(ContentService.MimeType.JSON); // 指定格式為 JSON
+  else if (keyword && params.category) {
+  return ContentService.createTextOutput(JSON.stringify(searchStock(params.category, keyword)))
+    .setMimeType(ContentService.MimeType.JSON);
   }
-  // ✅ 若傳入的是 category（例如「銑刀」），代表做分類查詢
+  // ✅ 若傳入的是 category，代表做分類查詢
   else if (params.category) {
     return getStockByCategory(params.category); // 依類別回傳庫存資料
   }
@@ -149,26 +219,61 @@ function getDropdownData2() {
  * 回傳格式：[{ 編號, 類別, 品名規格, 廠牌, 庫存數量 }, ...]
  */
 function getStockByCategory(category) {
-  // 取得名為「刀具庫存表」的工作表
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("刀具庫存表");
-  // 取得整張表的所有資料（含標題列）
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // 對應類別與工作表名稱
+  const stockMap = {
+    "A.刀片": "A.刀片庫存表",
+    "B.鑽頭銑刀": "B.鑽頭銑刀庫存表",
+    "C.刀柄": "C.刀柄庫存表",
+    "D.其他": "D.其他庫存表"
+  };
+
+  const sheetName = stockMap[category];
+  if (!sheetName) {
+    return ContentService.createTextOutput(JSON.stringify([]))  // 找不到對應表，回傳空陣列
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const sheet = ss.getSheetByName(sheetName);
   const data = sheet.getDataRange().getValues();
-  // 建立空陣列，準備存放符合條件的資料
   const result = [];
-  // 遍歷所有資料列（包含標題，實務上建議可跳過第 1 列）
-  data.forEach(row => {
-    // 若第 2 欄（類別欄）與傳入參數一致，則加入結果陣列
-    if (row[1] === category) {
+
+  // 根據表格結構不同處理欄位轉換
+  for (let i = 1; i < data.length; i++) { // 跳過標題列
+    const row = data[i];
+
+    // A.刀片欄位：編號(A), 形狀(B), 規格(C), 槽型(D), 材質(E), 廠牌(F), 數量(G)
+    if (category === "A.刀片") {
       result.push({
-        編號: row[0],        // A欄：編號
-        類別: row[1],        // B欄：類別
-        品名規格: row[2],    // C欄：品名規格
-        廠牌: row[3],        // D欄：廠牌
-        庫存數量: row[4]     // E欄：庫存數量
+        編號: row[0],
+        形狀: row[1],
+        品名規格: row[2],
+        槽型: row[3],
+        材質: row[4],
+        廠牌: row[5],
+        庫存數量: row[6]
+      });
+    } else if (category === "D.其他") {
+      result.push({
+        編號: row[0],
+        品名規格: row[1],
+        廠牌: row[2],
+        庫存數量: row[3]
+      });
+    } else {
+      // B/C 欄位：編號(A), 形狀(B), 規格(C), 材質(D), 廠牌(E), 數量(F)
+      result.push({
+        編號: row[0],
+        形狀: row[1],
+        品名規格: row[2],
+        材質: row[3],
+        廠牌: row[4],
+        庫存數量: row[5]
       });
     }
-  });
-  // 將查詢結果轉換成 JSON 字串並回傳，指定為 JSON 格式供前端 fetch 處理
+  }
+
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
 }
@@ -182,79 +287,231 @@ function getStockByCategory(category) {
  *   - { success: true, stock: {...} }（更新後的庫存資訊）
  */
 function handleToolInventoryPost(data) {
-  // 取得「刀具入庫表」與「刀具庫存表」兩個工作表
-  const sheet_in = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("刀具入庫表");
-  const sheet_stock = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("刀具庫存表");
-  // 從 data 中取出各欄位資料（解構賦值）
-  const { category, spec, brand, vendor, unit_price, quantity, total_price, date, note } = data;
-  // 新入庫資料的編號（用目前最後一行當作流水號）
-  const newId = sheet_in.getLastRow();
-  // ✅ 寫入「刀具入庫表」一筆紀錄
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet_in = ss.getSheetByName("刀具入庫表");
+
+  // ✅ 解構從前端送來的資料欄位
+  const {
+    category, spec, brand, vendor,
+    unit_price, quantity, total_price,
+    date, note, shape, groove, material
+  } = data;
+
+  // ✅ 寫入「刀具入庫表」
+  const newInId = sheet_in.getLastRow();
   sheet_in.appendRow([
-    newId, category, spec, brand, vendor, unit_price, quantity, total_price, date, note
+    newInId, category, spec, brand, vendor,
+    unit_price, quantity, total_price, date, note
   ]);
-  // 取得庫存資料（含標題列）
-  const stock_data = sheet_stock.getDataRange().getValues();
-  // 初始化變數：是否找到舊資料、更新後的庫存資訊、如新增用的新編號
-  let found = false, updatedStockInfo = null, newStockId = '';
-  // 🔁 遍歷「刀具庫存表」資料，從第 2 列開始
-  for (let i = 1; i < stock_data.length; i++) {
-    const row = stock_data[i];
-    // ✅ 若規格 + 廠牌完全一致，視為已有此刀具，直接累加數量
-    if (row[2] === spec && row[3] === brand) {
-      const newQty = Number(row[4]) + Number(quantity); // 加總新舊數量
-      sheet_stock.getRange(i + 1, 5).setValue(newQty);   // 更新庫存數值（E 欄）
-      found = true;
-      // 建立更新後要回傳的庫存資訊
-      updatedStockInfo = {
-        編號: row[0], 類別: row[1], 品名規格: spec, 廠牌: brand, 數量: newQty
-      };
-      break;
+
+  // ✅ 對應各類別對應的庫存工作表名稱
+  const stockMap = {
+    "A.刀片": "A.刀片庫存表",
+    "B.鑽頭銑刀": "B.鑽頭銑刀庫存表",
+    "C.刀柄": "C.刀柄庫存表",
+    "D.其他": "D.其他庫存表"
+  };
+
+  const sheetName = stockMap[category];
+  let updatedStockInfo = null;
+
+  // ✅ 類別為「A.刀片」時的特殊處理邏輯
+  if (sheetName === "A.刀片庫存表") {
+    const sheet_stock = ss.getSheetByName(sheetName);
+    const stock_data = sheet_stock.getDataRange().getValues();
+    let found = false;
+
+    // 🔁 尋找是否已有相同「規格」
+    for (let i = 1; i < stock_data.length; i++) {
+      const row = stock_data[i];
+      if (row[2] === spec) { // C欄：規格
+        const newQty = Number(row[6]) + Number(quantity); // G欄：數量
+        sheet_stock.getRange(i + 1, 7).setValue(newQty);
+        found = true;
+        updatedStockInfo = {
+          編號: row[0],
+          形狀: shape,
+          品名規格: spec,
+          槽型: groove,
+          材質: material,
+          廠牌: brand,
+          數量: newQty
+        };
+        break;
+      }
     }
+
+    // ⛔ 未找到 → 新增一筆並依形狀代碼產生流水號編號
+    if (!found) {
+      const shapeCode = shape?.toUpperCase().trim(); // e.g., "VNMG"
+      const existingIds = stock_data
+        .map(row => row[0])
+        .filter(id => typeof id === "string" && id.startsWith(shapeCode));
+
+      // ✅ 找出目前已有的最大尾碼數字
+      let maxNumber = 0;
+      existingIds.forEach(id => {
+        const numberPart = parseInt(id.replace(shapeCode, ""));
+        if (!isNaN(numberPart) && numberPart > maxNumber) {
+          maxNumber = numberPart;
+        }
+      });
+
+      // ✅ 新編號：如 VNMG05
+      const newStockId = shapeCode + String(maxNumber + 1).padStart(2, '0');
+
+      sheet_stock.appendRow([
+        newStockId,
+        shape || "",
+        spec,
+        groove || "",
+        material || "",
+        brand,
+        Number(quantity)
+      ]);
+
+      updatedStockInfo = {
+        編號: newStockId,
+        形狀: shape,
+        品名規格: spec,
+        槽型: groove,
+        材質: material,
+        廠牌: brand,
+        數量: Number(quantity)
+      };
+
+      // ✅ 對 A 欄編號進行排序（排除標題列）
+      const range = sheet_stock.getRange(2, 1, sheet_stock.getLastRow() - 1, sheet_stock.getLastColumn());
+      range.sort({ column: 1, ascending: true });
+    }
+  
+  } else if (sheetName === "D.其他庫存表") {
+    const sheet_stock = ss.getSheetByName(sheetName);
+    const stock_data = sheet_stock.getDataRange().getValues();
+    let found = false;
+
+    // 🔁 查找是否已有相同規格（C欄）
+    for (let i = 1; i < stock_data.length; i++) {
+      const row = stock_data[i];
+      if (row[1] === spec) {
+        const newQty = Number(row[3]) + Number(quantity); // F欄為數量
+        sheet_stock.getRange(i + 1, 6).setValue(newQty);
+        found = true;
+        updatedStockInfo = {
+          編號: row[0],
+          品名規格: spec,
+          廠牌: brand,
+          數量: newQty
+        };
+        break;
+      }
+    }
+
+    // ⛔ 未找到 → 新增一筆並產生流水號編號（如 B0005）
+    if (!found) {
+      const prefix = category.trim().charAt(0); // e.g., B
+      const lastRow = sheet_stock.getLastRow();
+      const lastId = sheet_stock.getRange(lastRow, 1).getValue(); // A欄編號
+      let nextNumber = 1;
+
+      if (typeof lastId === 'string' && lastId.startsWith(prefix)) {
+        const numPart = parseInt(lastId.slice(1));
+        if (!isNaN(numPart)) nextNumber = numPart + 1;
+      }
+
+      const newStockId = prefix + String(nextNumber).padStart(4, '0');
+
+      sheet_stock.appendRow([
+        newStockId,
+        spec,
+        brand,
+        Number(quantity)
+      ]);
+
+      updatedStockInfo = {
+        編號: newStockId,
+        品名規格: spec,
+        廠牌: brand,
+        數量: Number(quantity)
+      };
+    }
+
+  // ✅ 類別為 B/C 類時的邏輯
+  } else if (sheetName) {
+    const sheet_stock = ss.getSheetByName(sheetName);
+    const stock_data = sheet_stock.getDataRange().getValues();
+    let found = false;
+
+    // 🔁 查找是否已有相同規格（C欄）
+    for (let i = 1; i < stock_data.length; i++) {
+      const row = stock_data[i];
+      if (row[2] === spec) {
+        const newQty = Number(row[5]) + Number(quantity); // F欄為數量
+        sheet_stock.getRange(i + 1, 6).setValue(newQty);
+        found = true;
+        updatedStockInfo = {
+          編號: row[0],
+          形狀: row[1],
+          品名規格: spec,
+          材質: row[3],
+          廠牌: brand,
+          數量: newQty
+        };
+        break;
+      }
+    }
+
+    // ⛔ 未找到 → 新增一筆並產生流水號編號（如 B0005）
+    if (!found) {
+      const prefix = category.trim().charAt(0); // e.g., B
+      const lastRow = sheet_stock.getLastRow();
+      const lastId = sheet_stock.getRange(lastRow, 1).getValue(); // A欄編號
+      let nextNumber = 1;
+
+      if (typeof lastId === 'string' && lastId.startsWith(prefix)) {
+        const numPart = parseInt(lastId.slice(1));
+        if (!isNaN(numPart)) nextNumber = numPart + 1;
+      }
+
+      const newStockId = prefix + String(nextNumber).padStart(4, '0');
+
+      sheet_stock.appendRow([
+        newStockId,
+        shape || "",
+        spec,
+        material || "",
+        brand,
+        Number(quantity)
+      ]);
+
+      updatedStockInfo = {
+        編號: newStockId,
+        形狀: shape,
+        品名規格: spec,
+        材質: material,
+        廠牌: brand,
+        數量: Number(quantity)
+      };
+    }
+
+  // ❗其他例外情況（未在 stockMap 中定義）
+  } else {
+    Logger.log("未知類別，未指定對應庫存表：" + category);
   }
 
-  // 🆕 若未找到該品項，則新增一筆至「刀具庫存表」
-  if (!found) {
-    const prefix = category.trim().charAt(0); // 用類別第一字元當作編號前綴
-    const categoryRows = stock_data.filter(row => row[1]?.charAt(0) === prefix); // 同一類別的行
-    // 依照同類項目數量產生新編號（如：C0002）
-    newStockId = prefix + (
-      categoryRows.length > 0
-        ? String(parseInt(categoryRows[categoryRows.length - 1][0].slice(1)) + 1).padStart(4, '0')
-        : '0001'
-    );
-    // 寫入新項目至庫存表
-    sheet_stock.appendRow([newStockId, category, spec, brand, Number(quantity)]);
-    sortStockSheet(); // 排序庫存表，確保編號有順序
-    // 建立回傳的庫存資料
-    updatedStockInfo = {
-      編號: newStockId, 類別: category, 品名規格: spec, 廠牌: brand, 數量: Number(quantity)
-    };
-  }
-  // ✏️ 若廠牌/廠商是新的，則寫入「data」表並排序（可輸入新選項）
+  // ✅ 若品牌/廠商為新選項，寫入 data 表
   updateDataSheetIfNew(brand, vendor);
-  // ✅ 將處理結果與更新後的庫存資訊一起回傳（提供前端即時顯示）
+
+  // ✅ 回傳成功與更新結果
   return ContentService.createTextOutput(JSON.stringify({
     success: true,
     stock: updatedStockInfo
   })).setMimeType(ContentService.MimeType.JSON);
 }
 
-/**
- * 🔢 sortStockSheet：將「刀具庫存表」依照刀具編號排序
- * 說明：當新增新刀具項目後，為了保持資料一致性，會依據 A 欄「編號」欄位做升冪排序
- */
-function sortStockSheet() {
-  // 取得「刀具庫存表」工作表
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("刀具庫存表");
-  // 取得整張表格的所有資料（含標題列）
-  const data = sheet.getDataRange().getValues();
-  // 將標題列（第1列）單獨取出
-  const header = data[0];
-  // 將資料列（第2列以後）依照編號欄（A欄）使用 localeCompare 排序（字串排序）
-  const rows = data.slice(1).sort((a, b) => a[0].localeCompare(b[0]));
-  // 將排序後的資料覆蓋回原表（從第2列開始，不動標題列）
-  sheet.getRange(2, 1, rows.length, header.length).setValues(rows);
+function generateStockId(sheet) {
+  const lastRow = sheet.getLastRow();
+  return `T${String(lastRow).padStart(2, '0')}`;
 }
 
 /**
@@ -319,29 +576,29 @@ function countAndSortByLength(list) {
  * 回傳格式：
  *   - { header: [...], results: [...] }（包含標題列與符合條件的資料列）
  */
-function searchStock(keyword) {
-  // 取得名為「刀具庫存表」的工作表
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("刀具庫存表");
-  // 取得整張表的所有資料（包含標題列）
+function searchStock(category, keyword) {
+  const stockMap = {
+    "A.刀片": "A.刀片庫存表",
+    "B.鑽頭銑刀": "B.鑽頭銑刀庫存表",
+    "C.刀柄": "C.刀柄庫存表",
+  };
+  const sheetName = stockMap[category];
+  if (!sheetName) return { header: [], results: [] };
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   const data = sheet.getDataRange().getValues();
-  // 取出標題列（第1列），將來一併回傳
   const header = data[0];
-  // 建立結果儲存用的陣列
   const results = [];
-  // 處理關鍵字字串：
-  // 1. 去除前後空白 2. 全轉大寫（比對用）3. 以「+」切割 4. 過濾空字串
+
   const keywords = keyword.trim().toUpperCase().split("+").map(k => k.trim()).filter(k => k);
-  // 從第2列開始逐行掃描資料
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    // 將 C 欄「品名規格」轉成大寫字串做比對
-    const name = row[2]?.toString().toUpperCase();
-    // 若 name 存在，且所有關鍵字都包含在品名中，則加入結果
+    const name = row[2]?.toString().toUpperCase(); // C欄 品名規格
     if (name && keywords.every(kw => name.includes(kw))) {
-      results.push(row); // 將整列加入查詢結果
+      results.push(row);
     }
   }
-  // 回傳：包含標題列與查詢結果
+
   return { header, results };
 }
 
@@ -469,21 +726,65 @@ function getOrderListByProduct(pd) {
  * 說明：依據 A 欄（日期）與 B 欄（機台）做升冪排序，
  *       讓資料按照時間與機台順序排列，便於管理與查詢。
  */
+// function sortProductionSheet() {
+//   // 取得「加工數量表」工作表
+//   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("加工數量表");
+//   // 取得目前最後一列的列號，用來界定要排序的範圍
+//   const lastRow = sheet.getLastRow();
+//   // 取得從第2列（資料列）開始，到最後一列的 A~Z 欄範圍（保留完整欄位）
+//   const range = sheet.getRange("A2:Z" + lastRow);
+//   // 執行排序：
+//   // 1. 先依 A 欄（日期）升冪排序
+//   // 2. 若日期相同，依 B 欄（機台）升冪排序
+//   range.sort([
+//     { column: 1, ascending: true },  // A欄：日期
+//     { column: 2, ascending: true }   // B欄：機台
+//   ]);
+// }
+
 function sortProductionSheet() {
-  // 取得「加工數量表」工作表
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("加工數量表");
-  // 取得目前最後一列的列號，用來界定要排序的範圍
   const lastRow = sheet.getLastRow();
-  // 取得從第2列（資料列）開始，到最後一列的 A~Z 欄範圍（保留完整欄位）
-  const range = sheet.getRange("A2:Z" + lastRow);
-  // 執行排序：
-  // 1. 先依 A 欄（日期）升冪排序
-  // 2. 若日期相同，依 B 欄（機台）升冪排序
-  range.sort([
-    { column: 1, ascending: true },  // A欄：日期
-    { column: 2, ascending: true }   // B欄：機台
-  ]);
+  const lastCol = sheet.getLastColumn();
+  const range = sheet.getRange(2, 1, lastRow - 1, lastCol);
+  const data = range.getValues();
+
+  data.sort((a, b) => {
+    const dateA = parseDate(a[0]);
+    const dateB = parseDate(b[0]);
+    if (dateA - dateB !== 0) return dateA - dateB;
+
+    const machineA = extractMachineCode(a[1]);
+    const machineB = extractMachineCode(b[1]);
+    return machineA.localeCompare(machineB);
+  });
+
+  range.setValues(data);
+  SpreadsheetApp.flush(); // ← 這行會強制更新畫面顯示
 }
+
+function parseDate(input) {
+  if (input instanceof Date) return input;
+  if (typeof input === 'string') {
+    const parts = input.split(/[\/\s:]+/);
+    if (parts.length >= 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+  }
+  return new Date('Invalid');
+}
+
+function extractMachineCode(str) {
+  const match = str.toString().match(/\d+/);
+  return match ? match[0].padStart(3, '0') : '000';
+}
+
+
+
+
 
 /**
  * 🕒 getLastSubmittedProduction：查詢「加工數量表」中最新一筆資料

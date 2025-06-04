@@ -196,23 +196,34 @@
         }
 
         function searchByKeyword() {
+            const category = document.getElementById("category").value.trim();
             const keyword = document.getElementById("keywordInput").value.trim();
+
+            if (!category) {
+                alert("請先選擇類別！");
+                return;
+            }
+
             if (!keyword) {
                 alert("請輸入關鍵字！");
                 return;
             }
+
             showLoading();
-            fetch(`${scriptUrl}?page=check&keyword=${encodeURIComponent(keyword)}`)
-            .then(res => res.json())
-            .then(data => {
-                hideLoading();
-                displayKeywordResults(data);
-            })
-            .catch(err => {
-                hideLoading();
-                console.error("搜尋失敗：", err);
-                document.getElementById("result").innerHTML = `<p class="text-danger">搜尋失敗</p>`;
-            });
+
+            const url = `${scriptUrl}?page=check&category=${encodeURIComponent(category)}&keyword=${encodeURIComponent(keyword)}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    hideLoading();
+                    displayKeywordResults(data);
+                })
+                .catch(err => {
+                    hideLoading();
+                    console.error("搜尋失敗：", err);
+                    document.getElementById("result").innerHTML = `<p class="text-danger">搜尋失敗，請稍後再試。</p>`;
+                });
         }
 
         function displayKeywordResults(data) {
