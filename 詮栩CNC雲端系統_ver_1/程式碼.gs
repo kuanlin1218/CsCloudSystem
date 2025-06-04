@@ -54,6 +54,41 @@ function doPost(e) {
     .setMimeType(ContentService.MimeType.JSON); // 回傳格式為 JSON
 }
 
+function getSizeListByShape(category, shape) {
+  const sheetMap = {
+    "A.刀片": ["A.刀片庫存表", 2, 3], // B:形狀, C:spec
+    "B.鑽頭銑刀": ["B.鑽頭銑刀庫存表", 2, 3],
+    "C.刀柄": ["C.刀柄庫存表", 2, 3]
+  };
+
+  const [sheetName, shapeCol, specCol] = sheetMap[category] || [];
+  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  const sizeSet = new Set();
+
+  if (!sheet || !shapeCol || !specCol) {
+    return ContentService.createTextOutput(JSON.stringify({ size: [] }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+
+  data.forEach(row => {
+    const rowShape = String(row[shapeCol - 1] || "").toUpperCase();
+    const spec = row[specCol - 1];
+
+    if (rowShape === shape.toUpperCase() && typeof spec === 'string') {
+      const parts = spec.split("-");
+      if (parts.length >= 3) {
+        sizeSet.add(parts[1]); // 取第2段做為尺寸
+      }
+    }
+  });
+
+  return ContentService.createTextOutput(JSON.stringify({
+    size: [...sizeSet]
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
 function getToolFieldLists(category) {
   try {
     // 定義一個對應表，根據傳入的類別(category)取得對應的工作表名稱
@@ -112,6 +147,14 @@ function getToolFieldLists(category) {
 function getDropdownData(e) {
   const sheet = SpreadsheetApp.getActive().getSheetByName("data");
   const values = sheet.getDataRange().getValues().slice(1); // 略過標題列
+
+  const category = e?.parameter?.category;
+  const shape = e?.parameter?.shape;
+
+  // 👉 若有傳入 category + shape，就回傳對應尺寸清單
+  if (category && shape) {
+    return getSizeListByShape(category, shape);
+  }
 
   // 三大下拉選單：類別、廠牌、廠商
   const categories = new Set(), brands = new Set(), vendors = new Set();
@@ -297,12 +340,17 @@ function handleToolInventoryPost(data) {
     date, note, shape, groove, material
   } = data;
 
-  // ✅ 寫入「刀具入庫表」
+  // ✅ 取得目前最後一列，決定要寫入的編號
   const newInId = sheet_in.getLastRow();
+
+  // ✅ 寫入「刀具入庫表」
   sheet_in.appendRow([
     newInId, category, spec, brand, vendor,
     unit_price, quantity, total_price, date, note
   ]);
+
+  // ✅ 排序並重新編號 A欄
+  sortAndResequenceInSheet();
 
   // ✅ 對應各類別對應的庫存工作表名稱
   const stockMap = {
@@ -502,6 +550,8 @@ function handleToolInventoryPost(data) {
   // ✅ 若品牌/廠商為新選項，寫入 data 表
   updateDataSheetIfNew(brand, vendor);
 
+  sortAndResequenceInSheet()
+
   // ✅ 回傳成功與更新結果
   return ContentService.createTextOutput(JSON.stringify({
     success: true,
@@ -512,6 +562,31 @@ function handleToolInventoryPost(data) {
 function generateStockId(sheet) {
   const lastRow = sheet.getLastRow();
   return `T${String(lastRow).padStart(2, '0')}`;
+}
+
+function sortAndResequenceInSheet() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("刀具入庫表");
+
+  const dataRange = sheet.getDataRange();
+  const allData = dataRange.getValues();
+  const header = allData[0];
+  const rows = allData.slice(1);
+
+  // ✅ 以 I 欄（第9欄，index 8）做日期升冪排序（舊到新）
+  rows.sort((a, b) => {
+    const dateA = new Date(a[8]);
+    const dateB = new Date(b[8]);
+    return dateA - dateB;
+  });
+
+  // ✅ 重新設定 A欄編號（從 1 開始）
+  rows.forEach((row, index) => {
+    row[0] = index + 1;
+  });
+
+  // ✅ 寫回資料（排除標題）
+  const range = sheet.getRange(2, 1, rows.length, rows[0].length);
+  range.setValues(rows);
 }
 
 /**

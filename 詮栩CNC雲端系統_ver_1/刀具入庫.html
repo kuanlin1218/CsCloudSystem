@@ -412,6 +412,24 @@
         });
     });
 
+    // 🧠 依據 shape 輸入，自動載入對應尺寸清單
+    shapeEl.addEventListener("input", async () => {
+      const category = categoryEl.value;
+      const shape = shapeEl.value.trim();
+
+      if (!category || !shape) return;
+
+      try {
+        const res = await fetch(`${scriptUrl}?page=inventory&category=${encodeURIComponent(category)}&shape=${encodeURIComponent(shape)}`);
+        const data = await res.json();
+        const sizeList = data.size || [];
+
+        updateDatalist("sizeList", sizeList);
+      } catch (err) {
+        console.error("載入尺寸失敗：", err);
+      }
+    });
+
     // 監聽欄位輸入組合規格
     [shapeEl, sizeEl, grooveEl, materialEl].forEach(el => {
       el.addEventListener("input", updateSpec);
