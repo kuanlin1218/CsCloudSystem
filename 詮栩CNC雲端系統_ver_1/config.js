@@ -1,7 +1,7 @@
 // config.js
 
 //GAS部署網址
-const scriptUrl = 'https://script.google.com/macros/s/AKfycbwHv3O95OoZQJsGoSIUyydEAsRdS1WsfYgR9KQRql1qJ-rJ1_8-1kZQRzozR1N-zAWF/exec';  // 在這裡替換為您的 GAS URL
+const scriptUrl = 'https://script.google.com/macros/s/AKfycbwvRyOmoUlSULU10Ol9eAZUYhNHEJH4tsHWEsQrh3ErkoT8TrR5RrKNkorGAIA4taZ9/exec';  // 在這裡替換為您的 GAS URL
 
 
 //navbar 公司logo
