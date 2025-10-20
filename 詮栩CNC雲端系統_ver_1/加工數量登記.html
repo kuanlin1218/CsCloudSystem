@@ -73,12 +73,12 @@
           <li class="nav-item">
             <a class="nav-link" href="首頁.html">🏠 首頁</a>
           </li>
-          <li class="nav-item">
+          <!-- <li class="nav-item">
               <a class="nav-link" href="刀具入庫.html">🛒 刀具入庫</a>
           </li>
           <li class="nav-item">
               <a class="nav-link" href="刀具查詢.html">🔍 刀具查詢</a>
-          </li>
+          </li> -->
           <li class="nav-item">
               <a class="nav-link" href="加工數量登記.html">📋 加工數量登記</a>
           </li>
@@ -102,10 +102,10 @@
         <span class="input-group-text">產品編號</span>
         <select id="pd" class="form-select custom" required></select>
       </div>
-      <div class="input-group my-3">
+      <!-- <div class="input-group my-3">
         <span class="input-group-text">訂單編號</span>
         <select id="or" class="form-select custom" required></select>
-      </div>
+      </div> -->
       <div class="input-group my-3">
         <span class="input-group-text">機台</span>
         <select id="mc" class="form-select custom" required></select>
@@ -204,34 +204,34 @@
       .then(res => res.json())
       .then(data => {
         populateSelect("pd", data);
-        document.getElementById("pd").addEventListener("change", e => loadOrderList(e.target.value));
+        // document.getElementById("pd").addEventListener("change", e => loadOrderList(e.target.value));
       })
       .catch(err => showErrorMessage("無法載入產品資料"));
     }
 
     // 根據產品載入訂單編號（✅ 選擇產品後自動帶入第一筆訂單）
-    function loadOrderList(product) {
-      const orderSelect = document.getElementById("or");
-      orderSelect.innerHTML = '';
-      if (!product) return;
-      fetch(`${scriptUrl}?page=production_entry&type=order&pd=${encodeURIComponent(product)}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!data || data.length === 0) {
-          orderSelect.innerHTML = '<option value="">（無訂單）</option>';
-          return;
-        }
-        data.forEach(order => {
-          const option = new Option(order, order);
-          orderSelect.appendChild(option);
-        });
-        orderSelect.selectedIndex = 0; // ✅ 自動選第一筆
-      })
-      .catch(err => {
-        console.error("訂單載入失敗", err);
-        orderSelect.innerHTML = '<option value="">（載入錯誤）</option>';
-      });
-    }
+    // function loadOrderList(product) {
+    //   const orderSelect = document.getElementById("or");
+    //   orderSelect.innerHTML = '';
+    //   if (!product) return;
+    //   fetch(`${scriptUrl}?page=production_entry&type=order&pd=${encodeURIComponent(product)}`)
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     if (!data || data.length === 0) {
+    //       orderSelect.innerHTML = '<option value="">（無訂單）</option>';
+    //       return;
+    //     }
+    //     data.forEach(order => {
+    //       const option = new Option(order, order);
+    //       orderSelect.appendChild(option);
+    //     });
+    //     orderSelect.selectedIndex = 0; // ✅ 自動選第一筆
+    //   })
+    //   .catch(err => {
+    //     console.error("訂單載入失敗", err);
+    //     orderSelect.innerHTML = '<option value="">（載入錯誤）</option>';
+    //   });
+    // }
 
     /** 將選項填入下拉選單 */
     function populateSelect(id, items) {
@@ -252,13 +252,13 @@
       const dt = document.getElementById("dt").value;
       const mc = document.getElementById("mc").value;
       const pd = document.getElementById("pd").value;
-      const or = document.getElementById("or").value;
+      // const or = document.getElementById("or").value;
       const hr = document.getElementById("hr").value;
       const min = document.getElementById("min").value;
       const num = document.getElementById("num").value;
       const comments = document.getElementById("comments").value;
 
-      if (!dt || !mc || !pd || !or || !hr || !min || !num) {
+      if (!dt || !mc || !pd || !hr || !min || !num) {
         showErrorMessage("資料不完整！");
         return;
       }
@@ -266,7 +266,7 @@
       const date = new Date(dt);
       const rowData = {
         dt: `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`,
-        mc, pd, or, hr, min, num, comments
+        mc, pd, hr, min, num, comments
       };
 
       // 👉 顯示送出中動畫
@@ -286,7 +286,7 @@
           const dtValue = document.getElementById("dt").value;
           const pdValue = document.getElementById("pd").value;
           const mcValue = document.getElementById("mc").value;
-          const orValue = document.getElementById("or").value;
+          // const orValue = document.getElementById("or").value;
 
           // 🧹 清除整張表單
           document.getElementById("myForm").reset();
@@ -295,7 +295,7 @@
           document.getElementById("dt").value = dtValue;
           document.getElementById("pd").value = pdValue;
           document.getElementById("mc").value = mcValue;
-          document.getElementById("or").value = orValue;
+          // document.getElementById("or").value = orValue;
         } else {
           showErrorMessage("已有重複資料！");
         }
@@ -344,7 +344,7 @@
         <li>日期：${displayDate}</li>
         <li>機台：${data.mc}</li>
         <li>產品編號：${data.pd}</li>
-        <li>訂單編號：${data.or}</li>
+        
         <li>加工時間：${data.hr} 時 ${data.min} 分</li>
         <li>數量：${data.num}</li>
         <li>備註：${data.com || '(無)'}</li>
