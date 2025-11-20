@@ -115,9 +115,9 @@
       </div>
       <div class="input-group my-3">
         <span class="input-group-text">時</span>
-        <input type="number" inputmode="decimal" pattern="[0-9]*" id="hr" class="form-control custom" required>
+        <input type="text" id="hr" class="form-control custom" inputmode="numeric" oninput="validateMinute()" required>
         <span class="input-group-text">分</span>
-        <input type="number" inputmode="decimal" pattern="[0-9]*" min="0" max="59" id="min" class="form-control custom" required>
+        <input type="text" id="min" class="form-control custom" inputmode="numeric" oninput="validateMinute()" required>
       </div>
       <div class="input-group my-3">
         <span class="input-group-text">數量</span>
@@ -212,30 +212,6 @@
       .catch(err => showErrorMessage("無法載入產品資料"));
     }
 
-    // 根據產品載入訂單編號（✅ 選擇產品後自動帶入第一筆訂單）
-    // function loadOrderList(product) {
-    //   const orderSelect = document.getElementById("or");
-    //   orderSelect.innerHTML = '';
-    //   if (!product) return;
-    //   fetch(`${scriptUrl}?page=production_entry&type=order&pd=${encodeURIComponent(product)}`)
-    //   .then(res => res.json())
-    //   .then(data => {
-    //     if (!data || data.length === 0) {
-    //       orderSelect.innerHTML = '<option value="">（無訂單）</option>';
-    //       return;
-    //     }
-    //     data.forEach(order => {
-    //       const option = new Option(order, order);
-    //       orderSelect.appendChild(option);
-    //     });
-    //     orderSelect.selectedIndex = 0; // ✅ 自動選第一筆
-    //   })
-    //   .catch(err => {
-    //     console.error("訂單載入失敗", err);
-    //     orderSelect.innerHTML = '<option value="">（載入錯誤）</option>';
-    //   });
-    // }
-
     /** 將選項填入下拉選單 */
     function populateSelect(id, items) {
       const select = document.getElementById(id);
@@ -247,6 +223,24 @@
         select.appendChild(option);
       });
     }
+
+
+    function validateMinute() {
+        const hr  = document.getElementById("hr");
+        const min = document.getElementById("min");
+
+        // 兩欄都限制只能輸入數字
+        hr.value  = hr.value.replace(/\D/g, "");
+        min.value = min.value.replace(/\D/g, "");
+
+        // 超過 59 → 紅框
+        if (min.value !== "" && parseInt(min.value) > 59) {
+            min.classList.add("is-invalid");   // Bootstrap 紅框
+        } else {
+            min.classList.remove("is-invalid");
+        }
+    }
+
 
     /** 表單送出 */
     document.getElementById("myForm").addEventListener("submit", function (event) {
