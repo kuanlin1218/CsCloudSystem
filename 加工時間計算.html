@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <title>詮栩雲系統</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="config.js"></script>
+  <link rel="stylesheet" href="共用風格.css">
+  <link id="dynamic-favicon" rel="icon" type="image/x-icon">
+
+  <style>
+    body {
+      height: 100%;
+      margin: 0;
+      background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    .input-group-text {
+      color: rgb(4, 109, 113);
+    }
+
+    .input-group-text {
+      background-color: none; 
+      width: 25%;
+      align-items: center;
+      justify-content: center;
+      text-align: center; 
+      font-size: 20px; 
+      letter-spacing: 1px; /*文字間距*/
+      font-weight:600; /*字體粗細100-900*/
+      height: 40px;
+    }
+
+    .btn-綠 {
+      width:100%;
+      font-size:22px;
+      padding:5px;
+      height: 40px;
+      font-weight: bold;
+    }
+
+    .btn-紅 {
+      width:100%;
+      font-size:22px;
+      padding:5px;
+      height: 40px;
+      font-weight: bold;
+    }
+
+    .alert {
+      padding: 5px;
+    }
+
+    .custom-t {
+      height: 50px;
+    }
+    .custom-c {
+      background-color: none; 
+      text-align: left; /*文字置中*/
+      appearance: none; /* 移除瀏覽器預設樣式 (選用) */
+      font-size: 18px; 
+      height: 50px;
+    }
+
+    h5{
+      text-align: center; /*文字置中*/
+      color:rgb(239, 100, 0);
+      font-size: 25px;
+      font-weight: bold;
+      /*letter-spacing: 3px;*/ /*文字間距*/
+    }
+
+    .input-error {
+      border: 2px solid #dc3545 !important;  /* Bootstrap danger 紅色 */
+      background-color: #ffecec !important;  /* 淡紅背景，更容易看 */
+    }
+
+    .form-control.input-error {
+      border: 2px solid #dc3545 !important;
+      background-color: #ffecec !important;
+      box-shadow: 0 0 0 0.15rem rgba(220, 53, 69, .25);
+    }
+
+  </style>
+</head>
+<body>
+  <!-- 導覽列 -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="首頁.html">
+        <img id="brandLogo" alt="Logo" class="navbar-logo">
+        詮栩CNC雲端系統
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="切換導覽列">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="首頁.html">🏠 首頁</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="加工數量登記.html">📋 加工數量登記</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="加工數量查詢.html">👨🏻‍💻 加工數量查詢</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="加工時間計算.html">⌨️ 加工時間計算</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  
+  <div class="container">
+    <form id="myForm">
+      <h2 class="text-center">⌨️ 加工時間計算 ⌨️</h2>
+      <hr>
+
+      <!-- 第1組：被減數 -->
+    <div class="input-group my-3">
+      <input type="number" id="hr1" class="form-control custom" min="0" oninput="validateAndCompute()">
+      <span class="input-group-text">時</span>
+      <input type="number" id="min1" class="form-control custom" min="0" max="59" oninput="validateAndCompute()">
+      <span class="input-group-text">分</span>
+    </div>
+
+    <h5 class="text-center">減去</h5>
+
+    <!-- 第2組：減數 -->
+    <div class="input-group my-3">
+      <input type="number" id="hr2" class="form-control custom" min="0" oninput="validateAndCompute()">
+      <span class="input-group-text">時</span>
+      <input type="number" id="min2" class="form-control custom" min="0" max="59" oninput="validateAndCompute()">
+      <span class="input-group-text">分</span>
+    </div>
+
+    <h5 class="text-center">等於</h5>
+
+    <!-- 第3組：結果（只顯示，不給改） -->
+    <div class="input-group my-3">
+      <input type="number" id="hr3" class="form-control custom" readonly>
+      <span class="input-group-text">時</span>
+      <input type="number" id="min3" class="form-control custom" readonly>
+      <span class="input-group-text">分</span>
+    </div>
+
+    <!-- 計算按鈕其實可以拿掉，不過留著也沒關係 -->
+    <button type="button" class="btn btn-綠 w-100" onclick="validateAndCompute()">計算</button>
+    <button type="button" id="clearBtn" class="btn btn-紅 w-100 mt-2">清除</button>
+
+    <!-- 錯誤訊息顯示區 -->
+    <p id="errorMsg" class="text-danger text-center fw-bold mt-2"></p>
+    <hr>
+  </div>
+
+<script>
+    // 設定 LOGO 圖片來源
+    document.getElementById("brandLogo").src = LOGO_URL;
+    // 設定 favicon 圖示
+    document.getElementById("dynamic-favicon").href = FAVICON_URL;
+
+    /** 收起 navbar */
+    document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        const nav = document.getElementById('navbarNav');
+        if (nav.classList.contains('show')) nav.classList.remove('show');
+      });
+    });
+
+    /** 平滑滾動 */
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener("click", function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute("href"));
+        if (target) {
+          window.scrollTo({ top: target.offsetTop - 50, behavior: "smooth" });
+        }
+      });
+    });
+
+
+
+    /** 顯示錯誤訊息 + 紅框 */
+    function showError(msg, elementId) {
+      const error = document.getElementById("errorMsg");
+      error.textContent = "⚠️ " + msg;
+
+      if (elementId) {
+        const el = document.getElementById(elementId);
+        el.classList.add("input-error");
+        el.focus();
+      }
+    }
+
+    /** 清除所有紅框 */
+    function clearErrorBorders() {
+      document.querySelectorAll(".input-error").forEach(el => {
+        el.classList.remove("input-error");
+      });
+    }
+
+    /** 讀取 + 驗證 單一欄位 */
+    function getValidInt(id, label) {
+      const el = document.getElementById(id);
+      const raw = el.value.trim();
+
+      // 每次先把舊紅框移除，避免殘留
+      el.classList.remove("input-error");
+
+      // 允許空白時單純不算，但不噴錯（你如果要空白就錯，可改這段）
+      if (raw === "") {
+        // 空白 → 不顯示錯誤，只是當作「尚未完成輸入」
+        return null;
+      }
+
+      const num = Number(raw);
+
+      if (!Number.isInteger(num)) {
+        showError(label + " 必須是整數", id);
+        throw new Error("not-int");
+      }
+
+      // 用 HTML 的 min/max 當限制
+      if (el.hasAttribute("min")) {
+        const min = Number(el.getAttribute("min"));
+        if (num < min) {
+          showError(label + " 不可小於 " + min, id);
+          throw new Error("min");
+        }
+      }
+
+      if (el.hasAttribute("max")) {
+        const max = Number(el.getAttribute("max"));
+        if (num > max) {
+          showError(label + " 不可大於 " + max, id);
+          throw new Error("max");
+        }
+      }
+
+      return num;
+    }
+
+    /** 即時驗證 + 即時計算 */
+    function validateAndCompute() {
+      const error = document.getElementById("errorMsg");
+      error.textContent = "";
+      clearErrorBorders();
+
+      let hr1, min1, hr2, min2;
+
+      try {
+        hr1 = getValidInt("hr1", "第 1 組『時』");
+        min1 = getValidInt("min1", "第 1 組『分』");
+        hr2 = getValidInt("hr2", "第 2 組『時』");
+        min2 = getValidInt("min2", "第 2 組『分'}");
+      } catch (e) {
+        // 有錯就清空結果
+        document.getElementById("hr3").value = "";
+        document.getElementById("min3").value = "";
+        return;
+      }
+
+      // 任一個還沒輸入完成 → 不計算、不顯示錯誤
+      if (hr1 === null || min1 === null || hr2 === null || min2 === null) {
+        document.getElementById("hr3").value = "";
+        document.getElementById("min3").value = "";
+        return;
+      }
+
+      const total1 = hr1 * 60 + min1;
+      const total2 = hr2 * 60 + min2;
+
+      // 減數 > 被減數 → 顯示錯誤，不算
+      if (total2 > total1) {
+        showError("減數時間大於被減數時間，無法計算！", "hr2");
+        document.getElementById("hr3").value = "";
+        document.getElementById("min3").value = "";
+        return;
+      }
+
+      const diff = total1 - total2;
+      document.getElementById("hr3").value = Math.floor(diff / 60);
+      document.getElementById("min3").value = diff % 60;
+    }
+
+    /** 清除按鈕 */
+    document.getElementById("clearBtn").addEventListener("click", function () {
+      ["hr1", "min1", "hr2", "min2", "hr3", "min3"].forEach(id => {
+        const el = document.getElementById(id);
+        el.value = "";
+        el.classList.remove("input-error");
+      });
+      document.getElementById("errorMsg").textContent = "";
+      document.getElementById("hr1").focus();
+    });
+
+
+</script>
+
+</body>
+</html>
