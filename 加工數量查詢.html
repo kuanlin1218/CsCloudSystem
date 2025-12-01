@@ -211,24 +211,45 @@
             const dt2 = document.getElementById("dt2").value;
             const pd  = document.getElementById("pd").value;
 
-            if (!pd) return alert("請選擇產品編號");
+            if (!pd) {
+                alert("請選擇產品編號");
+                return;
+            }
 
-            const d1 = new Date(dt1);
-            const d2 = new Date(dt2);
-            const f1 = `${d1.getFullYear()}/${d1.getMonth() + 1}/${d1.getDate()}`;
-            const f2 = `${d2.getFullYear()}/${d2.getMonth() + 1}/${d2.getDate()}`;
+            if (!dt1 || !dt2) {
+                alert("請選擇開始與結束日期");
+                return;
+            }
+
+            const startDate = new Date(dt1);         // input type="date" => YYYY-MM-DD
+            const endDate   = new Date(dt2);
+            // 為了讓結束日期「含當天」，把時間拉到當天 23:59:59
+            endDate.setHours(23, 59, 59, 999);
 
             showLoading();
-            fetch(`${scriptUrl}?page=production_query&pd=${encodeURIComponent(pd)}&dt1=${f1}&dt2=${f2}`)
-            .then(res => res.json())
-            .then(rows => {
-                hideLoading();
-                displayTable(rows);
-            })
-            .catch(() => {
-                hideLoading();
-                alert("查詢失敗");
-            });
+
+            // 直接用 export_data API 取得完整資料，前端再依日期篩選
+            fetch(`${dataUrl}&pd=${encodeURIComponent(pd)}`)
+                .then(res => res.json())
+                .then(allData => {
+                    // allData 欄位結構：0 日期(YYYY/M/D 或 YYYY/MM/DD), 1 機台, 2 產品, 3 時, 4 分, 5 數量, 6 備註
+                    const filtered = allData.filter(row => {
+                        if (!row[0]) return false;
+                        const parts = String(row[0]).split(/[\/-]/); // 支援 2025/3/1 或 2025-03-01
+                        const y = parseInt(parts[0], 10);
+                        const m = parseInt(parts[1], 10);
+                        const d = parseInt(parts[2], 10);
+                        const rowDate = new Date(y, m - 1, d);
+                        return rowDate >= startDate && rowDate <= endDate;
+                    });
+
+                    hideLoading();
+                    renderProductionTable(pd, filtered);  // ✅ 跟「查詢全部」同一種表格
+                })
+                .catch(err => {
+                    hideLoading();
+                    alert("查詢失敗：" + err.message);
+                });
         }
 
         // 依產品查最後一筆（最後加工日期的所有紀錄）
@@ -237,19 +258,22 @@
             document.getElementById("exportBtn").disabled = true;
 
             const pd = document.getElementById("pd").value;
-            if (!pd) return alert("請選擇產品編號");
+            if (!pd) {
+                alert("請選擇產品編號");
+                return;
+            }
 
             showLoading();
             fetch(`${scriptUrl}?page=production_query&mode=latest&pd=${encodeURIComponent(pd)}`)
-            .then(res => res.json())
-            .then(data => {
-                hideLoading();
-                displayTable(data);
-            })
-            .catch(() => {
-                hideLoading();
-                alert("查詢失敗");
-            });
+                .then(res => res.json())
+                .then(data => {
+                    hideLoading();
+                    displayTable(data);  // ✅ 保持原本簡易 3 欄格式
+                })
+                .catch(() => {
+                    hideLoading();
+                    alert("查詢失敗");
+                });
         }
 
         function displayTable(data, emptyMessage = "沒有符合條件的資料") {
@@ -310,93 +334,22 @@
         function loadData() {
             const pd = document.getElementById('pd').value;
             const resultDiv = document.getElementById('result');
-            if (!pd) { alert('請選擇產品編號'); return; }
+            if (!pd) {
+                alert('請選擇產品編號');
+                return;
+            }
 
             showLoading();
             fetch(`${dataUrl}&pd=${encodeURIComponent(pd)}`)   // 只帶 pd
-            .then(res => res.json())
-            .then(data => {
-                if (data.length === 0) { resultDiv.innerHTML = "查無資料"; hideLoading(); return; }
-
-                let totalQty = 0, totalMins = 0;
-                let dateSet = new Set();
-
-                let html = `
-                <div class="info-box">產品編號：${escapeHtml(pd)}</div>
-                <table id="dataTable">
-                    <thead>
-                    <tr>
-                        <th>日期</th>
-                        <th>機台</th>
-                        <th>時</th>
-                        <th>分</th>
-                        <th>數量</th>
-                        <th>總時間</th>
-                        <th>備註</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                `;
-
-                // ⚠️ 欄位已左移：A 日期(0), B 機台(1), C 產品(2), D 時(3), E 分(4), F 數量(5), G 備註(6)
-                data.forEach(row => {
-                const hr  = parseInt(row[3]) || 0;
-                const min = parseInt(row[4]) || 0;
-                const qty = parseInt(row[5]) || 0;
-                const totalThisMins = hr * 60 + min;
-
-                totalQty  += qty;
-                totalMins += totalThisMins;
-                dateSet.add(row[0]);
-
-                html += '<tr>';
-                html += `<td>${row[0]}</td>`;           // 日期
-                html += `<td>${row[1]}</td>`;           // 機台
-                html += `<td>${row[3]}</td>`;           // 時
-                html += `<td>${row[4]}</td>`;           // 分
-                html += `<td>${row[5]}</td>`;           // 數量
-                html += `<td>${totalThisMins}</td>`;    // 總時間(分)
-                html += `<td>${row[6]}</td>`;           // 備註
-                html += '</tr>';
+                .then(res => res.json())
+                .then(data => {
+                    hideLoading();
+                    renderProductionTable(pd, data);  // ✅ 共用表格產生
+                })
+                .catch(err => {
+                    hideLoading();
+                    resultDiv.innerHTML = "錯誤：" + err.message;
                 });
-
-                const totalDays   = dateSet.size;
-                const avgPerDay   = totalDays > 0 ? Math.round(totalQty / totalDays) : 0;
-                const avgPerPiece = totalQty > 0  ? Math.round((totalMins * 60) / totalQty) : 0; // 每顆(秒)
-
-                html += `
-                    </tbody>
-                    <tfoot>
-                    <tr class="footer-yellow">
-                        <td>合計</td>
-                        <td>總天數</td>
-                        <td>總數量</td>
-                        <td>總時間</td>
-                        <td>1天平均(顆)</td>
-                        <td>1顆平均(s)</td>
-                        <td></td>
-                    </tr>
-                    <tr class="footer-yellow">
-                        <td></td>
-                        <td>${totalDays}</td>
-                        <td>${totalQty}</td>
-                        <td>${totalMins}</td>
-                        <td>${avgPerDay}</td>
-                        <td>${avgPerPiece}</td>
-                        <td></td>
-                    </tr>
-                    </tfoot>
-                </table>
-                `;
-
-                resultDiv.innerHTML = html;
-                document.getElementById("exportBtn").disabled = false;
-                hideLoading();
-            })
-            .catch(err => {
-                hideLoading();
-                resultDiv.innerHTML = "錯誤：" + err.message;
-            });
         }
 
         function exportTable() {
@@ -451,6 +404,92 @@
             return buf;
             };
             saveAs(new Blob([s2ab(wbout)], { type: "application/octet-stream" }), `${pd}_加工數量查詢.xlsx`);
+        }
+
+
+        // 共用：依產品編號 + 資料陣列，畫出完整統計表（給 查詢全部 / 日期區間 共用）
+        function renderProductionTable(pd, data) {
+            const resultDiv = document.getElementById('result');
+
+            if (!data || data.length === 0) {
+                resultDiv.innerHTML = "查無資料";
+                document.getElementById("exportBtn").disabled = true;
+                return;
+            }
+
+            let totalQty = 0, totalMins = 0;
+            let dateSet = new Set();
+
+            let html = `
+                <div class="info-box">產品編號：${escapeHtml(pd)}</div>
+                <table id="dataTable">
+                    <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>機台</th>
+                        <th>時</th>
+                        <th>分</th>
+                        <th>數量</th>
+                        <th>總時間</th>
+                        <th>備註</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // ⚠️ 欄位已左移：A 日期(0), B 機台(1), C 產品(2), D 時(3), E 分(4), F 數量(5), G 備註(6)
+            data.forEach(row => {
+                const hr  = parseInt(row[3]) || 0;
+                const min = parseInt(row[4]) || 0;
+                const qty = parseInt(row[5]) || 0;
+                const totalThisMins = hr * 60 + min;
+
+                totalQty  += qty;
+                totalMins += totalThisMins;
+                dateSet.add(row[0]);
+
+                html += '<tr>';
+                html += `<td>${escapeHtml(row[0])}</td>`;  // 日期
+                html += `<td>${escapeHtml(row[1])}</td>`;  // 機台
+                html += `<td>${escapeHtml(row[3])}</td>`;  // 時
+                html += `<td>${escapeHtml(row[4])}</td>`;  // 分
+                html += `<td>${escapeHtml(row[5])}</td>`;  // 數量
+                html += `<td>${totalThisMins}</td>`;       // 總時間(分)
+                html += `<td>${escapeHtml(row[6])}</td>`;  // 備註
+                html += '</tr>';
+            });
+
+            const totalDays   = dateSet.size;
+            const avgPerDay   = totalDays > 0 ? Math.round(totalQty / totalDays) : 0;
+            const avgPerPiece = totalQty > 0  ? Math.round((totalMins * 60) / totalQty) : 0; // 每顆(秒)
+
+            html += `
+                </tbody>
+                <tfoot>
+                <tr class="footer-yellow">
+                    <td>合計</td>
+                    <td>總天數</td>
+                    <td>總數量</td>
+                    <td>總時間</td>
+                    <td>1天平均(顆)</td>
+                    <td>1顆平均(s)</td>
+                    <td></td>
+                </tr>
+                <tr class="footer-yellow">
+                    <td></td>
+                    <td>${totalDays}</td>
+                    <td>${totalQty}</td>
+                    <td>${totalMins}</td>
+                    <td>${avgPerDay}</td>
+                    <td>${avgPerPiece}</td>
+                    <td></td>
+                </tr>
+                </tfoot>
+            </table>
+            `;
+
+            resultDiv.innerHTML = html;
+            document.getElementById("exportBtn").disabled = false;
         }
     </script>
 
