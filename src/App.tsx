@@ -47,12 +47,23 @@ export default function App() {
 
   useEffect(() => { void refresh() }, [])
   useEffect(() => {
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void refresh()
+    }
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    return () => document.removeEventListener('visibilitychange', refreshWhenVisible)
+  }, [])
+  useEffect(() => {
     if (!toast) return
     const timer = window.setTimeout(() => setToast(''), 2600)
     return () => window.clearTimeout(timer)
   }, [toast])
 
-  const nav = (next: Page) => { setPage(next); setMobileNav(false) }
+  const nav = (next: Page) => {
+    setPage(next)
+    setMobileNav(false)
+    void refresh()
+  }
   const afterSave = async (message: string) => { await refresh(); setToast(message) }
   const isHome = page === 'home'
   const isInventory = page === 'dashboard' || page === 'movements' || page === 'stocktake' || page === 'products'
