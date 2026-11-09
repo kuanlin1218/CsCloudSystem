@@ -2,7 +2,7 @@
 
 單人使用的 CNC 雲端工具入口。首頁提供「加工數量登記、加工數量查詢、庫存管理系統」三個功能；加工時間計算已整合到加工數量登記頁，不再使用獨立入口。
 
-前端使用 React、TypeScript 與 Vite，雲端資料使用 Supabase Free，可由 GitHub Pages 自動部署；不需帳號或密碼，也不含 Lovable 套件、執行環境或任何平台綁定。
+前端使用 React、TypeScript 與 Vite，雲端資料使用 Supabase Free，可由 GitHub Pages 自動部署；日常功能免登入，只有完整資料備份／還原需要管理員密碼。專案不含 Lovable 套件、執行環境或任何平台綁定。
 
 ## 已完成功能
 
@@ -39,6 +39,7 @@
 - 入庫與出庫彈窗、負庫存提示、重複送出防護
 - 免登入共用模式；RLS 只允許存取系統共用資料列
 - 原子化 PostgreSQL RPC：鎖定刀具資料列，同一交易更新庫存與歷史
+- 首頁可由管理員將完整 Supabase 資料匯出為 Excel，整理後經格式檢查再整批還原
 - 無 Supabase 設定時自動使用可操作的瀏覽器示範資料
 - GitHub Actions / Pages 部署設定
 
@@ -86,7 +87,25 @@ npm run preview
 
 `register_stock_movement` 會鎖定刀具資料列、檢查共用資料範圍與負庫存，並以 `request_key` 防止同一次請求重送造成重複加減。
 
-### 2. 填入前端環境變數
+### 2. 啟用完整 Excel 備份／還原
+
+在 SQL Editor 建立一個 **New query**，開啟 [`supabase/admin_data.sql`](supabase/admin_data.sql)，複製整份內容並執行。成功後再執行下面一行設定管理員密碼（必須是 8 位數字）：
+
+```sql
+select private.set_admin_password('請改成8位數字密碼');
+```
+
+密碼只會以雜湊形式存放在 Supabase 的 private schema，不需要放進 `.env.local` 或 GitHub Actions Secrets。完整匯入及所有刪除功能都必須通過密碼驗證；連續輸入錯誤 5 次會暫停操作 5 分鐘。
+
+首頁的「資料備份／還原」可以：
+
+- 匯出刀具資料、出入庫歷史、加工數量與管理選項到同一份 Excel。
+- 選擇整理後的 Excel，先檢查欄位、日期、數字、重複編號與資料筆數。
+- 輸入「覆蓋資料」並再次通過管理員密碼後，以單一資料庫交易完整還原；發生錯誤會全部回復。
+
+匯入會取代目前的雲端資料，務必保留一份未修改的原始備份。
+
+### 3. 填入前端環境變數
 
 從 Supabase 專案設定的 API 頁面取得 Project URL 與 anon/public key。複製範例檔：
 
@@ -142,13 +161,13 @@ Vite 已使用相對資源路徑，因此同時支援 `帳號.github.io` 與 `�
 ## 資料與安全設計
 
 - 前端只能讀取與編輯免登入共用資料列（`user_id is null`）。
-- 加工紀錄允許共用模式新增、查詢與刪除，並由資料庫檢查工時和數量格式。
+- 加工紀錄允許共用模式新增與查詢；刪除必須呼叫管理員密碼保護的 RPC，並由資料庫檢查工時和數量格式。
 - 前端可編輯刀具說明欄位，但沒有直接修改 `stock_quantity`、`unit_price` 或歷史資料的權限。
 - 所有庫存增減只允許呼叫 `register_stock_movement`。
-- 刪除出入庫只允許呼叫 `delete_stock_movement`，不能由瀏覽器直接刪除歷史表。
+- 刪除出入庫只允許呼叫管理員密碼保護的 RPC，不能由瀏覽器直接刪除歷史表。
 - RPC 固定操作共用資料，不接受前端傳入任意 `user_id`。
 - 刀具編號會依「刀片、鑽銑刀、刀柄、其他」四種分類分別安全遞增。
-- 刪除刀具會一併刪除該刀具的歷史；網站操作前會再次確認。
+- 刪除刀具會一併刪除該刀具的歷史，且必須通過管理員密碼驗證。
 
 ## 專案結構
 
@@ -162,7 +181,8 @@ blade-inventory/
 │  ├─ App.tsx                    # 頁面與互動
 │  ├─ styles.css                 # 完整視覺與響應式樣式
 │  └─ types.ts
-├─ supabase/schema.sql           # Schema、RLS、RPC
+├─ supabase/schema.sql           # Schema、RLS、日常功能 RPC
+├─ supabase/admin_data.sql       # 管理員 Excel 備份／還原 RPC
 ├─ .env.example
 └─ vite.config.ts
 ```

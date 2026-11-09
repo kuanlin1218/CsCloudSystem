@@ -609,13 +609,13 @@ $$;
 
 revoke all on table public.products from anon, authenticated;
 revoke all on table public.stock_movements from anon, authenticated;
-grant select, delete on table public.products to anon, authenticated;
+grant select on table public.products to anon, authenticated;
 grant update (specification, size, chipbreaker, material, name, brand, supplier, category, unit, notes) on table public.products to anon, authenticated;
 grant select on table public.stock_movements to anon, authenticated;
 revoke all on table public.production_records from anon, authenticated;
-grant select, insert, delete on table public.production_records to anon, authenticated;
+grant select, insert on table public.production_records to anon, authenticated;
 revoke all on table public.production_options from anon, authenticated;
-grant select, insert, delete on table public.production_options to anon, authenticated;
+grant select, insert on table public.production_options to anon, authenticated;
 
 revoke all on function public.create_product_with_initial_stock(text, text, text, text, text, text, text, text, text, integer, numeric, date, uuid) from public, anon;
 revoke all on function public.register_stock_movement(uuid, text, integer, date, numeric, text, text, uuid) from public, anon;
@@ -624,9 +624,7 @@ revoke all on function public.set_stocktake_quantity(uuid, integer, text, uuid) 
 revoke all on function public.delete_production_product_data(text) from public, anon;
 grant execute on function public.create_product_with_initial_stock(text, text, text, text, text, text, text, text, text, integer, numeric, date, uuid) to anon, authenticated;
 grant execute on function public.register_stock_movement(uuid, text, integer, date, numeric, text, text, uuid) to anon, authenticated;
-grant execute on function public.delete_stock_movement(uuid) to anon, authenticated;
 grant execute on function public.set_stocktake_quantity(uuid, integer, text, uuid) to anon, authenticated;
-grant execute on function public.delete_production_product_data(text) to anon, authenticated;
 
 comment on function public.register_stock_movement is '以資料列鎖、負庫存檢查及防重送鍵原子化處理出入庫。';
 comment on function public.delete_stock_movement is '安全刪除出入庫紀錄，拒絕負庫存並重算商品庫存、歷史餘額及最新單價。';

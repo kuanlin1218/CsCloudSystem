@@ -61,6 +61,14 @@ function readLocal<T>(key: string, fallback: T): T {
 function writeLocal(key: string, value: unknown) { localStorage.setItem(key, JSON.stringify(value)) }
 const id = () => crypto.randomUUID()
 
+async function runAdminDelete(functionName: string, password: string, values: Record<string, unknown>): Promise<void> {
+  if (!/^\d{8}$/.test(password)) throw new Error('管理員密碼必須是 8 位數字')
+  const { data, error } = await supabase!.rpc(functionName, { p_password: password, ...values })
+  if (error) throw error
+  const result = data as { ok?: boolean; error?: string } | null
+  if (!result?.ok) throw new Error(result?.error || '管理員密碼驗證失敗')
+}
+
 export async function loadInventory(): Promise<{ products: Product[]; movements: Movement[] }> {
   if (isDemoMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts).map((product) => ({ ...product, category: normalizeCategory(product.category) }))
@@ -106,14 +114,13 @@ export async function createProductionOption(optionType: ProductionOptionType, r
   }
 }
 
-export async function deleteProductionOption(optionType: ProductionOptionType, value: string): Promise<void> {
+export async function deleteProductionOption(optionType: ProductionOptionType, value: string, password: string): Promise<void> {
   if (isDemoMode) {
     const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
     writeLocal(PRODUCTION_OPTION_KEY, options.filter((option) => !(option.option_type === optionType && option.value === value)))
     return
   }
-  const { error } = await supabase!.from('production_options').delete().eq('option_type', optionType).eq('value', value)
-  if (error) throw error
+  await runAdminDelete('admin_delete_production_option', password, { p_option_type: optionType, p_value: value })
 }
 
 export async function createProductionRecord(input: ProductionInput): Promise<void> {
@@ -130,16 +137,15 @@ export async function createProductionRecord(input: ProductionInput): Promise<vo
   if (error) throw error
 }
 
-export async function deleteProductionRecord(recordId: string): Promise<void> {
+export async function deleteProductionRecord(recordId: string, password: string): Promise<void> {
   if (isDemoMode) {
     writeLocal(PRODUCTION_KEY, readLocal(PRODUCTION_KEY, seedProductionRecords).filter((record) => record.id !== recordId))
     return
   }
-  const { error } = await supabase!.from('production_records').delete().eq('id', recordId)
-  if (error) throw error
+  await runAdminDelete('admin_delete_production_record', password, { p_record_id: recordId })
 }
 
-export async function deleteProductionProductData(productCode: string): Promise<void> {
+export async function deleteProductionProductData(productCode: string, password: string): Promise<void> {
   const normalized = productCode.trim().toUpperCase()
   if (!normalized) throw new Error('請先選擇產品編號')
   if (isDemoMode) {
@@ -147,8 +153,7 @@ export async function deleteProductionProductData(productCode: string): Promise<
     writeLocal(PRODUCTION_OPTION_KEY, readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions).filter((option) => !(option.option_type === 'product' && option.value.toUpperCase() === normalized)))
     return
   }
-  const { error } = await supabase!.rpc('delete_production_product_data', { p_product_code: normalized })
-  if (error) throw error
+  await runAdminDelete('admin_delete_production_product_data', password, { p_product_code: normalized })
 }
 
 export async function createProduct(input: ProductInput): Promise<void> {
@@ -185,13 +190,12 @@ export async function updateProduct(productId: string, input: ProductInput): Pro
   if (error) throw error
 }
 
-export async function deleteProduct(productId: string): Promise<void> {
+export async function deleteProduct(productId: string, password: string): Promise<void> {
   if (isDemoMode) {
     writeLocal(PRODUCT_KEY, readLocal(PRODUCT_KEY, seedProducts).filter((p) => p.id !== productId))
     writeLocal(MOVEMENT_KEY, readLocal(MOVEMENT_KEY, seedMovements).filter((m) => m.product_id !== productId)); return
   }
-  const { error } = await supabase!.from('products').delete().eq('id', productId)
-  if (error) throw error
+  await runAdminDelete('admin_delete_product', password, { p_product_id: productId })
 }
 
 export async function registerMovement(input: MovementInput): Promise<void> {
@@ -244,7 +248,7 @@ export async function setStocktakeQuantity(input: StocktakeInput): Promise<void>
   if (error) throw error
 }
 
-export async function deleteMovement(movementId: string): Promise<void> {
+export async function deleteMovement(movementId: string, password: string): Promise<void> {
   if (isDemoMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts)
     const movements = readLocal(MOVEMENT_KEY, seedMovements)
@@ -273,6 +277,5 @@ export async function deleteMovement(movementId: string): Promise<void> {
     writeLocal(MOVEMENT_KEY, remaining)
     return
   }
-  const { error } = await supabase!.rpc('delete_stock_movement', { p_movement_id: movementId })
-  if (error) throw error
+  await runAdminDelete('admin_delete_stock_movement', password, { p_movement_id: movementId })
 }

@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 're
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown,
   Calculator, ChevronLeft, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
-  ListPlus, Menu, Pencil, Plus, Save, Search, ShieldCheck, Trash2, Triangle, Wrench, X,
+  FileSpreadsheet, FileUp, ListPlus, LockKeyhole, Menu, Pencil, Plus, Save, Search, ShieldCheck, Trash2, Triangle, Wrench, X,
 } from 'lucide-react'
 import { isDemoMode } from './lib/supabase'
 import { composeProductName, formatDate, formatMoney, formatNumber, today } from './lib/format'
 import { exportProductionXlsx } from './lib/exportProductionXlsx'
+import { exportAllAdminData, importAllAdminData } from './lib/adminData'
+import type { WorkbookPreview } from './lib/adminDataWorkbook'
 import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, loadInventory, loadProductionOptions, loadProductionRecords, registerMovement, setStocktakeQuantity, updateProduct } from './lib/repository'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
 
@@ -16,6 +18,12 @@ const blankProduct = (): ProductInput => ({
 })
 
 type StockModalState = { type: MovementType; productId?: string }
+type AdminDeleteRequest = {
+  title: string
+  description: string
+  execute: (password: string) => Promise<void>
+  resolve: (result: boolean) => void
+}
 
 const messageFor = (error: unknown) => error instanceof Error ? error.message : (error as { message?: string })?.message || '發生未知錯誤'
 
@@ -32,6 +40,8 @@ export default function App() {
   const [productModal, setProductModal] = useState<Product | 'new' | null>(null)
   const [priceHistoryProduct, setPriceHistoryProduct] = useState<Product | null>(null)
   const [productionOptionModal, setProductionOptionModal] = useState<ProductionOptionType | null>(null)
+  const [adminDataModal, setAdminDataModal] = useState(false)
+  const [adminDelete, setAdminDelete] = useState<AdminDeleteRequest | null>(null)
   const [mobileNav, setMobileNav] = useState(false)
 
   const refresh = async () => {
@@ -65,6 +75,9 @@ export default function App() {
     void refresh()
   }
   const afterSave = async (message: string) => { await refresh(); setToast(message) }
+  const requestAdminDelete = (title: string, description: string, execute: (password: string) => Promise<void>) => new Promise<boolean>((resolve) => {
+    setAdminDelete({ title, description, execute, resolve })
+  })
   const isHome = page === 'home'
   const isInventory = page === 'dashboard' || page === 'movements' || page === 'stocktake' || page === 'products'
   const productionEntryProductCodes = useMemo(() => productionOptions.filter((option) => option.option_type === 'product').map((option) => option.value).sort(), [productionOptions])
@@ -106,25 +119,27 @@ export default function App() {
         {isInventory && isDemoMode && <div className="demo-banner"><ShieldCheck /> 目前是可操作的示範模式，資料儲存在這台裝置。設定 Supabase 後會自動切換為雲端模式。</div>}
         {error && <div className="error-banner">{error}<button onClick={() => void refresh()}>重試</button></div>}
 
-        {page === 'home' && <HomePage navigate={nav} />}
+        {page === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} />}
         {page === 'production-entry' && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} goHome={() => nav('home')} addOption={setProductionOptionModal} onSave={async (input) => {
           await createProductionRecord(input); await afterSave('加工數量已登記')
         }} onDeleteLast={async (record) => {
-          if (!window.confirm(`確定刪除最後一筆「${record.product_code}・${record.machine}・${record.quantity}」的加工紀錄？`)) return
-          try { await deleteProductionRecord(record.id); await afterSave('最後一筆加工紀錄已刪除') } catch (e) { setError(messageFor(e)) }
+          const deleted = await requestAdminDelete('刪除最後一筆加工紀錄', `${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, (password) => deleteProductionRecord(record.id, password))
+          if (deleted) await afterSave('最後一筆加工紀錄已刪除')
         }} />}
         {page === 'production-query' && <ProductionQueryPage records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} goHome={() => nav('home')} onDeleteRecord={async (record) => {
-          if (!window.confirm(`確定刪除 ${formatDate(record.work_date)}「${record.product_code}・${record.machine}・${record.quantity}」這筆加工紀錄？`)) return false
-          try { await deleteProductionRecord(record.id); await afterSave('所選加工紀錄已刪除'); return true } catch (e) { setError(messageFor(e)); return false }
+          const deleted = await requestAdminDelete('刪除加工紀錄', `${formatDate(record.work_date)}・${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, (password) => deleteProductionRecord(record.id, password))
+          if (deleted) await afterSave('所選加工紀錄已刪除')
+          return deleted
         }} onDeleteProductRecords={async (productCode, count) => {
-          if (!window.confirm(`確定永久刪除產品編號「${productCode}」、管理清單中的產品編號，以及全部 ${count} 筆加工紀錄？此操作無法復原。`)) return false
-          try { await deleteProductionProductData(productCode); await afterSave(`${productCode} 的產品編號與全部加工紀錄已永久刪除`); return true } catch (e) { setError(messageFor(e)); return false }
+          const deleted = await requestAdminDelete('永久刪除產品加工資料', `將刪除產品編號「${productCode}」、管理清單選項與全部 ${count} 筆加工紀錄。`, (password) => deleteProductionProductData(productCode, password))
+          if (deleted) await afterSave(`${productCode} 的產品編號與全部加工紀錄已永久刪除`)
+          return deleted
         }} />}
         {page === 'dashboard' && <Dashboard products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} />}
         {page === 'movements' && <MovementsPage products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} onDelete={async (movement) => {
           const product = movement.product || products.find((item) => item.id === movement.product_id)
-          if (!window.confirm(`確定刪除 ${formatDate(movement.movement_date)} 的${movement.movement_type === 'in' ? '入庫' : '出庫'}紀錄「${product?.name || ''}」？庫存會自動重新計算。`)) return
-          try { await deleteMovement(movement.id); await afterSave('出入庫紀錄已刪除，庫存已重新計算') } catch (e) { setError(messageFor(e)) }
+          const deleted = await requestAdminDelete('刪除出入庫紀錄', `${formatDate(movement.movement_date)} 的${movement.movement_type === 'in' ? '入庫' : '出庫'}紀錄「${product?.name || ''}」。庫存會自動重新計算。`, (password) => deleteMovement(movement.id, password))
+          if (deleted) await afterSave('出入庫紀錄已刪除，庫存已重新計算')
         }} />}
         {page === 'stocktake' && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} onAdjust={async (product, actualQuantity, notes) => {
           if (actualQuantity === product.stock_quantity) return true
@@ -136,8 +151,8 @@ export default function App() {
           } catch (e) { setError(messageFor(e)); return false }
         }} />}
         {page === 'products' && <ProductsPage products={products} movements={movements} loading={loading} add={() => setProductModal('new')} edit={setProductModal} openStock={(type, productId) => setStockModal({ type, productId })} viewHistory={setPriceHistoryProduct} onDelete={async (p) => {
-          if (!window.confirm(`確定刪除 ${p.code}「${p.name}」及其全部出入庫紀錄？`)) return
-          try { await deleteProduct(p.id); await afterSave('商品已刪除') } catch (e) { setError(messageFor(e)) }
+          const deleted = await requestAdminDelete('刪除刀具資料', `將刪除 ${p.code}「${p.name}」及其全部出入庫紀錄。`, (password) => deleteProduct(p.id, password))
+          if (deleted) await afterSave('商品已刪除')
         }} />}
       </main>
 
@@ -152,7 +167,15 @@ export default function App() {
       {productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={(productionOptionModal === 'product' ? productionEntryProductCodes : productionMachines)} close={() => setProductionOptionModal(null)} save={async (value) => {
         await createProductionOption(productionOptionModal, value); await afterSave(productionOptionModal === 'product' ? '產品編號已新增' : '機台已新增')
       }} remove={async (value) => {
-        await deleteProductionOption(productionOptionModal, value); await afterSave(productionOptionModal === 'product' ? '產品編號已刪除' : '機台已刪除')
+        const label = productionOptionModal === 'product' ? '產品編號' : '機台'
+        const deleted = await requestAdminDelete(`刪除${label}`, `確定刪除${label}「${value}」？過去已登記的加工紀錄會保留。`, (password) => deleteProductionOption(productionOptionModal, value, password))
+        if (deleted) await afterSave(`${label}已刪除`)
+      }} />}
+      {adminDataModal && <AdminDataModal close={() => setAdminDataModal(false)} afterImport={async () => {
+        await refresh(); setToast('Excel 資料已完整匯入')
+      }} />}
+      {adminDelete && <AdminDeleteModal request={adminDelete} close={(result) => {
+        adminDelete.resolve(result); setAdminDelete(null)
       }} />}
       {toast && <div className="toast"><ShieldCheck />{toast}</div>}
     </div>
@@ -163,7 +186,7 @@ function NavItem({ active, icon, onClick, children }: { active: boolean; icon: R
   return <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>{icon}<span>{children}</span></button>
 }
 
-function HomePage({ navigate }: { navigate: (page: Page) => void }) {
+function HomePage({ navigate, openAdmin }: { navigate: (page: Page) => void; openAdmin: () => void }) {
   return <section className="page-content home-page">
     <div className="home-hero">
       <img
@@ -180,6 +203,7 @@ function HomePage({ navigate }: { navigate: (page: Page) => void }) {
       <FunctionCard icon={<ListPlus/>} title="加工數量登記" description="登記數量並自動計算加工時間" tone="pink" onClick={() => navigate('production-entry')}/>
       <FunctionCard icon={<Search/>} title="加工數量查詢" description="依產品編號查詢與匯出紀錄" tone="sunset" onClick={() => navigate('production-query')}/>
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
+      <FunctionCard icon={<FileSpreadsheet/>} title="資料備份／還原" description="匯出或整批匯入 Supabase Excel" tone="purple" onClick={openAdmin}/>
     </div>
   </section>
 }
@@ -235,13 +259,13 @@ function ProductionEntryPage({ records, productCodes, machines, loading, goHome,
       <div className="time-entry-panel">
         <div className="time-entry-head"><div><Clock3 /><span><strong>實際加工時間</strong><small>可直接輸入；需要相減時再開啟計算工具</small></span></div><button type="button" onClick={() => setShowTimeCalculator(true)}><Calculator />加工時間計算</button></div>
         <div className="duration-fields compact">
-          <label><span>實際工時（時）</span><input type="number" min="0" step="1" value={form.hours || ''} onChange={(e) => setForm({ ...form, hours: Math.max(0, Number(e.target.value)) })} aria-label="加工時數" /></label>
-          <label><span>實際工時（分）</span><input type="number" min="0" max="59" step="1" value={form.minutes || ''} onChange={(e) => setForm({ ...form, minutes: Math.max(0, Number(e.target.value)) })} aria-label="加工分鐘" /></label>
+          <label><span>實際工時（時）</span><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={form.hours || ''} onChange={(e) => setForm({ ...form, hours: Math.max(0, Number(e.target.value)) })} aria-label="加工時數" /></label>
+          <label><span>實際工時（分）</span><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="59" step="1" value={form.minutes || ''} onChange={(e) => setForm({ ...form, minutes: Math.max(0, Number(e.target.value)) })} aria-label="加工分鐘" /></label>
           <div><span>實際總時間</span><strong>{formatNumber(form.hours * 60 + form.minutes)} 分鐘</strong></div>
         </div>
       </div>
 
-      <div className="production-field-row"><label>數量</label><input type="number" min="1" step="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: Math.max(0, Number(e.target.value)) })} placeholder="輸入完成數量" required /></div>
+      <div className="production-field-row"><label>數量</label><input type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: Math.max(0, Number(e.target.value)) })} placeholder="輸入完成數量" required /></div>
       <div className="production-field-row note-row"><label>備註</label><textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="選填" /></div>
       {formError && <div className="form-error production-error">{formError}</div>}
       <button className="production-action save-action" disabled={saving} type="submit"><Save />{saving ? '儲存中…' : '送出登記'}</button>
@@ -369,9 +393,9 @@ function ProductionTimeCalculatorModal({ initialHours, initialMinutes, close, ap
   return <Modal title="加工時間計算" close={close} size="time-tool-modal">
     <p className="modal-intro">這裡計算的是工時長度相減，例如 11 小時 5 分減去 3 小時 10 分，結果是 7 小時 55 分。</p>
     <div className="duration-calculation modal-calculation">
-      <div className="duration-row"><strong>總工時</strong><label><input type="number" min="0" step="1" value={values.totalHours || ''} onChange={(e) => { setValues({ ...values, totalHours: Math.max(0, Number(e.target.value)) }); setResult(null) }} aria-label="總工時小時" /><span>時</span></label><label><input type="number" min="0" max="59" step="1" value={values.totalMinutes || ''} onChange={(e) => { setValues({ ...values, totalMinutes: Math.max(0, Number(e.target.value)) }); setResult(null) }} aria-label="總工時分鐘" /><span>分</span></label></div>
+      <div className="duration-row"><strong>總工時</strong><label><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={values.totalHours || ''} onChange={(e) => { setValues({ ...values, totalHours: Math.max(0, Number(e.target.value)) }); setResult(null) }} aria-label="總工時小時" /><span>時</span></label><label><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="59" step="1" value={values.totalMinutes || ''} onChange={(e) => { setValues({ ...values, totalMinutes: Math.max(0, Number(e.target.value)) }); setResult(null) }} aria-label="總工時分鐘" /><span>分</span></label></div>
       <div className="duration-operator">減去</div>
-      <div className="duration-row"><strong>扣除工時</strong><label><input type="number" min="0" step="1" value={values.deductHours || ''} onChange={(e) => { setValues({ ...values, deductHours: Math.max(0, Number(e.target.value)) }); setResult(null) }} aria-label="扣除工時小時" /><span>時</span></label><label><input type="number" min="0" max="59" step="1" value={values.deductMinutes || ''} onChange={(e) => { setValues({ ...values, deductMinutes: Math.max(0, Number(e.target.value)) }); setResult(null) }} aria-label="扣除工時分鐘" /><span>分</span></label></div>
+      <div className="duration-row"><strong>扣除工時</strong><label><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={values.deductHours || ''} onChange={(e) => { setValues({ ...values, deductHours: Math.max(0, Number(e.target.value)) }); setResult(null) }} aria-label="扣除工時小時" /><span>時</span></label><label><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="59" step="1" value={values.deductMinutes || ''} onChange={(e) => { setValues({ ...values, deductMinutes: Math.max(0, Number(e.target.value)) }); setResult(null) }} aria-label="扣除工時分鐘" /><span>分</span></label></div>
       <button className="button calculator-button" type="button" onClick={calculate}><Calculator />計算實際工時</button>
     </div>
     {error && <div className="form-error production-error modal-tool-error">{error}</div>}
@@ -398,7 +422,7 @@ function OrderForecastModal({ productCode, records, close }: { productCode: stri
   }, [records, orderQuantity])
   return <Modal title="訂單完工預估" close={close} size="large forecast-modal">
     <div className="forecast-modal-product"><span>產品編號</span><strong>{productCode}</strong></div>
-    <div className="forecast-head modal-forecast-head"><div><Calculator /><span><strong>依全部歷史資料估算</strong><small>輸入訂單總數量後自動計算</small></span></div><label><span>訂單總數量</span><input autoFocus type="number" min="1" step="1" value={orderQuantity || ''} onChange={(event) => setOrderQuantity(Math.max(0, Number(event.target.value)))} placeholder="輸入訂單數量" /></label></div>
+    <div className="forecast-head modal-forecast-head"><div><Calculator /><span><strong>依全部歷史資料估算</strong><small>輸入訂單總數量後自動計算</small></span></div><label><span>訂單總數量</span><input autoFocus type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={orderQuantity || ''} onChange={(event) => setOrderQuantity(Math.max(0, Number(event.target.value)))} placeholder="輸入訂單數量" /></label></div>
     {orderQuantity <= 0 ? <p className="forecast-placeholder">輸入訂單總數量後，會顯示剩餘數量、天數與預估完工日期</p> : !forecast.historyDays ? <p className="forecast-placeholder warning">此產品尚無歷史加工資料，暫時無法估算完工時間</p> : <div className="forecast-grid">
       <div><span>歷史完成量</span><strong>{formatNumber(forecast.completedQuantity)}</strong></div>
       <div><span>平均每日產量</span><strong>{formatNumber(Math.round(forecast.dailyAverage))}</strong></div>
@@ -425,7 +449,6 @@ function ProductionOptionModal({ type, values, close, save, remove }: { type: Pr
     finally { setSaving(false) }
   }
   const removeValue = async (target: string) => {
-    if (!window.confirm(`確定刪除${label}「${target}」？過去已登記的加工紀錄會保留。`)) return
     setError(''); setRemoving(target)
     try { await remove(target) } catch (removeError) { setError(messageFor(removeError)) }
     finally { setRemoving('') }
@@ -602,7 +625,7 @@ function StocktakePage({ products, loading, add, onAdjust }: { products: Product
           <td><span className="tag neutral">{product.category}</span></td>
           <td>{product.unit_price > 0 ? <span className="known-price">{formatMoney(product.unit_price)}</span> : <span className="unknown-price">未設定價格</span>}</td>
           <td className="number quantity">{formatNumber(product.stock_quantity)} <small>{product.unit}</small></td>
-          <td><label className={`stocktake-quantity ${invalid ? 'invalid' : ''}`}><input type="number" min="0" step="1" value={actualFor(product)} onFocus={(event) => event.currentTarget.select()} onChange={(event) => { setDrafts((current) => ({ ...current, [product.id]: event.target.value })); setPageError('') }} aria-label={`${product.name} 實際盤點數量`}/><span>{product.unit}</span></label></td>
+          <td><label className={`stocktake-quantity ${invalid ? 'invalid' : ''}`}><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={actualFor(product)} onFocus={(event) => event.currentTarget.select()} onChange={(event) => { setDrafts((current) => ({ ...current, [product.id]: event.target.value })); setPageError('') }} aria-label={`${product.name} 實際盤點數量`}/><span>{product.unit}</span></label></td>
           <td className={`number stocktake-difference ${difference === null ? 'invalid' : difference > 0 ? 'positive' : difference < 0 ? 'negative' : ''}`}>{difference === null ? '格式錯誤' : difference === 0 ? '一致' : `${difference > 0 ? '+' : ''}${formatNumber(difference)}`}</td>
           <td><button className="stocktake-save" onClick={() => void save(product)} disabled={savingId !== '' || invalid || difference === 0}><Save />{savingId === product.id ? '儲存中' : '更新數量'}</button></td>
           <td><input className="stocktake-note" value={notes[product.id] || ''} onChange={(event) => setNotes((current) => ({ ...current, [product.id]: event.target.value }))} placeholder="選填，例如盤點位置" /></td>
@@ -616,7 +639,9 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, view
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('全部分類')
   const categories = ['全部分類', ...PRODUCT_CATEGORIES]
-  const filtered = products.filter((p) => `${p.code} ${p.name} ${p.brand} ${p.supplier}`.toLowerCase().includes(query.toLowerCase()) && (category === '全部分類' || p.category === category))
+  const filtered = products
+    .filter((p) => `${p.code} ${p.name} ${p.brand} ${p.supplier}`.toLowerCase().includes(query.toLowerCase()) && (category === '全部分類' || p.category === category))
+    .sort((a, b) => `${b.purchased_at || '0000-00-00'}-${b.updated_at}-${b.code}`.localeCompare(`${a.purchased_at || '0000-00-00'}-${a.updated_at}-${a.code}`))
   return <section className="page-content">
     <PageTitle eyebrow="TOOLS" title="刀具資料" actions={<button className="button primary" onClick={add}><Plus />新增刀具</button>} />
     <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="搜尋編號、品名、廠牌、供應商"/><label className="select-wrap"><select value={category} onChange={(e) => setCategory(e.target.value)}>{categories.map((c) => <option key={c}>{c}</option>)}</select><ChevronDown /></label></div>
@@ -664,8 +689,8 @@ function StockModal({ type, initialProductId, products, close, switchType, save 
       <div className="segmented"><button type="button" className={type === 'in' ? 'selected-in' : ''} onClick={() => switchType('in')}>入庫</button><button type="button" className={type === 'out' ? 'selected-out' : ''} onClick={() => switchType('out')}>出庫</button></div>
       <Field label="刀具" wide><ProductPicker products={products} value={productId} onChange={setProductId}/></Field>
       {selected && <div className="stock-hint">目前庫存 <strong>{formatNumber(selected.stock_quantity)} {selected.unit}</strong></div>}
-      <div className="form-grid"><Field label="數量"><input required min="1" step="1" type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={type === 'in' ? '購入日期' : '出庫日期'}><input required type="date" value={date} onChange={(e) => setDate(e.target.value)}/></Field>
-      {type === 'in' && <><Field label="單價"><input required min="0" step="0.01" type="number" value={price} onChange={(e) => setPrice(e.target.value)}/></Field><Field label="供應商"><EditableCombo list="stock-supplier-options" value={supplier} onChange={setSupplier} placeholder="選擇既有供應商或輸入新資料"/></Field></>}</div>
+      <div className="form-grid"><Field label="數量"><input required min="1" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={type === 'in' ? '購入日期' : '出庫日期'}><input required type="date" value={date} onChange={(e) => setDate(e.target.value)}/></Field>
+      {type === 'in' && <><Field label="單價"><input required min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={price} onChange={(e) => setPrice(e.target.value)}/></Field><Field label="供應商"><EditableCombo list="stock-supplier-options" value={supplier} onChange={setSupplier} placeholder="選擇既有供應商或輸入新資料"/></Field></>}</div>
       {type === 'in' && <OptionsList id="stock-supplier-options" values={supplierOptions}/>} 
       {type === 'in' && <TotalPreview quantity={Number(quantity || 0)} unitPrice={Number(price || 0)} total={totalPrice}/>} 
       <Field label="備註" wide><textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={type === 'in' ? '例如：發票號碼' : '例如：機台編號、工單號碼'}/></Field>
@@ -753,7 +778,7 @@ function ProductModal({ product, products, close, save }: { product: Product | n
       <OptionsList id="product-brand-options" values={brandOptions}/>
       <OptionsList id="product-supplier-options" values={supplierOptions}/>
       <OptionsList id="product-unit-options" values={unitOptions}/>
-      {!product && <fieldset className="initial-stock"><legend>目前庫存（可只填數量，單價找不到時可留空）</legend><div className="form-grid three"><Field label="數量"><input min="0" step="1" type="number" value={data.initial_quantity || ''} onChange={(e) => set('initial_quantity', Number(e.target.value))}/></Field><Field label="單價"><input min="0" step="0.01" type="number" value={data.initial_unit_price || ''} onChange={(e) => set('initial_unit_price', Number(e.target.value))} placeholder="沒有價格可留空"/></Field><Field label="購入日期"><input type="date" value={data.purchased_at} onChange={(e) => set('purchased_at', e.target.value)}/></Field></div><TotalPreview quantity={data.initial_quantity} unitPrice={data.initial_unit_price} total={initialTotalPrice}/></fieldset>}
+      {!product && <fieldset className="initial-stock"><legend>目前庫存（可只填數量，單價找不到時可留空）</legend><div className="form-grid three"><Field label="數量"><input min="0" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_quantity || ''} onChange={(e) => set('initial_quantity', Number(e.target.value))}/></Field><Field label="單價"><input min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_unit_price || ''} onChange={(e) => set('initial_unit_price', Number(e.target.value))} placeholder="沒有價格可留空"/></Field><Field label="購入日期"><input type="date" value={data.purchased_at} onChange={(e) => set('purchased_at', e.target.value)}/></Field></div><TotalPreview quantity={data.initial_quantity} unitPrice={data.initial_unit_price} total={initialTotalPrice}/></fieldset>}
       <Field label="備註" wide><textarea value={data.notes} onChange={(e) => set('notes', e.target.value)} placeholder="材質、適用工件等"/></Field>
       {formError && <p className="form-error">{formError}</p>}
       <button disabled={busy} className="button modal-submit primary">{busy ? '儲存中…' : '儲存'}</button>
@@ -788,6 +813,101 @@ function PriceHistoryModal({ product, movements, close }: { product: Product; mo
         return <tr key={entry.id}><td className="nowrap">{formatDate(entry.movement_date)}</td><td className="number history-price">{formatMoney(entry.unit_price || 0)}{difference !== null && difference !== 0 && <small className={difference > 0 ? 'price-up' : 'price-down'}>{difference > 0 ? '▲' : '▼'}{formatMoney(Math.abs(difference))}</small>}</td><td className="number muted">{formatNumber(entry.quantity)}</td><td>{entry.supplier || product.supplier || '—'}</td></tr>
       })}
     </tbody></table></div>
+  </Modal>
+}
+
+function AdminDeleteModal({ request, close }: { request: AdminDeleteRequest; close: (result: boolean) => void }) {
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const submit = async (event: FormEvent) => {
+    event.preventDefault(); setError('')
+    if (!/^\d{8}$/.test(password)) { setError('請輸入 8 位數字管理員密碼'); return }
+    setDeleting(true)
+    try { await request.execute(password); close(true) }
+    catch (submitError) { setError(messageFor(submitError)) }
+    finally { setDeleting(false) }
+  }
+  return <Modal title={request.title} close={() => !deleting && close(false)}>
+    <div className="admin-delete-warning"><Trash2/><div><strong>此操作無法復原</strong><span>{request.description}</span></div></div>
+    <form onSubmit={submit}>
+      <Field label="管理員密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder="輸入 8 位數字密碼" disabled={deleting}/></Field>
+      {error && <div className="form-error">{error}</div>}
+      <button className="button outbound admin-action" type="submit" disabled={deleting || password.length !== 8}><Trash2/>{deleting ? '正在驗證並刪除…' : '驗證密碼並刪除'}</button>
+    </form>
+  </Modal>
+}
+
+function AdminDataModal({ close, afterImport }: { close: () => void; afterImport: () => Promise<void> }) {
+  const [password, setPassword] = useState('')
+  const [preview, setPreview] = useState<WorkbookPreview | null>(null)
+  const [fileName, setFileName] = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const [busy, setBusy] = useState<'export' | 'parse' | 'import' | null>(null)
+  const [message, setMessage] = useState('')
+  const [success, setSuccess] = useState(false)
+
+  const exportExcel = async () => {
+    setMessage(''); setSuccess(false)
+    if (!password) { setMessage('請先輸入管理員密碼'); return }
+    setBusy('export')
+    try {
+      const result = await exportAllAdminData(password)
+      const { downloadAdminWorkbook } = await import('./lib/adminDataWorkbook')
+      downloadAdminWorkbook(result.data, result.exported_at)
+      setSuccess(true); setMessage('完整備份已下載，請保留一份未修改的原始檔')
+    } catch (error) { setMessage(messageFor(error)) }
+    finally { setBusy(null) }
+  }
+
+  const selectFile = async (file?: File) => {
+    setPreview(null); setFileName(file?.name || ''); setConfirmation(''); setMessage(''); setSuccess(false)
+    if (!file) return
+    setBusy('parse')
+    try {
+      const { parseAdminWorkbook } = await import('./lib/adminDataWorkbook')
+      const parsed = await parseAdminWorkbook(file)
+      setPreview(parsed); setSuccess(true); setMessage('Excel 格式檢查完成，請確認筆數後再匯入')
+    } catch (error) { setMessage(messageFor(error)) }
+    finally { setBusy(null) }
+  }
+
+  const importExcel = async () => {
+    setMessage(''); setSuccess(false)
+    if (!password) { setMessage('請輸入管理員密碼'); return }
+    if (!preview) { setMessage('請先選擇並檢查 Excel 檔案'); return }
+    if (confirmation !== '覆蓋資料') { setMessage('請輸入「覆蓋資料」確認執行'); return }
+    setBusy('import')
+    try {
+      const counts = await importAllAdminData(password, preview.payload)
+      setSuccess(true)
+      setMessage(`匯入完成：刀具 ${counts?.products || 0}、出入庫 ${counts?.movements || 0}、加工紀錄 ${counts?.production_records || 0} 筆`)
+      await afterImport()
+      setPreview(null); setFileName(''); setConfirmation('')
+    } catch (error) { setMessage(messageFor(error)) }
+    finally { setBusy(null) }
+  }
+
+  return <Modal title="資料備份／還原" close={() => !busy && close()} size="admin-data">
+    <div className="admin-security-note"><LockKeyhole/><div><strong>管理員限定功能</strong><span>密碼由 Supabase 安全驗證，不會儲存在瀏覽器或網站程式中。</span></div></div>
+    <Field label="管理員密碼"><input type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder="輸入 8 位數字密碼" disabled={Boolean(busy)}/></Field>
+
+    <section className="admin-data-section">
+      <div className="admin-data-heading"><Download/><div><strong>1. 匯出完整備份</strong><span>包含刀具、出入庫、加工數量與管理選項</span></div></div>
+      <button className="button primary admin-action" type="button" onClick={() => void exportExcel()} disabled={Boolean(busy) || isDemoMode}>{busy === 'export' ? '正在製作 Excel…' : '下載完整 Excel'}</button>
+    </section>
+
+    <section className="admin-data-section danger-zone">
+      <div className="admin-data-heading"><FileUp/><div><strong>2. 整理後匯入</strong><span>會完整取代目前的雲端資料，請先下載並保留備份</span></div></div>
+      <label className="admin-file-picker"><input type="file" accept=".xlsx,.xls" disabled={Boolean(busy)} onChange={(event) => void selectFile(event.target.files?.[0])}/><FileSpreadsheet/><span>{busy === 'parse' ? '正在檢查 Excel…' : fileName || '選擇系統匯出的 Excel'}</span></label>
+      {preview && <div className="admin-preview">
+        <span><b>{preview.summary.products}</b> 刀具</span><span><b>{preview.summary.movements}</b> 出入庫</span><span><b>{preview.summary.productionRecords}</b> 加工紀錄</span><span><b>{preview.summary.options}</b> 管理選項</span>
+      </div>}
+      {preview && <Field label="輸入「覆蓋資料」確認"><input value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="覆蓋資料" disabled={Boolean(busy)}/></Field>}
+      <button className="button outbound admin-action" type="button" onClick={() => void importExcel()} disabled={Boolean(busy) || !preview || isDemoMode}>{busy === 'import' ? '正在安全匯入…' : '覆蓋並匯入雲端資料'}</button>
+    </section>
+    {isDemoMode && <p className="form-message">目前是示範模式，連接 Supabase 後才能使用完整備份。</p>}
+    {message && <p className={success ? 'admin-success' : 'form-error'}>{message}</p>}
   </Modal>
 }
 
