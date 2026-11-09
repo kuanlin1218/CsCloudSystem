@@ -822,6 +822,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「刀具資料與出入庫歷史」的「資料表格」的「整張表格」相關格式：本行可修改文字或圖示顏色、white-space。 */
 .data-table .muted { color: #89949c; }.data-table .nowrap { white-space: nowrap; }
 
+/* 「刀具資料」的「供應商與購入日期內容」：覆蓋共用淡色文字，改成與其他資料相同的白色。 */
+.product-table td.muted { color: #edf4f7; }
+
 /* 「刀具資料與出入庫歷史」的「資料表格」的「整張表格」相關格式：本行可修改文字或圖示顏色。 */
 .data-table small { color: #94a2aa; }
 
