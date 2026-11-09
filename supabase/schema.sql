@@ -633,3 +633,27 @@ comment on function public.delete_production_product_data is '在同一交易內
 comment on column public.stock_movements.request_key is '由前端每次送出時產生，重試相同請求不會重複扣加庫存。';
 comment on table public.production_records is '免登入共用的加工數量、機台與加工時間紀錄。';
 comment on table public.production_options is '加工數量登記使用的產品編號與機台下拉選單資料。';
+
+-- 啟用跨手機與電腦的 Supabase Realtime。重複執行不會重複加入資料表。
+do $$
+declare
+  realtime_table text;
+begin
+  if not exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    execute 'create publication supabase_realtime';
+  end if;
+
+  foreach realtime_table in array array['products', 'stock_movements', 'production_records', 'production_options']
+  loop
+    if not exists (
+      select 1
+      from pg_publication_tables
+      where pubname = 'supabase_realtime'
+        and schemaname = 'public'
+        and tablename = realtime_table
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', realtime_table);
+    end if;
+  end loop;
+end;
+$$;

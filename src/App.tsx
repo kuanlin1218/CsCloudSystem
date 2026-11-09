@@ -4,7 +4,7 @@ import {
   Calculator, ChevronLeft, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
   FileSpreadsheet, FileUp, ListPlus, LockKeyhole, Menu, Pencil, Plus, Save, Search, ShieldCheck, Trash2, Triangle, Wrench, X,
 } from 'lucide-react'
-import { isDemoMode } from './lib/supabase'
+import { isDemoMode, supabase } from './lib/supabase'
 import { composeProductName, formatDate, formatMoney, formatNumber, today } from './lib/format'
 import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
@@ -55,19 +55,44 @@ export default function App() {
   const [adminDataModal, setAdminDataModal] = useState(false)
   const [adminDelete, setAdminDelete] = useState<AdminDeleteRequest | null>(null)
   const [mobileNav, setMobileNav] = useState(false)
+  const [realtimeConnected, setRealtimeConnected] = useState(false)
 
-  const refresh = async () => {
-    setLoading(true); setError('')
+  const refresh = async (showLoading = true) => {
+    if (showLoading) setLoading(true)
+    setError('')
     try {
       const [data, productionData, optionData] = await Promise.all([loadInventory(), loadProductionRecords(), loadProductionOptions()])
       setProducts(data.products); setMovements(data.movements)
       setProductionRecords(productionData)
       setProductionOptions(optionData)
     } catch (e) { setError(messageFor(e)) }
-    finally { setLoading(false) }
+    finally { if (showLoading) setLoading(false) }
   }
 
   useEffect(() => { void refresh() }, [])
+  useEffect(() => {
+    const client = supabase
+    if (!client) return
+    let refreshTimer: number | undefined
+    const queueRealtimeRefresh = () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer)
+      refreshTimer = window.setTimeout(() => void refresh(false), 180)
+    }
+    const realtimeChannel = client
+      .channel('cnc-cloud-data-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, queueRealtimeRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_movements' }, queueRealtimeRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'production_records' }, queueRealtimeRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'production_options' }, queueRealtimeRefresh)
+      .subscribe((status) => {
+        setRealtimeConnected(status === 'SUBSCRIBED')
+        if (status === 'SUBSCRIBED') queueRealtimeRefresh()
+      })
+    return () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer)
+      void client.removeChannel(realtimeChannel)
+    }
+  }, [])
   useEffect(() => {
     if (window.location.hash !== `#${pageFromLocation()}` || !window.location.hash) window.history.replaceState({ page: pageFromLocation() }, '', pageUrl(pageFromLocation()))
     const followBrowserHistory = () => {
@@ -100,7 +125,7 @@ export default function App() {
     setMobileNav(false)
     void refresh()
   }
-  const afterSave = async (message: string) => { await refresh(); setToast(message) }
+  const afterSave = async (message: string) => { await refresh(false); setToast(message) }
   const requestAdminDelete = (title: string, description: string, execute: (password: string) => Promise<void>) => new Promise<boolean>((resolve) => {
     setAdminDelete({ title, description, execute, resolve })
   })
@@ -129,7 +154,7 @@ export default function App() {
           <NavItem active={page === 'products'} icon={<Boxes />} onClick={() => nav('products')}>刀具資料</NavItem>
         </nav>
         <div className="sidebar-foot">
-          <span className="status-line">{isDemoMode ? <ShieldCheck /> : <Database />} {isDemoMode ? '示範模式' : '雲端資料'}</span>
+          <span className="status-line">{isDemoMode ? <ShieldCheck /> : <Database />} {isDemoMode ? '示範模式' : realtimeConnected ? '雲端即時同步' : '雲端連線中'}</span>
           <span className="status-line"><Wrench /> 免登入共用模式</span>
         </div>
       </aside>}
