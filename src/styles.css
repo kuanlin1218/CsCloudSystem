@@ -2468,3 +2468,135 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     font-size: 18px !important;
   }
 }
+
+
+/* ========================================================================== */
+/* 手機版所有資料卡的最終統一樣式                                             */
+/* 刀具資料、出入庫、庫存盤點及加工查詢共用相同外框、留白、分隔線與字級。     */
+/* ========================================================================== */
+@media (max-width: 620px) {
+
+  /* 「手機版－刀具資料、出入庫與庫存盤點」的「單筆資料卡外框」相關格式。 */
+  .data-table.product-table tbody tr,
+  .data-table.movement-table tbody tr,
+  .data-table.stocktake-table tbody tr,
+  .production-table.compact tbody tr,
+  .production-table:not(.compact) tbody tr {
+    padding: 6px 8px;
+    border: 1px solid #2c363b;
+    border-radius: 7px;
+    background: #11171a;
+  }
+
+  /* 「手機版－所有資料卡」的「內容欄位」相關格式：統一內距、分隔線、字體及顏色。 */
+  .data-table.product-table tbody td,
+  .data-table.movement-table tbody td,
+  .data-table.stocktake-table tbody td,
+  .production-table.compact tbody td,
+  .production-table:not(.compact) tbody td {
+    min-width: 0;
+    min-height: 0;
+    padding: 6px 7px;
+    border-bottom: 1px solid #252e33;
+    color: #edf4f7;
+    font-size: 18px;
+    line-height: 1.35;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* 「手機版－所有資料卡」的「欄位名稱」相關格式：統一灰色標題、字級及間距。 */
+  .data-table.product-table tbody td::before,
+  .data-table.movement-table tbody td::before,
+  .data-table.stocktake-table tbody td::before,
+  .production-table.compact tbody td::before,
+  .production-table:not(.compact) tbody td::before {
+    display: inline;
+    margin-right: 5px;
+    color: #82929a;
+    font: 750 18px/1.35 system-ui, sans-serif;
+  }
+
+  /* 「手機版－所有資料卡」的「編號、品名、數量、單價與標籤」相關格式：統一為刀具資料字級。 */
+  .data-table.product-table .code,
+  .data-table.movement-table .code,
+  .data-table.stocktake-table .code,
+  .data-table.product-table .product-name,
+  .data-table.movement-table .product-name,
+  .data-table.stocktake-table .product-name,
+  .data-table.product-table .quantity,
+  .data-table.movement-table .quantity,
+  .data-table.stocktake-table .quantity,
+  .data-table.product-table small,
+  .data-table.movement-table small,
+  .data-table.stocktake-table small,
+  .data-table.product-table .tag,
+  .data-table.movement-table .tag,
+  .data-table.stocktake-table .tag,
+  .stocktake-table .known-price,
+  .stocktake-table .unknown-price {
+    font-size: 18px !important;
+  }
+
+  /* 「手機版－出入庫」的「供應商、金額、日期與備註內容」相關格式：內容維持白色。 */
+  .movement-table td.muted,
+  .movement-table .note-cell {
+    color: #edf4f7;
+  }
+
+  /* 「手機版－加工數量查詢」的「查詢最後一筆第一行」：日期與產品機台比照查詢全部並排。 */
+  .production-table.compact tbody td:nth-child(1) {
+    grid-column: 1 / 2;
+    grid-row: 1;
+  }
+  .production-table.compact tbody td:nth-child(2) {
+    grid-column: 2 / 3;
+    grid-row: 1;
+    padding-right: 7px;
+  }
+
+  /* 「手機版－加工數量查詢」的「查詢最後一筆第二行」：數量獨立使用整行。 */
+  .production-table.compact tbody td:nth-child(3) {
+    grid-column: 1 / 3;
+    grid-row: 2;
+    padding-right: 7px;
+  }
+
+  /* 「手機版－加工數量查詢」的「查詢最後一筆第三行」：刪除按鈕獨立使用整行。 */
+  .production-table.compact tbody td:nth-child(4) {
+    grid-column: 1 / 3;
+    grid-row: 3;
+    border-bottom: 0;
+  }
+
+  /* 「手機版－加工數量查詢」的「總數量統計卡」相關格式：取代舊黃色表格頁尾。 */
+  .latest-production-total {
+    grid-template-columns: 1fr;
+    margin-top: 8px;
+    padding: 0;
+    border: 1px solid #2c363b;
+    border-radius: 7px;
+    background: #11171a;
+  }
+  .latest-production-total > div {
+    min-height: 64px;
+    padding: 8px 14px;
+    border-right: 0;
+  }
+  .latest-production-total > div:last-child { grid-column: auto; }
+  .latest-production-total span { color: #82929a; font-size: 18px; }
+  .latest-production-total strong { margin-top: 3px; color: #edf4f7; font-size: 20px; }
+
+  /* 「手機版－庫存盤點」的「數量、備註與更新按鈕」相關格式：字級與卡片內容一致。 */
+  .stocktake-table .stocktake-quantity input,
+  .stocktake-table .stocktake-quantity span,
+  .stocktake-table .stocktake-note,
+  .stocktake-table .stocktake-save {
+    font-size: 18px !important;
+  }
+
+  /* 「手機版－庫存盤點」的「備註與更新按鈕分隔線」：依畫面排列順序讓最下方按鈕不顯示底線。 */
+  .stocktake-table tbody td:nth-child(9) { border-bottom: 1px solid #252e33; }
+  .stocktake-table tbody td:nth-child(8) { border-bottom: 0; }
+}
