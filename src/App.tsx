@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown,
   Calculator, ChevronLeft, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
@@ -280,8 +280,8 @@ function ProductionEntryPage({ records, productCodes, machines, loading, goHome,
       <div className="time-entry-panel">
         <div className="time-entry-head"><div><Clock3 /><span><strong>實際加工時間</strong><small>可直接輸入；需要相減時再開啟計算工具</small></span></div><button type="button" onClick={() => setShowTimeCalculator(true)}><Calculator />加工時間計算</button></div>
         <div className="duration-fields compact">
-          <label><span>實際工時（時）</span><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={form.hours || ''} onChange={(e) => setForm({ ...form, hours: Math.max(0, Number(e.target.value)) })} aria-label="加工時數" /></label>
-          <label><span>實際工時（分）</span><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="59" step="1" value={form.minutes || ''} onChange={(e) => setForm({ ...form, minutes: Math.max(0, Number(e.target.value)) })} aria-label="加工分鐘" /></label>
+          <label className="actual-hours-field"><span>實際工時（時）</span><input className="actual-hours-input" type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={form.hours || ''} onChange={(e) => setForm({ ...form, hours: Math.max(0, Number(e.target.value)) })} aria-label="加工時數" /></label>
+          <label className="actual-minutes-field"><span>實際工時（分）</span><input className="actual-minutes-input" type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="59" step="1" value={form.minutes || ''} onChange={(e) => setForm({ ...form, minutes: Math.max(0, Number(e.target.value)) })} aria-label="加工分鐘" /></label>
           <div><span>實際總時間</span><strong>{formatNumber(form.hours * 60 + form.minutes)} 分鐘</strong></div>
         </div>
       </div>
@@ -443,7 +443,7 @@ function OrderForecastModal({ productCode, records, close }: { productCode: stri
   }, [records, orderQuantity])
   return <Modal title="訂單完工預估" close={close} size="large forecast-modal">
     <div className="forecast-modal-product"><span>產品編號</span><strong>{productCode}</strong></div>
-    <div className="forecast-head modal-forecast-head"><div><Calculator /><span><strong>依全部歷史資料估算</strong><small>輸入訂單總數量後自動計算</small></span></div><label><span>訂單總數量</span><input autoFocus type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={orderQuantity || ''} onChange={(event) => setOrderQuantity(Math.max(0, Number(event.target.value)))} placeholder="輸入訂單數量" /></label></div>
+    <div className="forecast-head modal-forecast-head"><div><Calculator /><span><strong>依全部歷史資料估算</strong><small>輸入訂單總數量後自動計算</small></span></div><label><span>訂單總數量</span><input className="order-quantity-input" autoFocus type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={orderQuantity || ''} onChange={(event) => setOrderQuantity(Math.max(0, Number(event.target.value)))} placeholder="輸入訂單數量" /></label></div>
     {orderQuantity <= 0 ? <p className="forecast-placeholder">輸入訂單總數量後，會顯示剩餘數量、天數與預估完工日期</p> : !forecast.historyDays ? <p className="forecast-placeholder warning">此產品尚無歷史加工資料，暫時無法估算完工時間</p> : <div className="forecast-grid">
       <div><span>歷史完成量</span><strong>{formatNumber(forecast.completedQuantity)}</strong></div>
       <div><span>平均每日產量</span><strong>{formatNumber(Math.round(forecast.dailyAverage))}</strong></div>
@@ -725,14 +725,15 @@ function ProductPicker({ products, value, onChange }: { products: Product[]; val
   const display = (product: Product) => `${product.code}｜${product.name}`
   const [query, setQuery] = useState(selected ? display(selected) : '')
   const [open, setOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   useEffect(() => { const product = products.find((item) => item.id === value); if (product) setQuery(display(product)) }, [value, products])
   const normalized = query.trim().toLowerCase()
   const filtered = products.filter((product) => `${product.code} ${product.name} ${product.brand} ${product.supplier} ${product.category}`.toLowerCase().includes(normalized)).slice(0, 10)
-  const choose = (product: Product) => { onChange(product.id); setQuery(display(product)); setOpen(false) }
+  const choose = (product: Product) => { onChange(product.id); setQuery(display(product)); setOpen(false); inputRef.current?.blur() }
   return <div className="product-picker" onBlur={() => window.setTimeout(() => setOpen(false), 120)}>
-    <div className="product-picker-input"><Search/><input required role="combobox" aria-expanded={open} aria-controls="product-picker-options" value={query} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onChange={(event) => { setQuery(event.target.value); onChange(''); setOpen(true) }} placeholder="輸入編號、品名、廠牌或供應商搜尋"/><ChevronDown/></div>
+    <div className="product-picker-input"><Search/><input ref={inputRef} required role="combobox" aria-expanded={open} aria-controls="product-picker-options" value={query} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onChange={(event) => { setQuery(event.target.value); onChange(''); setOpen(true) }} placeholder="輸入編號、品名、廠牌或供應商搜尋"/><ChevronDown/></div>
     {open && <div className="product-picker-menu" id="product-picker-options" role="listbox">
-      {filtered.length === 0 ? <div className="product-picker-empty">找不到符合的刀具</div> : filtered.map((product) => <button type="button" role="option" aria-selected={product.id === value} key={product.id} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(product)}><span><b>{product.code}</b>{product.name}</span><small>庫存 {formatNumber(product.stock_quantity)} {product.unit}</small></button>)}
+      {filtered.length === 0 ? <div className="product-picker-empty">找不到符合的刀具</div> : filtered.map((product) => <button type="button" role="option" aria-selected={product.id === value} key={product.id} onPointerDown={(event) => { event.preventDefault(); choose(product) }} onClick={() => choose(product)}><span><b>{product.code}</b>{product.name}</span><small>庫存 {formatNumber(product.stock_quantity)} {product.unit}</small></button>)}
     </div>}
   </div>
 }
@@ -777,7 +778,7 @@ function ProductModal({ product, products, close, save }: { product: Product | n
     <form onSubmit={submit}>
       <div className="form-grid">
         <Field label="編號"><input disabled value={product?.code || '儲存後自動產生'} /></Field>
-        <Field label="分類 *"><select autoFocus required value={data.category} onChange={(e) => changeCategory(e.target.value as ProductCategory)}>{PRODUCT_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
+        <Field label="分類 *"><select required value={data.category} onChange={(e) => { changeCategory(e.target.value as ProductCategory); e.currentTarget.blur() }}>{PRODUCT_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
       </div>
       <Field label="品名（自動組合）" wide><input className="composed-name" disabled value={name || (data.category === '刀片' ? '規格-尺寸-斷屑槽-材質' : data.category === '鑽銑刀' ? '規格-尺寸-材質' : '規格')} /></Field>
       <div className="form-grid dynamic-fields">
@@ -801,13 +802,14 @@ function ProductModal({ product, products, close, save }: { product: Product | n
 
 function EditableCombo({ options, value, onChange, placeholder, required = false }: { options: string[]; value: string; onChange: (value: string) => void; placeholder: string; required?: boolean }) {
   const [open, setOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const normalized = value.trim().toLocaleLowerCase('zh-Hant')
   const filtered = options.filter((option) => !normalized || option.toLocaleLowerCase('zh-Hant').includes(normalized)).slice(0, 20)
-  const choose = (option: string) => { onChange(option); setOpen(false) }
+  const choose = (option: string) => { onChange(option); setOpen(false); inputRef.current?.blur() }
   return <span className="editable-combo" onBlur={() => window.setTimeout(() => setOpen(false), 120)}>
-    <input autoComplete="off" required={required} role="combobox" aria-expanded={open} value={value} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onChange={(event) => { onChange(event.target.value); setOpen(true) }} placeholder={placeholder}/><ChevronDown aria-hidden="true"/>
+    <input ref={inputRef} autoComplete="off" required={required} role="combobox" aria-expanded={open} value={value} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onChange={(event) => { onChange(event.target.value); setOpen(true) }} placeholder={placeholder}/><ChevronDown aria-hidden="true"/>
     {open && <span className="product-picker-menu editable-combo-menu" role="listbox">
-      {filtered.length === 0 ? <span className="product-picker-empty">可直接輸入新資料</span> : filtered.map((option) => <button type="button" role="option" aria-selected={option === value} key={option} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(option)}><span>{option}</span></button>)}
+      {filtered.length === 0 ? <span className="product-picker-empty">可直接輸入新資料</span> : filtered.map((option) => <button type="button" role="option" aria-selected={option === value} key={option} onPointerDown={(event) => { event.preventDefault(); choose(option) }} onClick={() => choose(option)}><span>{option}</span></button>)}
     </span>}
   </span>
 }
