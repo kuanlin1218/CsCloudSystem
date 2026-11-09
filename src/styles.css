@@ -1467,6 +1467,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版」的「庫存管理系統內容頁」的「右上方新增或操作按鈕」字體大小。 */
   .page-title:has(.button.primary) .title-actions .button { font-size: 14px; }
 
+  /* 「手機版」的「庫存總覽與出入庫頁面」的「右上方入庫與出庫按鈕」文字大小與寬度；這裡可調整按鈕文字大小。 */
+  .title-actions .button.inbound, .title-actions .button.outbound { min-width: 64px; padding: 0 10px; gap: 5px; font-size: 14px; white-space: nowrap; }
+
   /* ---------- 系統首頁 ---------- */
 
   /* 「手機版」的「系統首頁」的「CHYUAN SHEU CNC CLOUD 英文標題」字體大小。 */
