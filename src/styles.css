@@ -1252,6 +1252,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「手機版」的「螢幕寬度 620px 以下」的「響應式版面」相關格式。 */
 @media (max-width: 620px) {
 
+  /* 「手機版」的「整個網站－所有可輸入欄位」的「點擊後避免瀏覽器自動放大」相關格式：字體不可小於 16px；touch-action 可避免快速點擊造成額外縮放。 */
+  input, select, textarea { font-size: 16px; touch-action: manipulation; }
+
   /* 「手機版」的「整個網站－頁面頂端」的「示範模式提示」相關格式：本行可修改垂直對齊、水平對齊、字體大小、內距。 */
   .demo-banner { align-items: flex-start; justify-content: flex-start; font-size: 12px; padding: 9px 14px; }
 
@@ -1310,10 +1313,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .production-field-row > input, .production-field-row > textarea { padding-inline: 10px; font-size: 16px; }
 
   /* 「手機版」的「加工數量登記與加工數量查詢－產品編號與機台」的「下拉選單」相關格式：本行可修改左右內距、字體大小、文字對齊、text-align-last、background-position。 */
-  .production-field-row > select { padding-inline: 10px 30px; font-size: 15px; text-align: left; text-align-last: left; background-position: calc(100% - 16px) 51%, calc(100% - 10px) 51%; }
+  .production-field-row > select { padding-inline: 10px 30px; font-size: 16px; text-align: left; text-align-last: left; background-position: calc(100% - 16px) 51%, calc(100% - 10px) 51%; }
 
   /* 「手機版」的「加工數量登記與加工數量查詢－可輸入選單」的「輸入框」相關格式：本行可修改最小高度、左側內距、右側內距、文字對齊、字體大小。 */
-  .production-field-row .editable-combo input { min-height: 52px; padding-left: 10px; padding-right: 34px; text-align: left; font-size: 15px; }
+  .production-field-row .editable-combo input { min-height: 52px; padding-left: 10px; padding-right: 34px; text-align: left; font-size: 16px; }
 
   /* 「手機版」的「加工數量登記－基礎資料」的「管理產品編號與機台區塊」相關格式：本行可修改垂直對齊、flex-direction、排列方式、欄位數量與寬度、水平對齊。 */
   .production-data-tools { align-items: stretch; flex-direction: column; }.production-data-tools > div:last-child { display: grid; grid-template-columns: 1fr 1fr; }.production-data-tools button { justify-content: center; }
