@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown,
   Calculator, ChevronLeft, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
@@ -18,6 +18,11 @@ const blankProduct = (): ProductInput => ({
 })
 
 const PAGE_VALUES: Page[] = ['home', 'production-entry', 'production-query', 'dashboard', 'movements', 'stocktake', 'products']
+const preventInputEnterSubmit = (event: ReactKeyboardEvent<HTMLFormElement>) => {
+  if (event.key !== 'Enter' || event.nativeEvent.isComposing || !(event.target instanceof HTMLInputElement)) return
+  event.preventDefault()
+  event.target.blur()
+}
 const pageFromLocation = (): Page => {
   const value = window.location.hash.replace(/^#/, '') as Page
   return PAGE_VALUES.includes(value) ? value : 'home'
@@ -268,7 +273,7 @@ function ProductionEntryPage({ records, productCodes, machines, loading, goHome,
 
   return <section className="production-page production-entry-page">
     <ProductionHeader title="加工數量登記" eyebrow="PRODUCTION ENTRY" icon={<ListPlus />} goHome={goHome} />
-    <form className="production-card entry-card" onSubmit={submit}>
+    <form className="production-card entry-card" onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="production-data-tools">
         <div><span>基礎資料</span><small>管理產品編號與機台，再從登記表單選擇</small></div>
         <div><button type="button" onClick={() => addOption('product')}><Wrench />管理產品編號</button><button type="button" onClick={() => addOption('machine')}><Wrench />管理機台</button></div>
@@ -475,7 +480,7 @@ function ProductionOptionModal({ type, values, close, save, remove }: { type: Pr
     finally { setRemoving('') }
   }
   return <Modal title={`管理${label}`} close={close}>
-    <form onSubmit={submit}>
+    <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <Field label={label} wide><input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder={type === 'product' ? '例如 OAS-025<SP263735>' : '例如 MT04'} /></Field>
       <p className="option-help">新增後會出現在加工登記選單；刪除不會影響過去的加工紀錄。</p>
       {error && <div className="form-error">{error}</div>}
@@ -706,7 +711,7 @@ function StockModal({ type, initialProductId, products, close, switchType, save 
     catch (err) { setFormError(messageFor(err)); setBusy(false) }
   }
   return <Modal close={close} title={`登記${type === 'in' ? '入庫' : '出庫'}`}>
-    <form onSubmit={submit}>
+    <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="segmented"><button type="button" className={type === 'in' ? 'selected-in' : ''} onClick={() => switchType('in')}>入庫</button><button type="button" className={type === 'out' ? 'selected-out' : ''} onClick={() => switchType('out')}>出庫</button></div>
       <Field label="刀具" wide><ProductPicker products={products} value={productId} onChange={setProductId}/></Field>
       {selected && <div className="stock-hint">目前庫存 <strong>{formatNumber(selected.stock_quantity)} {selected.unit}</strong></div>}
@@ -775,7 +780,7 @@ function ProductModal({ product, products, close, save }: { product: Product | n
     try { await save(data) } catch (err) { setFormError(messageFor(err)); setBusy(false) }
   }
   return <Modal close={close} title={product ? '編輯刀具' : '新增刀具'} size="large">
-    <form onSubmit={submit}>
+    <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="form-grid">
         <Field label="編號"><input disabled value={product?.code || '儲存後自動產生'} /></Field>
         <Field label="分類 *"><select required value={data.category} onChange={(e) => { changeCategory(e.target.value as ProductCategory); e.currentTarget.blur() }}>{PRODUCT_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
@@ -850,7 +855,7 @@ function AdminDeleteModal({ request, close }: { request: AdminDeleteRequest; clo
   }
   return <Modal title={request.title} close={() => !deleting && close(false)}>
     <div className="admin-delete-warning"><Trash2/><div><strong>此操作無法復原</strong><span>{request.description}</span></div></div>
-    <form onSubmit={submit}>
+    <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <Field label="管理員密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder="輸入 8 位數字密碼" disabled={deleting}/></Field>
       {error && <div className="form-error">{error}</div>}
       <button className="button outbound admin-action" type="submit" disabled={deleting || password.length !== 8}><Trash2/>{deleting ? '正在驗證並刪除…' : '驗證密碼並刪除'}</button>
