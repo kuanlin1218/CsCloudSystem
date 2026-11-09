@@ -2020,3 +2020,107 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .price-history-table .data-table td { padding-left: 4px; padding-right: 4px; font-size: 13px; white-space: normal; overflow-wrap: anywhere; }
   .price-history-table .data-table small { font-size: 13px; }
 }
+
+
+/* ========================================================================== */
+/* 手機版資料卡二欄緊湊排列                                                   */
+/* 每列並排兩個欄位，文字統一 18px；重點資料最高 20px。                       */
+/* ========================================================================== */
+@media (max-width: 620px) {
+
+  /* 「手機版－查詢最後一筆」的「每筆加工結果」：改成兩列卡片，避免四欄擠壓與左右捲動。 */
+  .production-table.compact { display: block; table-layout: auto; }
+  .production-table.compact thead { display: none; }
+  .production-table.compact tbody { display: grid; gap: 8px; }
+  .production-table.compact tbody tr { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 7px 9px; border: 1px solid #2c363b; border-radius: 6px; background: #11171a; }
+  .production-table.compact tbody td { width: auto !important; min-height: 0; padding: 6px 7px; border: 0; font-size: 18px; line-height: 1.35; text-align: left; }
+  .production-table.compact tbody td::before { margin-right: 6px; color: #82929a; font-size: 18px; font-weight: 750; }
+  .production-table.compact tbody td:nth-child(1)::before { content: "日期："; }
+  .production-table.compact tbody td:nth-child(2) { grid-column: 1 / -1; grid-row: 2; padding-right: 42px; overflow-wrap: anywhere; }
+  .production-table.compact tbody td:nth-child(2)::before { content: "產品・機台："; }
+  .production-table.compact tbody td:nth-child(3) { padding-right: 38px; }
+  .production-table.compact tbody td:nth-child(3)::before { content: "數量："; }
+  .production-table.compact tbody td:nth-child(4) { position: absolute; right: 8px; bottom: 8px; width: 32px !important; padding: 0; }
+  .production-table.compact tbody td:nth-child(4)::before { content: none; }
+  .production-table.compact .production-row-delete { width: 32px; min-height: 32px; }
+  .production-table.compact tfoot { display: block; margin-top: 8px; }
+  .production-table.compact tfoot tr { display: grid; grid-template-columns: 1fr 1fr; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 5px; }
+  .production-table.compact tfoot td { width: auto !important; min-height: 0; padding: 7px; border: 0; font-size: 18px; text-align: left; }
+  .production-table.compact tfoot td:nth-child(3) { text-align: right; }
+  .production-table.compact tfoot td:nth-child(4) { display: none; }
+
+  /* 「手機版－查詢全部與日期區間」的「每筆加工紀錄」：兩個欄位並排，備註與操作才使用整列。 */
+  .production-table:not(.compact) tbody tr { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 6px 8px; }
+  .production-table:not(.compact) tbody td { display: block; min-height: 0; padding: 6px 7px; border-bottom: 1px solid #252e33; font-size: 18px; line-height: 1.35; }
+  .production-table:not(.compact) tbody td::before { display: inline; margin-right: 6px; font-size: 18px; }
+  .production-table:not(.compact) tbody td:nth-child(7),
+  .production-table:not(.compact) tbody td:nth-child(8) { grid-column: 1 / -1; }
+  .production-table:not(.compact) .production-row-delete { min-height: 36px; font-size: 18px; }
+
+  /* 「手機版－出入庫、刀具資料、庫存盤點」的「每筆資料卡」：改為每列兩欄，縮短卡片高度。 */
+  .data-table.movement-table tbody tr,
+  .data-table.product-table tbody tr,
+  .data-table.stocktake-table tbody tr { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 6px 8px; }
+  .data-table.movement-table tbody td,
+  .data-table.product-table tbody td,
+  .data-table.stocktake-table tbody td { display: block; min-height: 0; padding: 6px 7px; border-bottom: 1px solid #252e33; font-size: 18px; line-height: 1.35; }
+  .data-table.movement-table tbody td::before,
+  .data-table.product-table tbody td::before,
+  .data-table.stocktake-table tbody td::before { display: inline; margin-right: 5px; font: 750 18px system-ui, sans-serif; }
+
+  /* 「手機版－刀具資料」的「五個操作按鈕」需要整列寬度，其他欄位維持兩欄並排。 */
+  .product-table td:nth-child(9) { grid-column: 1 / -1; }
+
+  /* 「手機版－表格與資料卡」的「內容、編號、數量、單位與標籤」統一為 18px。 */
+  .data-table .code,
+  .data-table .quantity,
+  .data-table small,
+  .data-table .tag,
+  .data-table .known-price,
+  .data-table .unknown-price,
+  .data-table .stocktake-save { font-size: 18px !important; }
+  .data-table .tag,
+  .data-table .unknown-price { min-height: 30px; height: auto; line-height: 1.25; }
+  .data-table .row-actions button { width: 36px; height: 36px; }
+  .data-table .row-actions svg { width: 19px; }
+
+  /* 「手機版－庫存盤點」的「數量、備註與更新按鈕」使用 18px，仍避免 iPhone 點擊放大。 */
+  .stocktake-quantity,
+  .stocktake-note { height: 40px; }
+  .stocktake-quantity input,
+  .stocktake-quantity span,
+  .stocktake-note,
+  .stocktake-save { font-size: 18px !important; }
+  .stocktake-save { min-height: 40px; }
+
+  /* 「手機版－歷史價格」的「表格標題、日期、價格、數量與供應商」統一為 18px。 */
+  .price-history-table .data-table th,
+  .price-history-table .data-table td,
+  .price-history-table .data-table small { font-size: 18px; line-height: 1.3; }
+}
+
+
+/* ========================================================================== */
+/* 電腦版刀具資料表格緊湊設定                                                 */
+/* 縮小欄位留白與操作區，允許品名適度換行，減少左右捲動。                     */
+/* ========================================================================== */
+@media (min-width: 621px) {
+
+  /* 「電腦版－刀具資料」的「整張表格」：允許文字換行並縮小欄位占用寬度。 */
+  .product-table { white-space: normal; }
+  .product-table th { height: 40px; padding: 0 7px; font-size: 13px; }
+  .product-table td { height: 56px; padding: 5px 7px; font-size: 14px; line-height: 1.35; }
+
+  /* 「電腦版－刀具資料」的「編號、品名、數量與單價」：縮小字體與最大寬度。 */
+  .product-table .code { font-size: 14px; white-space: nowrap; }
+  .product-table .product-name { max-width: 230px; white-space: normal; overflow-wrap: anywhere; }
+  .product-table .quantity { font-size: 17px !important; white-space: nowrap; }
+  .product-table .price-cell { white-space: nowrap; }
+  .product-table .price-cell small { margin-left: 3px; font-size: 11px; }
+  .product-table .tag { padding: 0 7px; font-size: 12px; }
+
+  /* 「電腦版－刀具資料」的「入庫、出庫、歷史、編輯、刪除操作區」：縮小按鈕與欄寬。 */
+  .product-table .product-actions { min-width: 146px; gap: 0; }
+  .product-table .row-actions button { width: 29px; height: 31px; }
+  .product-table .row-actions svg { width: 15px; }
+}
