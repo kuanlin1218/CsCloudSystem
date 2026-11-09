@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown,
   Calculator, ChevronLeft, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
@@ -733,7 +733,7 @@ function ProductPicker({ products, value, onChange }: { products: Product[]; val
   return <div className="product-picker" onBlur={() => window.setTimeout(() => setOpen(false), 120)}>
     <div className="product-picker-input"><Search/><input ref={inputRef} required role="combobox" aria-expanded={open} aria-controls="product-picker-options" value={query} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onChange={(event) => { setQuery(event.target.value); onChange(''); setOpen(true) }} placeholder="輸入編號、品名、廠牌或供應商搜尋"/><ChevronDown/></div>
     {open && <div className="product-picker-menu" id="product-picker-options" role="listbox">
-      {filtered.length === 0 ? <div className="product-picker-empty">找不到符合的刀具</div> : filtered.map((product) => <button type="button" role="option" aria-selected={product.id === value} key={product.id} onPointerDown={(event) => { event.preventDefault(); choose(product) }} onClick={() => choose(product)}><span><b>{product.code}</b>{product.name}</span><small>庫存 {formatNumber(product.stock_quantity)} {product.unit}</small></button>)}
+      {filtered.length === 0 ? <div className="product-picker-empty">找不到符合的刀具</div> : filtered.map((product) => <button type="button" role="option" aria-selected={product.id === value} key={product.id} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(product)}><span><b>{product.code}</b>{product.name}</span><small>庫存 {formatNumber(product.stock_quantity)} {product.unit}</small></button>)}
     </div>}
   </div>
 }
@@ -809,7 +809,7 @@ function EditableCombo({ options, value, onChange, placeholder, required = false
   return <span className="editable-combo" onBlur={() => window.setTimeout(() => setOpen(false), 120)}>
     <input ref={inputRef} autoComplete="off" required={required} role="combobox" aria-expanded={open} value={value} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onChange={(event) => { onChange(event.target.value); setOpen(true) }} placeholder={placeholder}/><ChevronDown aria-hidden="true"/>
     {open && <span className="product-picker-menu editable-combo-menu" role="listbox">
-      {filtered.length === 0 ? <span className="product-picker-empty">可直接輸入新資料</span> : filtered.map((option) => <button type="button" role="option" aria-selected={option === value} key={option} onPointerDown={(event) => { event.preventDefault(); choose(option) }} onClick={() => choose(option)}><span>{option}</span></button>)}
+      {filtered.length === 0 ? <span className="product-picker-empty">可直接輸入新資料</span> : filtered.map((option) => <button type="button" role="option" aria-selected={option === value} key={option} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(option)}><span>{option}</span></button>)}
     </span>}
   </span>
 }
@@ -935,7 +935,12 @@ function Field({ label, wide, children }: { label: string; wide?: boolean; child
 
 function Modal({ title, close, size = '', children }: { title: string; close: () => void; size?: string; children: ReactNode }) {
   useEffect(() => { const fn = (e: KeyboardEvent) => e.key === 'Escape' && close(); window.addEventListener('keydown', fn); return () => window.removeEventListener('keydown', fn) }, [close])
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && close()}><section className={`modal ${size}`} role="dialog" aria-modal="true" aria-label={title}><div className="modal-head"><h2>{title}</h2><button className="icon-button" onClick={close} aria-label="關閉"><X /></button></div>{children}</section></div>
+  const dismissInput = () => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur() }
+  const dismissFromBlankArea = (event: ReactPointerEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement
+    if (!target.closest('input, select, textarea, button, a, label, [role="option"]')) dismissInput()
+  }
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && close()}><section className={`modal ${size}`} role="dialog" aria-modal="true" aria-label={title} onPointerDown={dismissFromBlankArea}><div className="modal-head"><h2>{title}</h2><button className="icon-button" onClick={close} aria-label="關閉"><X /></button></div><button type="button" className="modal-input-dismiss" onClick={dismissInput}><ChevronDown />完成輸入／收起選單</button>{children}</section></div>
 }
 
 function PageSkeleton() { return <div className="skeleton"><i/><i/><i/></div> }

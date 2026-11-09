@@ -894,6 +894,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「整個網站」的「所有彈出視窗」的「標題列與關閉按鈕」相關格式：本行可修改排列方式、垂直對齊、水平對齊、下方外距。 */
 .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 
+/* 「手機版彈出視窗」的「表單輸入」的「完成輸入／收起選單按鈕」相關格式：電腦版預設隱藏。 */
+.modal-input-dismiss { display: none; }
+
 /* 「整個網站」的「所有彈出視窗」的「視窗主標題」相關格式：本行可修改外距、字體大小。 */
 .modal-head h2 { margin: 0; font-size: 23px; }
 
@@ -1375,6 +1378,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版」的「整個網站－所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改最小寬度、最大寬度。 */
   .modal input, .modal select, .modal textarea { min-width: 0; max-width: 100%; }
 
+  /* 「手機版」的「所有含輸入欄位的彈出視窗」的「完成輸入／收起鍵盤與選單按鈕」相關格式：按鈕會固定在視窗上方，避免必須點擊下一個輸入框。 */
+  .modal:has(input, select, textarea) > .modal-input-dismiss { position: sticky; top: 6px; z-index: 30; width: max-content; min-height: 38px; display: flex; align-items: center; gap: 6px; margin: -8px 0 18px auto; padding: 0 12px; border: 1px solid rgba(255,194,58,.45); border-radius: 20px; background: #242116; color: var(--yellow); box-shadow: 0 7px 22px rgba(0,0,0,.38); }
+
+  /* 「手機版」的「所有含輸入欄位的彈出視窗」的「完成輸入／收起鍵盤與選單按鈕圖示」相關格式。 */
+  .modal-input-dismiss svg { width: 17px; }
+
   /* 「手機版」的「整個網站－所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距。 */
   .modal .total-preview { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; }
 
@@ -1391,7 +1400,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .admin-data-section { padding: 14px; }
 
   /* 「手機版」的「新增／編輯刀具與出入庫－表單」的「兩欄或三欄排列」相關格式：本行可修改欄位數量與寬度、元件間距。 */
-  .form-grid, .form-grid.three { grid-template-columns: 1fr; gap: 15px; }
+  .form-grid, .form-grid.three { grid-template-columns: 1fr; gap: 22px; }
 
   /* 「手機版」的「刀具資料－歷史價格」的「三張價格卡片排列」相關格式：本行可修改欄位數量與寬度、元件間距。 */
   .price-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -1777,6 +1786,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
   /* 「手機版」的「所有彈出視窗」的「視窗主標題」字體大小。 */
   .modal-head h2 { font-size: 23px; }
+
+  /* 「手機版」的「所有含輸入欄位的彈出視窗」的「完成輸入／收起鍵盤與選單按鈕」字體大小。 */
+  .modal-input-dismiss { font-size: 14px; }
 
   /* 「手機版」的「出入庫彈出視窗」的「入庫與出庫切換按鈕」字體大小。 */
   .segmented button { font-size: 17px; }
