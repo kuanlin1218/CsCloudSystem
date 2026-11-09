@@ -17,6 +17,13 @@ const blankProduct = (): ProductInput => ({
   category: '刀片', unit: '片', notes: '', initial_quantity: 0, initial_unit_price: 0, purchased_at: today(),
 })
 
+const PAGE_VALUES: Page[] = ['home', 'production-entry', 'production-query', 'dashboard', 'movements', 'stocktake', 'products']
+const pageFromLocation = (): Page => {
+  const value = window.location.hash.replace(/^#/, '') as Page
+  return PAGE_VALUES.includes(value) ? value : 'home'
+}
+const pageUrl = (page: Page) => `${window.location.pathname}${window.location.search}#${page}`
+
 type StockModalState = { type: MovementType; productId?: string }
 type AdminDeleteRequest = {
   title: string
@@ -28,7 +35,7 @@ type AdminDeleteRequest = {
 const messageFor = (error: unknown) => error instanceof Error ? error.message : (error as { message?: string })?.message || '發生未知錯誤'
 
 export default function App() {
-  const [page, setPage] = useState<Page>('home')
+  const [page, setPage] = useState<Page>(pageFromLocation)
   const [products, setProducts] = useState<Product[]>([])
   const [movements, setMovements] = useState<Movement[]>([])
   const [productionRecords, setProductionRecords] = useState<ProductionRecord[]>([])
@@ -57,6 +64,19 @@ export default function App() {
 
   useEffect(() => { void refresh() }, [])
   useEffect(() => {
+    if (window.location.hash !== `#${pageFromLocation()}` || !window.location.hash) window.history.replaceState({ page: pageFromLocation() }, '', pageUrl(pageFromLocation()))
+    const followBrowserHistory = () => {
+      setPage(pageFromLocation())
+      setMobileNav(false)
+      setStockModal(null); setProductModal(null); setPriceHistoryProduct(null)
+      setProductionOptionModal(null); setAdminDataModal(false)
+      setAdminDelete((request) => { request?.resolve(false); return null })
+      void refresh()
+    }
+    window.addEventListener('popstate', followBrowserHistory)
+    return () => window.removeEventListener('popstate', followBrowserHistory)
+  }, [])
+  useEffect(() => {
     const refreshWhenVisible = () => {
       if (document.visibilityState === 'visible') void refresh()
     }
@@ -70,6 +90,7 @@ export default function App() {
   }, [toast])
 
   const nav = (next: Page) => {
+    if (window.location.hash !== `#${next}`) window.history.pushState({ page: next }, '', pageUrl(next))
     setPage(next)
     setMobileNav(false)
     void refresh()
@@ -690,8 +711,7 @@ function StockModal({ type, initialProductId, products, close, switchType, save 
       <Field label="刀具" wide><ProductPicker products={products} value={productId} onChange={setProductId}/></Field>
       {selected && <div className="stock-hint">目前庫存 <strong>{formatNumber(selected.stock_quantity)} {selected.unit}</strong></div>}
       <div className="form-grid"><Field label="數量"><input required min="1" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={type === 'in' ? '購入日期' : '出庫日期'}><input required type="date" value={date} onChange={(e) => setDate(e.target.value)}/></Field>
-      {type === 'in' && <><Field label="單價"><input required min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={price} onChange={(e) => setPrice(e.target.value)}/></Field><Field label="供應商"><EditableCombo list="stock-supplier-options" value={supplier} onChange={setSupplier} placeholder="選擇既有供應商或輸入新資料"/></Field></>}</div>
-      {type === 'in' && <OptionsList id="stock-supplier-options" values={supplierOptions}/>} 
+      {type === 'in' && <><Field label="單價"><input required min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={price} onChange={(e) => setPrice(e.target.value)}/></Field><Field label="供應商"><EditableCombo options={supplierOptions} value={supplier} onChange={setSupplier} placeholder="選擇既有供應商或輸入新資料"/></Field></>}</div>
       {type === 'in' && <TotalPreview quantity={Number(quantity || 0)} unitPrice={Number(price || 0)} total={totalPrice}/>} 
       <Field label="備註" wide><textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={type === 'in' ? '例如：發票號碼' : '例如：機台編號、工單號碼'}/></Field>
       {formError && <p className="form-error">{formError}</p>}
@@ -761,23 +781,16 @@ function ProductModal({ product, products, close, save }: { product: Product | n
       </div>
       <Field label="品名（自動組合）" wide><input className="composed-name" disabled value={name || (data.category === '刀片' ? '規格-尺寸-斷屑槽-材質' : data.category === '鑽銑刀' ? '規格-尺寸-材質' : '規格')} /></Field>
       <div className="form-grid dynamic-fields">
-        <Field label="規格 *"><EditableCombo list="product-specification-options" required value={data.specification} onChange={(value) => set('specification', value.toUpperCase())} placeholder={data.category === '刀片' ? 'WNMG' : data.category === '鑽銑刀' ? 'EMM4100' : '選擇既有資料或輸入新規格'}/></Field>
-        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="尺寸 *"><EditableCombo list="product-size-options" required value={data.size} onChange={(value) => set('size', value.toUpperCase())} placeholder={data.category === '刀片' ? '080408' : '例如 10'}/></Field>}
-        {data.category === '刀片' && <Field label="斷屑槽（無則留空）"><EditableCombo list="product-chipbreaker-options" value={data.chipbreaker} onChange={(value) => set('chipbreaker', value.toUpperCase())} placeholder="選擇既有資料或輸入新值"/></Field>}
-        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="材質 *"><EditableCombo list="product-material-options" required value={data.material} onChange={(value) => set('material', value.toUpperCase())} placeholder={data.category === '刀片' ? 'PR1535' : '例如 鎢鋼'}/></Field>}
+        <Field label="規格 *"><EditableCombo options={specificationOptions} required value={data.specification} onChange={(value) => set('specification', value.toUpperCase())} placeholder={data.category === '刀片' ? 'WNMG' : data.category === '鑽銑刀' ? 'EMM4100' : '選擇既有資料或輸入新規格'}/></Field>
+        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="尺寸 *"><EditableCombo options={sizeOptions} required value={data.size} onChange={(value) => set('size', value.toUpperCase())} placeholder={data.category === '刀片' ? '080408' : '例如 10'}/></Field>}
+        {data.category === '刀片' && <Field label="斷屑槽（無則留空）"><EditableCombo options={chipbreakerOptions} value={data.chipbreaker} onChange={(value) => set('chipbreaker', value.toUpperCase())} placeholder="選擇既有資料或輸入新值"/></Field>}
+        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="材質 *"><EditableCombo options={materialOptions} required value={data.material} onChange={(value) => set('material', value.toUpperCase())} placeholder={data.category === '刀片' ? 'PR1535' : '例如 鎢鋼'}/></Field>}
       </div>
       <div className="form-grid common-fields">
-        <Field label="廠牌"><EditableCombo list="product-brand-options" value={data.brand} onChange={(value) => set('brand', value)} placeholder="選擇既有廠牌或輸入新資料"/></Field>
-        <Field label="供應商"><EditableCombo list="product-supplier-options" value={data.supplier} onChange={(value) => set('supplier', value)} placeholder="選擇既有供應商或輸入新資料"/></Field>
-        <Field label="單位"><EditableCombo list="product-unit-options" required value={data.unit} onChange={(value) => set('unit', value)} placeholder="片"/></Field>
+        <Field label="廠牌"><EditableCombo options={brandOptions} value={data.brand} onChange={(value) => set('brand', value)} placeholder="選擇既有廠牌或輸入新資料"/></Field>
+        <Field label="供應商"><EditableCombo options={supplierOptions} value={data.supplier} onChange={(value) => set('supplier', value)} placeholder="選擇既有供應商或輸入新資料"/></Field>
+        <Field label="單位"><EditableCombo options={unitOptions} required value={data.unit} onChange={(value) => set('unit', value)} placeholder="片"/></Field>
       </div>
-      <OptionsList id="product-specification-options" values={specificationOptions}/>
-      <OptionsList id="product-size-options" values={sizeOptions}/>
-      <OptionsList id="product-chipbreaker-options" values={chipbreakerOptions}/>
-      <OptionsList id="product-material-options" values={materialOptions}/>
-      <OptionsList id="product-brand-options" values={brandOptions}/>
-      <OptionsList id="product-supplier-options" values={supplierOptions}/>
-      <OptionsList id="product-unit-options" values={unitOptions}/>
       {!product && <fieldset className="initial-stock"><legend>目前庫存（可只填數量，單價找不到時可留空）</legend><div className="form-grid three"><Field label="數量"><input min="0" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_quantity || ''} onChange={(e) => set('initial_quantity', Number(e.target.value))}/></Field><Field label="單價"><input min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_unit_price || ''} onChange={(e) => set('initial_unit_price', Number(e.target.value))} placeholder="沒有價格可留空"/></Field><Field label="購入日期"><input type="date" value={data.purchased_at} onChange={(e) => set('purchased_at', e.target.value)}/></Field></div><TotalPreview quantity={data.initial_quantity} unitPrice={data.initial_unit_price} total={initialTotalPrice}/></fieldset>}
       <Field label="備註" wide><textarea value={data.notes} onChange={(e) => set('notes', e.target.value)} placeholder="材質、適用工件等"/></Field>
       {formError && <p className="form-error">{formError}</p>}
@@ -786,12 +799,17 @@ function ProductModal({ product, products, close, save }: { product: Product | n
   </Modal>
 }
 
-function EditableCombo({ list, value, onChange, placeholder, required = false }: { list: string; value: string; onChange: (value: string) => void; placeholder: string; required?: boolean }) {
-  return <span className="editable-combo"><input list={list} autoComplete="off" required={required} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder}/><ChevronDown aria-hidden="true"/></span>
-}
-
-function OptionsList({ id, values }: { id: string; values: string[] }) {
-  return <datalist id={id}>{values.map((value) => <option value={value} key={value}/>)}</datalist>
+function EditableCombo({ options, value, onChange, placeholder, required = false }: { options: string[]; value: string; onChange: (value: string) => void; placeholder: string; required?: boolean }) {
+  const [open, setOpen] = useState(false)
+  const normalized = value.trim().toLocaleLowerCase('zh-Hant')
+  const filtered = options.filter((option) => !normalized || option.toLocaleLowerCase('zh-Hant').includes(normalized)).slice(0, 20)
+  const choose = (option: string) => { onChange(option); setOpen(false) }
+  return <span className="editable-combo" onBlur={() => window.setTimeout(() => setOpen(false), 120)}>
+    <input autoComplete="off" required={required} role="combobox" aria-expanded={open} value={value} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onChange={(event) => { onChange(event.target.value); setOpen(true) }} placeholder={placeholder}/><ChevronDown aria-hidden="true"/>
+    {open && <span className="product-picker-menu editable-combo-menu" role="listbox">
+      {filtered.length === 0 ? <span className="product-picker-empty">可直接輸入新資料</span> : filtered.map((option) => <button type="button" role="option" aria-selected={option === value} key={option} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(option)}><span>{option}</span></button>)}
+    </span>}
+  </span>
 }
 
 function PriceHistoryModal({ product, movements, close }: { product: Product; movements: Movement[]; close: () => void }) {
