@@ -1,5 +1,6 @@
 -- 詮栩 CNC 雲端系統：管理員 Excel 備份／還原
 -- 先執行 schema.sql，再在 Supabase SQL Editor 的「新查詢」執行本檔。
+-- 注意：若已執行 secure_single_user.sql，請勿再執行本檔；安全版已改用 Supabase Auth 密碼。
 
 create schema if not exists extensions;
 create extension if not exists pgcrypto with schema extensions;

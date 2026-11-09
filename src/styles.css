@@ -139,6 +139,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「庫存管理系統」的「電腦版左側選單」的「雲端資料與免登入狀態」相關格式：本行可修改寬度。 */
 .status-line svg { width: 18px; }
 
+/* 「登入後左側選單」的「登出系統」的「按鈕」相關格式：可修改高度、邊框、背景、文字大小與顏色。 */
+.sidebar-logout { min-height: 42px; display: flex; align-items: center; gap: 10px; margin: 3px 8px 0; padding: 0 12px; border: 1px solid #30393f; border-radius: 6px; background: #11171a; color: #c7d0d5; font: inherit; font-size: 14px; cursor: pointer; }
+.sidebar-logout:hover { border-color: #55636b; color: #fff; }
+.sidebar-logout svg { width: 18px; }
+
+/* 「系統首頁與加工頁」的「登出」的「右上角固定按鈕」相關格式：可修改位置、背景、文字大小與顯示層級。 */
+.portal-logout { position: fixed; z-index: 45; top: 18px; right: 22px; min-height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border: 1px solid #30393f; border-radius: 6px; background: rgba(12,17,20,.92); color: #c7d0d5; font: inherit; font-size: 14px; cursor: pointer; backdrop-filter: blur(10px); }
+.portal-logout:hover { border-color: #55636b; color: #fff; }
+.portal-logout svg { width: 17px; }
+
 /* 「庫存管理系統」的「電腦版左側選單」的「舊版登出按鈕保留樣式」相關格式：本行可修改字體大小。 */
 .logout { font-size: 15px; }
 
@@ -1165,6 +1175,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改內距。 */
 .auth-brand { padding: 0 0 34px; }
+
+/* 「登入與設定密碼畫面」的「公司 Logo」的「圖片大小與位置」相關格式：可修改寬度、高度與下方留白。 */
+.auth-logo { display: block; width: 98px; height: 98px; margin: 0 auto 22px; object-fit: contain; }
 
 /* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改外距、文字或圖示顏色、字型／粗細／大小、字距。 */
 .auth-eyebrow { margin: 0 0 8px; color: #91aab8; font: 12px ui-monospace, monospace; letter-spacing: .22em; }

@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import type { Session, User } from '@supabase/supabase-js'
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown,
   Calculator, ChevronLeft, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
-  FileSpreadsheet, FileUp, ListPlus, LockKeyhole, Menu, Pencil, Plus, Save, Search, ShieldCheck, Trash2, Triangle, Wrench, X,
+  FileSpreadsheet, FileUp, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, Wrench, X,
 } from 'lucide-react'
 import { isDemoMode, supabase } from './lib/supabase'
+import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, verifyOwnerPassword } from './lib/auth'
 import { composeProductName, formatDate, formatMoney, formatNumber, today } from './lib/format'
 import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
@@ -33,13 +35,145 @@ type StockModalState = { type: MovementType; productId?: string }
 type AdminDeleteRequest = {
   title: string
   description: string
-  execute: (password: string) => Promise<void>
+  execute: () => Promise<void>
   resolve: (result: boolean) => void
 }
 
 const messageFor = (error: unknown) => error instanceof Error ? error.message : (error as { message?: string })?.message || '發生未知錯誤'
 
 export default function App() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [authReady, setAuthReady] = useState(isDemoMode)
+  const [authMessage, setAuthMessage] = useState('')
+  const [forcePasswordSetup, setForcePasswordSetup] = useState(false)
+
+  useEffect(() => {
+    const client = supabase
+    if (isDemoMode || !client) return
+    const acceptSession = async (nextSession: Session | null) => {
+      if (nextSession && !isOwnerUser(nextSession.user.id)) {
+        await client.auth.signOut()
+        setSession(null)
+        setAuthMessage('這個帳號沒有系統使用權限')
+      } else {
+        setSession(nextSession)
+      }
+      setAuthReady(true)
+    }
+    void client.auth.getSession().then(({ data }) => acceptSession(data.session))
+    const { data: listener } = client.auth.onAuthStateChange((event, nextSession) => {
+      if (event === 'PASSWORD_RECOVERY') setForcePasswordSetup(true)
+      void acceptSession(nextSession)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
+  if (isDemoMode) return <AuthenticatedApp session={null} />
+  if (!authReady) return <LoadingScreen label="正在確認安全登入狀態…" />
+  if (!session) return <LoginScreen initialMessage={authMessage} />
+  if (forcePasswordSetup || session.user.user_metadata?.password_configured !== true) {
+    return <PasswordSetupScreen session={session} complete={(user) => { setForcePasswordSetup(false); setSession({ ...session, user }) }} />
+  }
+  return <AuthenticatedApp session={session} />
+}
+
+function LoadingScreen({ label }: { label: string }) {
+  return <main className="loading-screen"><span className="loader"/><p>{label}</p></main>
+}
+
+function LoginScreen({ initialMessage }: { initialMessage?: string }) {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [message, setMessage] = useState(initialMessage || '')
+  const [success, setSuccess] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault(); setMessage(''); setSuccess(false)
+    if (username.trim().toLowerCase() !== OWNER_USERNAME) { setMessage('登入名稱或密碼不正確'); return }
+    if (!password) { setMessage('請輸入密碼'); return }
+    setBusy(true)
+    try { await verifyOwnerPassword(password) }
+    catch (error) { setMessage(messageFor(error)) }
+    finally { setBusy(false) }
+  }
+
+  const sendPasswordEmail = async () => {
+    if (!supabase) return
+    setBusy(true); setMessage(''); setSuccess(false)
+    try {
+      const redirectTo = `${window.location.origin}${import.meta.env.BASE_URL}`
+      const { error } = await supabase.auth.resetPasswordForEmail(OWNER_EMAIL, { redirectTo })
+      if (error) throw error
+      setSuccess(true); setMessage('設定密碼郵件已寄出，請使用最新一封郵件中的連結。')
+    } catch (error) { setMessage(messageFor(error)) }
+    finally { setBusy(false) }
+  }
+
+  return <main className="auth-screen">
+    <span className="auth-grid"/>
+    <section className="auth-card" aria-label="登入系統">
+      <div className="auth-brand">
+        <img className="auth-logo" src={`${import.meta.env.BASE_URL}company-logo.png`} alt="詮栩公司 Logo"/>
+        <p className="auth-eyebrow">CHYUAN SHEU CNC CLOUD</p>
+        <h1>登入雲端系統</h1>
+        <p className="auth-copy">本系統僅限指定帳號使用。</p>
+      </div>
+      <form onSubmit={submit}>
+        <Field label="登入名稱" wide><input autoFocus autoCapitalize="none" autoCorrect="off" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入登入名稱" disabled={busy}/></Field>
+        <Field label="密碼" wide><input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="輸入密碼" disabled={busy}/></Field>
+        {message && <p className={success ? 'admin-success' : 'form-error'}>{message}</p>}
+        <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
+      </form>
+      <button className="auth-switch" type="button" onClick={() => void sendPasswordEmail()} disabled={busy}>忘記密碼或尚未設定密碼</button>
+    </section>
+  </main>
+}
+
+function PasswordSetupScreen({ session, complete }: { session: Session; complete: (user: User) => void }) {
+  const [password, setPassword] = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault(); setMessage('')
+    if (password.length < 8) { setMessage('密碼至少需要 8 個字元'); return }
+    if (password === '16866319') { setMessage('這組舊管理密碼已經公開使用過，請設定不同的新密碼'); return }
+    if (password !== confirmation) { setMessage('兩次輸入的密碼不同'); return }
+    if (!supabase) return
+    setBusy(true)
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password,
+        data: { ...session.user.user_metadata, username: OWNER_USERNAME, password_configured: true },
+      })
+      if (error) throw error
+      complete(data.user)
+    } catch (error) { setMessage(messageFor(error)) }
+    finally { setBusy(false) }
+  }
+
+  return <main className="auth-screen">
+    <span className="auth-grid"/>
+    <section className="auth-card" aria-label="設定登入密碼">
+      <div className="auth-brand">
+        <img className="auth-logo" src={`${import.meta.env.BASE_URL}company-logo.png`} alt="詮栩公司 Logo"/>
+        <p className="auth-eyebrow">FIRST-TIME SECURITY SETUP</p>
+        <h1>設定登入密碼</h1>
+        <p className="auth-copy">登入名稱固定為 <b>{OWNER_USERNAME}</b>。請設定一組只有你知道的新密碼。</p>
+      </div>
+      <form onSubmit={submit}>
+        <Field label="新密碼" wide><input autoFocus type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="至少 8 個字元" disabled={busy}/></Field>
+        <Field label="再次輸入新密碼" wide><input type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="再次輸入相同密碼" disabled={busy}/></Field>
+        {message && <p className="form-error">{message}</p>}
+        <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在安全儲存…' : '儲存密碼並進入系統'}</button>
+      </form>
+    </section>
+  </main>
+}
+
+function AuthenticatedApp({ session }: { session: Session | null }) {
   const [page, setPage] = useState<Page>(pageFromLocation)
   const [products, setProducts] = useState<Product[]>([])
   const [movements, setMovements] = useState<Movement[]>([])
@@ -126,7 +260,7 @@ export default function App() {
     void refresh()
   }
   const afterSave = async (message: string) => { await refresh(false); setToast(message) }
-  const requestAdminDelete = (title: string, description: string, execute: (password: string) => Promise<void>) => new Promise<boolean>((resolve) => {
+  const requestAdminDelete = (title: string, description: string, execute: () => Promise<void>) => new Promise<boolean>((resolve) => {
     setAdminDelete({ title, description, execute, resolve })
   })
   const isHome = page === 'home'
@@ -140,6 +274,7 @@ export default function App() {
 
   return (
     <div className={`app-shell ${isHome ? 'portal-shell' : ''}`}>
+      {!isDemoMode && !isInventory && <button className="portal-logout" type="button" onClick={() => void supabase?.auth.signOut()}><LogOut />登出</button>}
       {isInventory && <aside className={`sidebar ${mobileNav ? 'is-open' : ''}`}>
         <div className="brand">
           <span className="brand-mark"><Triangle fill="currentColor" /><i /></span>
@@ -155,7 +290,8 @@ export default function App() {
         </nav>
         <div className="sidebar-foot">
           <span className="status-line">{isDemoMode ? <ShieldCheck /> : <Database />} {isDemoMode ? '示範模式' : realtimeConnected ? '雲端即時同步' : '雲端連線中'}</span>
-          <span className="status-line"><Wrench /> 免登入共用模式</span>
+          <span className="status-line"><UserRound /> {isDemoMode ? '本機示範資料' : session?.user.user_metadata?.username || OWNER_USERNAME}</span>
+          {!isDemoMode && <button className="sidebar-logout" type="button" onClick={() => void supabase?.auth.signOut()}><LogOut />登出系統</button>}
         </div>
       </aside>}
 
@@ -174,22 +310,22 @@ export default function App() {
         {page === 'production-entry' && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} goHome={() => nav('home')} addOption={setProductionOptionModal} onSave={async (input) => {
           await createProductionRecord(input); await afterSave('加工數量已登記')
         }} onDeleteLast={async (record) => {
-          const deleted = await requestAdminDelete('刪除最後一筆加工紀錄', `${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, (password) => deleteProductionRecord(record.id, password))
+          const deleted = await requestAdminDelete('刪除最後一筆加工紀錄', `${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, () => deleteProductionRecord(record.id))
           if (deleted) await afterSave('最後一筆加工紀錄已刪除')
         }} />}
         {page === 'production-query' && <ProductionQueryPage records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} goHome={() => nav('home')} onDeleteRecord={async (record) => {
-          const deleted = await requestAdminDelete('刪除加工紀錄', `${formatDate(record.work_date)}・${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, (password) => deleteProductionRecord(record.id, password))
+          const deleted = await requestAdminDelete('刪除加工紀錄', `${formatDate(record.work_date)}・${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, () => deleteProductionRecord(record.id))
           if (deleted) await afterSave('所選加工紀錄已刪除')
           return deleted
         }} onDeleteProductRecords={async (productCode, count) => {
-          const deleted = await requestAdminDelete('永久刪除產品加工資料', `將刪除產品編號「${productCode}」、管理清單選項與全部 ${count} 筆加工紀錄。`, (password) => deleteProductionProductData(productCode, password))
+          const deleted = await requestAdminDelete('永久刪除產品加工資料', `將刪除產品編號「${productCode}」、管理清單選項與全部 ${count} 筆加工紀錄。`, () => deleteProductionProductData(productCode))
           if (deleted) await afterSave(`${productCode} 的產品編號與全部加工紀錄已永久刪除`)
           return deleted
         }} />}
         {page === 'dashboard' && <Dashboard products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} />}
         {page === 'movements' && <MovementsPage products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} onDelete={async (movement) => {
           const product = movement.product || products.find((item) => item.id === movement.product_id)
-          const deleted = await requestAdminDelete('刪除出入庫紀錄', `${formatDate(movement.movement_date)} 的${movement.movement_type === 'in' ? '入庫' : '出庫'}紀錄「${product?.name || ''}」。庫存會自動重新計算。`, (password) => deleteMovement(movement.id, password))
+          const deleted = await requestAdminDelete('刪除出入庫紀錄', `${formatDate(movement.movement_date)} 的${movement.movement_type === 'in' ? '入庫' : '出庫'}紀錄「${product?.name || ''}」。庫存會自動重新計算。`, () => deleteMovement(movement.id))
           if (deleted) await afterSave('出入庫紀錄已刪除，庫存已重新計算')
         }} />}
         {page === 'stocktake' && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} onAdjust={async (product, actualQuantity, notes) => {
@@ -202,7 +338,7 @@ export default function App() {
           } catch (e) { setError(messageFor(e)); return false }
         }} />}
         {page === 'products' && <ProductsPage products={products} movements={movements} loading={loading} add={() => setProductModal('new')} edit={setProductModal} openStock={(type, productId) => setStockModal({ type, productId })} viewHistory={setPriceHistoryProduct} onDelete={async (p) => {
-          const deleted = await requestAdminDelete('刪除刀具資料', `將刪除 ${p.code}「${p.name}」及其全部出入庫紀錄。`, (password) => deleteProduct(p.id, password))
+          const deleted = await requestAdminDelete('刪除刀具資料', `將刪除 ${p.code}「${p.name}」及其全部出入庫紀錄。`, () => deleteProduct(p.id))
           if (deleted) await afterSave('商品已刪除')
         }} />}
       </main>
@@ -219,7 +355,7 @@ export default function App() {
         await createProductionOption(productionOptionModal, value); await afterSave(productionOptionModal === 'product' ? '產品編號已新增' : '機台已新增')
       }} remove={async (value) => {
         const label = productionOptionModal === 'product' ? '產品編號' : '機台'
-        const deleted = await requestAdminDelete(`刪除${label}`, `確定刪除${label}「${value}」？過去已登記的加工紀錄會保留。`, (password) => deleteProductionOption(productionOptionModal, value, password))
+        const deleted = await requestAdminDelete(`刪除${label}`, `確定刪除${label}「${value}」？過去已登記的加工紀錄會保留。`, () => deleteProductionOption(productionOptionModal, value))
         if (deleted) await afterSave(`${label}已刪除`)
       }} />}
       {adminDataModal && <AdminDataModal close={() => setAdminDataModal(false)} afterImport={async () => {
@@ -872,18 +1008,18 @@ function AdminDeleteModal({ request, close }: { request: AdminDeleteRequest; clo
   const [deleting, setDeleting] = useState(false)
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError('')
-    if (!/^\d{8}$/.test(password)) { setError('請輸入 8 位數字管理員密碼'); return }
+    if (!password) { setError('請輸入登入密碼'); return }
     setDeleting(true)
-    try { await request.execute(password); close(true) }
+    try { await verifyOwnerPassword(password); await request.execute(); close(true) }
     catch (submitError) { setError(messageFor(submitError)) }
     finally { setDeleting(false) }
   }
   return <Modal title={request.title} close={() => !deleting && close(false)}>
     <div className="admin-delete-warning"><Trash2/><div><strong>此操作無法復原</strong><span>{request.description}</span></div></div>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
-      <Field label="管理員密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder="輸入 8 位數字密碼" disabled={deleting}/></Field>
+      <Field label="登入密碼" wide><input autoFocus type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="輸入帳號登入密碼" disabled={deleting}/></Field>
       {error && <div className="form-error">{error}</div>}
-      <button className="button outbound admin-action" type="submit" disabled={deleting || password.length !== 8}><Trash2/>{deleting ? '正在驗證並刪除…' : '驗證密碼並刪除'}</button>
+      <button className="button outbound admin-action" type="submit" disabled={deleting || !password}><Trash2/>{deleting ? '正在驗證並刪除…' : '驗證登入密碼並刪除'}</button>
     </form>
   </Modal>
 }
@@ -899,10 +1035,11 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
 
   const exportExcel = async () => {
     setMessage(''); setSuccess(false)
-    if (!password) { setMessage('請先輸入管理員密碼'); return }
+    if (!password) { setMessage('請先輸入登入密碼'); return }
     setBusy('export')
     try {
-      const result = await exportAllAdminData(password)
+      await verifyOwnerPassword(password)
+      const result = await exportAllAdminData()
       const { downloadAdminWorkbook } = await import('./lib/adminDataWorkbook')
       downloadAdminWorkbook(result.data, result.exported_at)
       setSuccess(true); setMessage('完整備份已下載，請保留一份未修改的原始檔')
@@ -924,12 +1061,13 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
 
   const importExcel = async () => {
     setMessage(''); setSuccess(false)
-    if (!password) { setMessage('請輸入管理員密碼'); return }
+    if (!password) { setMessage('請輸入登入密碼'); return }
     if (!preview) { setMessage('請先選擇並檢查 Excel 檔案'); return }
     if (confirmation !== '覆蓋資料') { setMessage('請輸入「覆蓋資料」確認執行'); return }
     setBusy('import')
     try {
-      const counts = await importAllAdminData(password, preview.payload)
+      await verifyOwnerPassword(password)
+      const counts = await importAllAdminData(preview.payload)
       setSuccess(true)
       setMessage(`匯入完成：刀具 ${counts?.products || 0}、出入庫 ${counts?.movements || 0}、加工紀錄 ${counts?.production_records || 0} 筆`)
       await afterImport()
@@ -939,8 +1077,8 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
   }
 
   return <Modal title="資料備份／還原" close={() => !busy && close()} size="admin-data">
-    <div className="admin-security-note"><LockKeyhole/><div><strong>管理員限定功能</strong><span>密碼由 Supabase 安全驗證，不會儲存在瀏覽器或網站程式中。</span></div></div>
-    <Field label="管理員密碼"><input type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder="輸入 8 位數字密碼" disabled={Boolean(busy)}/></Field>
+    <div className="admin-security-note"><LockKeyhole/><div><strong>帳號本人限定功能</strong><span>密碼由 Supabase Auth 重新驗證，不會儲存在瀏覽器或網站程式中。</span></div></div>
+    <Field label="登入密碼"><input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="輸入帳號登入密碼" disabled={Boolean(busy)}/></Field>
 
     <section className="admin-data-section">
       <div className="admin-data-heading"><Download/><div><strong>1. 匯出完整備份</strong><span>包含刀具、出入庫、加工數量與管理選項</span></div></div>

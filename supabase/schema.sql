@@ -1,5 +1,6 @@
 -- 刀片庫存管理系統 / Supabase PostgreSQL schema
 -- 可重複執行。請在 Supabase Dashboard > SQL Editor 貼上並執行整份檔案。
+-- 注意：若已執行 secure_single_user.sql，請勿再執行本檔，以免恢復舊共用模式。
 
 create extension if not exists pgcrypto;
 

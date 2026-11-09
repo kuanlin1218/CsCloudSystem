@@ -2,7 +2,7 @@
 
 單人使用的 CNC 雲端工具入口。首頁提供「加工數量登記、加工數量查詢、庫存管理系統」三個功能；加工時間計算已整合到加工數量登記頁，不再使用獨立入口。
 
-前端使用 React、TypeScript 與 Vite，雲端資料使用 Supabase Free，可由 GitHub Pages 自動部署；日常功能免登入，只有完整資料備份／還原需要管理員密碼。專案不含 Lovable 套件、執行環境或任何平台綁定。
+前端使用 React、TypeScript 與 Vite，雲端資料使用 Supabase Free，可由 GitHub Pages 自動部署。雲端模式僅允許指定的 Supabase 帳號登入；刪除、完整備份與還原會再要求一次帳號密碼。專案不含 Lovable 套件、執行環境或任何平台綁定。
 
 ## 已完成功能
 
@@ -37,7 +37,8 @@
 - 每筆出入庫紀錄均可安全刪除；系統會重算後續餘額、商品庫存和最新單價，並拒絕會造成歷史負庫存的刪除
 - 出入庫歷史：全文搜尋、類型與日期區間篩選
 - 入庫與出庫彈窗、負庫存提示、重複送出防護
-- 免登入共用模式；RLS 只允許存取系統共用資料列
+- 自訂登入名稱 `kuanlin`，實際身分由 Supabase Auth Email／密碼安全驗證
+- RLS 與安全交易 RPC 固定綁定單一 Supabase UID，匿名訪客無法讀取或修改資料
 - 原子化 PostgreSQL RPC：鎖定刀具資料列，同一交易更新庫存與歷史
 - 首頁可由管理員將完整 Supabase 資料匯出為 Excel，整理後經格式檢查再整批還原
 - 無 Supabase 設定時自動使用可操作的瀏覽器示範資料
@@ -69,7 +70,7 @@ npm run preview
 2. 進入專案的 SQL Editor。
 3. 開啟 [`supabase/schema.sql`](supabase/schema.sql)，複製整份內容並執行。
 
-若先前已執行過舊版 schema，也請重新執行目前這份完整檔案。它會新增加工紀錄與下拉選單資料表、把既有資料轉為免登入共用模式、將舊分類遷移為「刀片」，並依四種分類重新編排刀具編號；既有出入庫歷史不會被清除。
+`schema.sql` 是建立空白專案基礎資料表使用。已經升級為單一帳號安全模式後，不要再次執行舊的 `schema.sql` 或 `admin_data.sql`，以免恢復舊共用政策。
 
 這份 SQL 會建立：
 
@@ -78,7 +79,7 @@ npm run preview
 - `production_records` 加工數量、機台、工時與備註紀錄
 - `production_options` 產品編號與機台下拉選單資料
 - 入庫紀錄同時作為刀具的歷史價格來源，不需另一張價格表
-- 免登入共用資料專用的 Row Level Security policies
+- 基礎 Row Level Security policies（最後會由單一帳號安全升級檔取代）
 - `create_product_with_initial_stock(...)` 安全建立刀具 RPC
 - `register_stock_movement(...)` 安全出入庫 RPC
 - `delete_stock_movement(...)` 安全刪除與完整庫存軌跡重算 RPC
@@ -87,25 +88,28 @@ npm run preview
 
 `register_stock_movement` 會鎖定刀具資料列、檢查共用資料範圍與負庫存，並以 `request_key` 防止同一次請求重送造成重複加減。
 
-### 2. 啟用完整 Excel 備份／還原
+### 2. 新專案先啟用完整 Excel 備份／還原
 
-在 SQL Editor 建立一個 **New query**，開啟 [`supabase/admin_data.sql`](supabase/admin_data.sql)，複製整份內容並執行。成功後再執行下面一行設定管理員密碼（必須是 8 位數字）：
-
-```sql
-select private.set_admin_password('請改成8位數字密碼');
-```
-
-密碼只會以雜湊形式存放在 Supabase 的 private schema，不需要放進 `.env.local` 或 GitHub Actions Secrets。完整匯入及所有刪除功能都必須通過密碼驗證；連續輸入錯誤 5 次會暫停操作 5 分鐘。
+只有全新空白 Supabase 專案才需要先執行 [`supabase/admin_data.sql`](supabase/admin_data.sql)。不要再設定舊的 8 位數管理密碼；下一步安全升級會移除舊密碼表，改用 Supabase 帳號密碼重新驗證。
 
 首頁的「資料備份／還原」可以：
 
 - 匯出刀具資料、出入庫歷史、加工數量與管理選項到同一份 Excel。
 - 選擇整理後的 Excel，先檢查欄位、日期、數字、重複編號與資料筆數。
-- 輸入「覆蓋資料」並再次通過管理員密碼後，以單一資料庫交易完整還原；發生錯誤會全部回復。
+- 輸入「覆蓋資料」並再次通過帳號登入密碼後，以單一資料庫交易完整還原；發生錯誤會全部回復。
 
 匯入會取代目前的雲端資料，務必保留一份未修改的原始備份。
 
-### 3. 填入前端環境變數
+### 3. 執行單一帳號安全升級
+
+1. 先從舊網站下載一份完整 Excel 備份。
+2. 確認 Supabase Authentication → Users 中已存在 `kuanlin@chyuansheu.com`，UID 為 `5568706d-caaa-459b-b842-13cdbc3929fc`。
+3. 在 SQL Editor 建立 **New query**，完整貼上 [`supabase/secure_single_user.sql`](supabase/secure_single_user.sql) 後按 **Run**。
+4. 成功畫面會顯示 `Success. No rows returned`。此檔會核對 UID 與 Email、把既有共用資料歸戶、關閉匿名權限並重建安全 RPC。
+
+安全升級完成後，不要再執行 `schema.sql`、`admin_data.sql` 或舊的 `set_admin_password` 指令。
+
+### 4. 填入前端環境變數
 
 從 Supabase 專案設定的 API 頁面取得 Project URL 與 anon/public key。複製範例檔：
 
@@ -126,9 +130,11 @@ VITE_SUPABASE_URL=https://你的專案.supabase.co
 VITE_SUPABASE_ANON_KEY=你的_anon_key
 ```
 
-重新執行 `npm run dev`。首頁仍會直接開啟；進入庫存管理後，狀態顯示「雲端模式」就代表連線成功。
+重新執行 `npm run dev`。雲端模式會先顯示登入畫面；登入名稱為 `kuanlin`。
 
-> `anon` key 本來就是供瀏覽器使用；絕對不要把 `service_role` key 放進 Vite、GitHub Pages 或任何 `VITE_` 變數。此版本刻意不設登入，因此任何取得網站網址的人都能使用同一份庫存資料；正式網址請只提供給內部使用者。若未來需要對外公開，建議再啟用登入與個別帳戶權限。
+> `anon`／publishable key 本來就是供瀏覽器使用；絕對不要把 `service_role` key 放進 Vite、GitHub Pages 或任何 `VITE_` 變數。真正的資料保護由 Supabase Auth、RLS 與安全 RPC 負責。
+
+首次使用或忘記密碼時，在登入畫面按「忘記密碼或尚未設定密碼」。請先在 Supabase Authentication → URL Configuration 將正式 GitHub Pages 網址加入 Redirect URLs。郵件連結回到網站後會顯示設定新密碼畫面；已公開使用過的舊管理密碼 `16866319` 不可再當登入密碼。
 
 ## 部署到 GitHub Pages
 
@@ -160,14 +166,15 @@ Vite 已使用相對資源路徑，因此同時支援 `帳號.github.io` 與 `�
 
 ## 資料與安全設計
 
-- 前端只能讀取與編輯免登入共用資料列（`user_id is null`）。
-- 加工紀錄允許共用模式新增與查詢；刪除必須呼叫管理員密碼保護的 RPC，並由資料庫檢查工時和數量格式。
+- 匿名角色沒有任何資料表或業務 RPC 權限。
+- 每筆資料的 `user_id` 都必須等於指定 UID；RLS 同時檢查登入 JWT 與資料擁有者。
+- 加工紀錄新增與查詢只開放給指定帳號；刪除前由 Supabase Auth 再次驗證帳號密碼。
 - 前端可編輯刀具說明欄位，但沒有直接修改 `stock_quantity`、`unit_price` 或歷史資料的權限。
 - 所有庫存增減只允許呼叫 `register_stock_movement`。
-- 刪除出入庫只允許呼叫管理員密碼保護的 RPC，不能由瀏覽器直接刪除歷史表。
-- RPC 固定操作共用資料，不接受前端傳入任意 `user_id`。
+- 刪除出入庫只允許呼叫已登入帳號專用的 RPC，不能由瀏覽器直接刪除歷史表。
+- RPC 從登入 JWT 取得 UID，不接受前端傳入任意 `user_id`。
 - 刀具編號會依「刀片、鑽銑刀、刀柄、其他」四種分類分別安全遞增。
-- 刪除刀具會一併刪除該刀具的歷史，且必須通過管理員密碼驗證。
+- 刪除刀具會一併刪除該刀具的歷史，且必須再次通過帳號密碼驗證。
 
 ## 專案結構
 
@@ -178,11 +185,13 @@ blade-inventory/
 ├─ src/
 │  ├─ lib/repository.ts          # Supabase / 示範資料存取
 │  ├─ lib/supabase.ts            # Supabase client
+│  ├─ lib/auth.ts                # 指定帳號與重新驗證
 │  ├─ App.tsx                    # 頁面與互動
 │  ├─ styles.css                 # 完整視覺與響應式樣式
 │  └─ types.ts
 ├─ supabase/schema.sql           # Schema、RLS、日常功能 RPC
 ├─ supabase/admin_data.sql       # 管理員 Excel 備份／還原 RPC
+├─ supabase/secure_single_user.sql # 單一帳號歸戶、RLS 與安全 RPC 升級
 ├─ .env.example
 └─ vite.config.ts
 ```

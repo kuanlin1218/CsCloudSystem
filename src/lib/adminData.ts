@@ -73,18 +73,18 @@ function requireCloud() {
   return supabase
 }
 
-export async function exportAllAdminData(password: string): Promise<Required<Pick<AdminExportResult, 'exported_at' | 'data'>>> {
+export async function exportAllAdminData(): Promise<Required<Pick<AdminExportResult, 'exported_at' | 'data'>>> {
   const client = requireCloud()
-  const { data, error } = await client.rpc('admin_export_all', { p_password: password })
+  const { data, error } = await client.rpc('admin_export_all')
   if (error) throw error
   const result = data as AdminExportResult
   if (!result?.ok || !result.data) throw new Error(result?.error || '無法匯出雲端資料')
   return { exported_at: result.exported_at || new Date().toISOString(), data: result.data }
 }
 
-export async function importAllAdminData(password: string, payload: AdminDataPayload): Promise<AdminImportResult['counts']> {
+export async function importAllAdminData(payload: AdminDataPayload): Promise<AdminImportResult['counts']> {
   const client = requireCloud()
-  const { data, error } = await client.rpc('admin_import_all', { p_password: password, p_payload: payload })
+  const { data, error } = await client.rpc('admin_import_all', { p_payload: payload })
   if (error) throw error
   const result = data as AdminImportResult
   if (!result?.ok || !result.counts) throw new Error(result?.error || '無法匯入雲端資料')
