@@ -1929,7 +1929,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .production-table:not(.compact) tbody td:nth-child(5)::before { content: "數量"; }
   .production-table:not(.compact) tbody td:nth-child(6)::before { content: "總時間"; }
   .production-table:not(.compact) tbody td:nth-child(7)::before { content: "備註"; }
-  .production-table:not(.compact) tbody td:nth-child(8)::before { content: "操作"; }
+  .production-table:not(.compact) tbody td:nth-child(8)::before { content: none; }
   .production-table:not(.compact) .production-row-delete { width: 100%; min-height: 32px; font-size: 13px; }
 
   /* 「手機版－出入庫、刀具資料、庫存盤點」的「表格外框」：每一筆改成直向卡片，完全取消左右捲動。 */
@@ -1966,7 +1966,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .movement-table td:nth-child(7)::before { content: "金額"; }
   .movement-table td:nth-child(8)::before { content: "供應商"; }
   .movement-table td:nth-child(9)::before { content: "備註"; }
-  .movement-table td:nth-child(10)::before { content: "操作"; }
+  .movement-table td:nth-child(10)::before { content: none; }
 
   /* 「手機版－刀具資料」的「資料卡片欄位名稱」。 */
   .product-table td:nth-child(1)::before { content: "編號"; }
@@ -1977,7 +1977,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .product-table td:nth-child(6)::before { content: "數量"; }
   .product-table td:nth-child(7)::before { content: "單價"; }
   .product-table td:nth-child(8)::before { content: "購入日期"; }
-  .product-table td:nth-child(9)::before { content: "操作"; }
+  .product-table td:nth-child(9)::before { content: none; }
 
   /* 「手機版－庫存盤點」的「資料卡片欄位名稱」。 */
   .stocktake-table td:nth-child(1)::before { content: "編號"; }
@@ -2171,8 +2171,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
   /* 「電腦版－出入庫歷史」的「整張表格」：固定欄寬並允許內容換行。 */
   .movement-table { table-layout: fixed; white-space: normal; }
-  .movement-table th { height: 40px; padding: 0 5px; font-size: 12px; }
-  .movement-table td { height: 58px; padding: 5px; font-size: 13px; line-height: 1.3; white-space: normal; overflow-wrap: anywhere; }
+  .movement-table th { height: 40px; padding: 0 7px; font-size: 13px; }
+  .movement-table td { height: 56px; padding: 5px 7px; font-size: 14px; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
   .movement-table th:nth-child(1) { width: 7%; }
   .movement-table th:nth-child(2) { width: 10%; }
   .movement-table th:nth-child(3) { width: 8%; }
@@ -2183,18 +2183,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .movement-table th:nth-child(8) { width: 9%; }
   .movement-table th:nth-child(9) { width: 16%; }
   .movement-table th:nth-child(10) { width: 5%; }
-  .movement-table .code { font-size: 13px; white-space: normal; }
+  .movement-table .code { font-size: 14px; white-space: normal; }
   .movement-table .product-name,
   .movement-table .note-cell { max-width: none; white-space: normal; overflow: visible; text-overflow: clip; }
-  .movement-table .quantity { font-size: 15px !important; white-space: normal; }
-  .movement-table .tag { padding: 0 6px; font-size: 12px; }
+  .movement-table .quantity { font-size: 17px !important; white-space: normal; }
+  .movement-table .tag { padding: 0 7px; font-size: 12px; }
+  .movement-table td.muted { color: #edf4f7; }
   .movement-table .row-actions { min-width: 0; justify-content: center; }
-  .movement-table .row-actions button { width: 28px; height: 30px; }
+  .movement-table .row-actions button { width: 29px; height: 31px; }
 
   /* 「電腦版－庫存盤點」的「整張表格」：取消原本 1260px 最小寬度並固定欄位比例。 */
   .stocktake-table { width: 100%; min-width: 0; table-layout: fixed; white-space: normal; }
-  .stocktake-table th { height: 40px; padding: 0 5px; font-size: 12px; line-height: 1.25; white-space: normal; }
-  .stocktake-table td { height: 62px; padding: 5px; font-size: 13px; line-height: 1.3; white-space: normal; overflow-wrap: anywhere; }
+  .stocktake-table th { height: 40px; padding: 0 7px; font-size: 13px; line-height: 1.25; white-space: normal; }
+  .stocktake-table td { height: 56px; padding: 5px 7px; font-size: 14px; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
   .stocktake-table th:nth-child(1) { width: 8%; }
   .stocktake-table th:nth-child(2) { width: 16%; }
   .stocktake-table th:nth-child(3) { width: 8%; }
@@ -2204,12 +2205,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .stocktake-table th:nth-child(7) { width: 8%; }
   .stocktake-table th:nth-child(8) { width: 11%; }
   .stocktake-table th:nth-child(9) { width: 17%; }
-  .stocktake-table .code { font-size: 13px; white-space: normal; }
+  .stocktake-table .code { font-size: 14px; white-space: normal; }
   .stocktake-table .product-name { max-width: none; white-space: normal; overflow: visible; text-overflow: clip; }
-  .stocktake-table .quantity { font-size: 15px !important; white-space: normal; }
+  .stocktake-table .quantity { font-size: 17px !important; white-space: normal; }
   .stocktake-table .tag,
   .stocktake-table .known-price,
-  .stocktake-table .unknown-price { padding-left: 5px; padding-right: 5px; font-size: 11px; }
+  .stocktake-table .unknown-price { padding-left: 7px; padding-right: 7px; font-size: 12px; }
 
   /* 「電腦版－庫存盤點」的「實際數量、更新按鈕與備註輸入框」：跟隨欄位寬度縮放。 */
   .stocktake-table .stocktake-quantity,
@@ -2218,6 +2219,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .stocktake-table .stocktake-quantity { height: 38px; }
   .stocktake-table .stocktake-quantity input { padding: 0 5px; font-size: 14px; }
   .stocktake-table .stocktake-quantity span { padding: 0 5px 0 2px; font-size: 11px; }
-  .stocktake-table .stocktake-note { height: 38px; padding: 0 6px; font-size: 13px; }
-  .stocktake-table .stocktake-save { min-height: 36px; padding: 0 5px; gap: 4px; font-size: 12px; white-space: normal; }
+  .stocktake-table .stocktake-note { height: 38px; padding: 0 6px; font-size: 14px; }
+  .stocktake-table .stocktake-save { min-height: 36px; padding: 0 5px; gap: 4px; font-size: 14px; white-space: normal; }
 }
