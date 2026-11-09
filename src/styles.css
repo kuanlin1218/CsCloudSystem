@@ -1242,12 +1242,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「平板與手機版」的「訂單完工預估－預估結果」的「五張結果卡片排列」相關格式：本行可修改欄位數量與寬度。 */
   .forecast-grid { grid-template-columns: repeat(3, 1fr); }
 
-  /* 「手機版」的「加工數量登記」的「實際工時（時）」的「輸入框」相關格式 */
-  .duration-fields input.actual-hours-input {font-size: 24px;}
-
-  /* 「手機版」的「加工數量登記」的「實際工時（分）」的「輸入框」相關格式 */
-  .duration-fields input.actual-minutes-input { font-size: 24px; }
-
 /* 「平板與手機版」的「訂單完工預估－預估結果」的「五張結果卡片排列」相關格式。 */
 }
 
@@ -1256,7 +1250,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 @media (max-width: 620px) {
 
   /* 「手機版」的「整個網站－所有可輸入欄位」的「點擊後避免瀏覽器自動放大」相關格式：字體不可小於 16px；touch-action 可避免快速點擊造成額外縮放。 */
-  input, select, textarea { font-size: 16px; touch-action: manipulation; }
+  input, select, textarea { font-size: 20px; touch-action: manipulation; }
 
   /* 「手機版」的「整個網站－頁面頂端」的「示範模式提示」相關格式：本行可修改垂直對齊、水平對齊、字體大小、內距。 */
   .demo-banner { align-items: flex-start; justify-content: flex-start; font-size: 12px; padding: 9px 14px; }
@@ -1414,11 +1408,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版」的「舊版登入畫面保留樣式－登入功能」的「保留元件」相關格式：本行可修改內距。 */
   .auth-screen { padding: 12px; }.auth-card { padding: 24px 20px; }
 
-  /* 「手機版」的「加工數量登記」的「實際工時（時）」的「輸入框」相關格式 */
-  .duration-fields input.actual-hours-input {font-size: 24px;}
-
-  /* 「手機版」的「加工數量登記」的「實際工時（分）」的「輸入框」相關格式 */
-  .duration-fields input.actual-minutes-input { font-size: 24px; }
+  
 
 /* 「手機版」的「舊版登入畫面保留樣式－登入功能」的「保留元件」相關格式。 */
 }
@@ -1426,3 +1416,443 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* 「整個網站」的「無障礙設定」的「減少動畫效果」相關格式：本行可修改scroll-behavior、動畫速度、animation-duration、animation-iteration-count。 */
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+
+
+/* ========================================================================== */
+/* 手機版所有字體大小集中設定區                                                */
+/* 只需要修改下方的 px 數值；這一區放在檔案最後，會覆蓋前面的手機版字體設定。 */
+/* ========================================================================== */
+@media (max-width: 620px) {
+
+  /* ---------- 整個網站共用 ---------- */
+
+  /* 「手機版」的「整個網站」的「一般文字」字體大小。 */
+  body { font-size: 16px; }
+
+  /* 「手機版」的「整個網站」的「一般按鈕文字」字體大小。 */
+  button { font-size: 16px; }
+
+  /* 「手機版」的「整個網站」的「一般輸入框、下拉選單、備註輸入框」字體大小；建議不要小於 16px。 */
+  input, select, textarea { font-size: 20px; }
+
+  /* 「手機版」的「整個網站」的「雲端資料、錯誤提示橫幅」字體大小。 */
+  .demo-banner, .error-banner { font-size: 12px; }
+
+  /* 「手機版」的「整個網站」的「操作成功通知與載入提示」字體大小。 */
+  .toast, .loading-screen { font-size: 16px; }
+
+  /* ---------- 手機頂端與側邊功能選單 ---------- */
+
+  /* 「手機版」的「庫存管理系統側邊選單」的「庫存管理系統標題」字體大小。 */
+  .brand strong { font-size: 21px; }
+
+  /* 「手機版」的「庫存管理系統側邊選單」的「英文副標題」字體大小。 */
+  .brand small { font-size: 11px; }
+
+  /* 「手機版」的「庫存管理系統側邊選單」的「總覽、出入庫、庫存盤點、刀具資料」字體大小。 */
+  .nav-item { font-size: 18px; }
+
+  /* 「手機版」的「庫存管理系統側邊選單」的「雲端資料與免登入狀態」字體大小。 */
+  .status-line { font-size: 14px; }
+
+  /* 「手機版」的「庫存管理系統頂端列」的「目前功能名稱」字體大小。 */
+  .mobile-header { font-size: 16px; }
+
+  /* 「手機版」的「庫存管理系統內容頁」的「主標題上方英文小標」字體大小。 */
+  .page-title > div:first-child > span { font-size: 13px; }
+
+  /* 「手機版」的「庫存管理系統內容頁」的「總覽、出入庫、庫存盤點、刀具資料主標題」字體大小。 */
+  .page-title h1 { font-size: 30px; }
+
+  /* 「手機版」的「庫存管理系統內容頁」的「右上方新增或操作按鈕」字體大小。 */
+  .page-title:has(.button.primary) .title-actions .button { font-size: 14px; }
+
+  /* ---------- 系統首頁 ---------- */
+
+  /* 「手機版」的「系統首頁」的「CHYUAN SHEU CNC CLOUD 英文標題」字體大小。 */
+  .home-eyebrow { font-size: 12px; }
+
+  /* 「手機版」的「系統首頁」的「詮栩 CNC 雲端系統主標題」字體大小。 */
+  .home-hero h1 { font-size: 34px; }
+
+  /* 「手機版」的「系統首頁」的「加工資訊與庫存管理整合平台副標題」字體大小。 */
+  .home-hero p { font-size: 16px; }
+
+  /* 「手機版」的「系統首頁」的「SYSTEM FUNCTIONS 英文小標」字體大小。 */
+  .home-section-head span { font-size: 11px; }
+
+  /* 「手機版」的「系統首頁」的「功能選擇標題」字體大小。 */
+  .home-section-head h2 { font-size: 25px; }
+
+  /* 「手機版」的「系統首頁」的「功能卡片標題」字體大小。 */
+  .function-copy strong { font-size: 19px; }
+
+  /* 「手機版」的「系統首頁」的「功能卡片說明」字體大小。 */
+  .function-copy small { font-size: 13px; }
+
+  /* 「手機版」的「系統首頁」的「未來功能標題」字體大小。 */
+  .future-head { font-size: 14px; }
+
+  /* 「手機版」的「系統首頁」的「未來功能小標籤」字體大小。 */
+  .future-head small { font-size: 10px; }
+
+  /* 「手機版」的「系統首頁」的「尚未開放標籤」字體大小。 */
+  .function-card.is-future em { font-size: 11px; }
+
+  /* ---------- 加工數量登記與加工數量查詢共用 ---------- */
+
+  /* 「手機版」的「加工數量登記與加工數量查詢」的「頁面頂端英文小標」字體大小。 */
+  .production-head > div > span:not(.production-head-icon) { font-size: 11px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢」的「頁面主標題」字體大小。 */
+  .production-head h1 { font-size: 30px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢」的「返回首頁按鈕」字體大小。 */
+  .production-back { font-size: 16px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢」的「雲端資料狀態」字體大小。 */
+  .production-mode { font-size: 12px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢」的「日期、產品編號、機台、數量、備註欄位標題」字體大小。 */
+  .production-field-row > label:first-child { font-size: 15px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢」的「一般輸入框與備註輸入框」字體大小。 */
+  .production-field-row > input, .production-field-row > textarea { font-size: 20px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢」的「產品編號與機台下拉選單」字體大小。 */
+  .production-field-row > select { font-size: 16px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢」的「可以輸入關鍵字的下拉選單」字體大小。 */
+  .production-field-row .editable-combo input { font-size: 16px; }
+
+  /* 「手機版」的「加工數量登記」的「管理產品編號與機台標題」字體大小。 */
+  .production-data-tools > div:first-child span { font-size: 16px; }
+
+  /* 「手機版」的「加工數量登記」的「管理產品編號與機台說明」字體大小。 */
+  .production-data-tools > div:first-child small { font-size: 13px; }
+
+  /* 「手機版」的「加工數量登記」的「管理產品編號與管理機台按鈕」字體大小。 */
+  .production-data-tools button { font-size: 16px; }
+
+  /* ---------- 加工數量登記－實際加工時間 ---------- */
+
+  /* 「手機版」的「加工數量登記」的「實際加工時間標題」字體大小。 */
+  .time-entry-head strong { font-size: 16px; }
+
+  /* 「手機版」的「加工數量登記」的「實際加工時間說明」字體大小。 */
+  .time-entry-head small { font-size: 13px; }
+
+  /* 「手機版」的「加工數量登記」的「加工時間計算按鈕」字體大小。 */
+  .time-entry-head > button { font-size: 16px; }
+
+  /* 「手機版」的「加工數量登記」的「實際工時（時）欄位標題」字體大小。 */
+  .duration-fields label.actual-hours-field > span { font-size: 13px; }
+
+  /* 「手機版」的「加工數量登記」的「實際工時（時）輸入框」字體大小。 */
+  .duration-fields input.actual-hours-input { font-size: 24px; }
+
+  /* 「手機版」的「加工數量登記」的「實際工時（分）欄位標題」字體大小。 */
+  .duration-fields label.actual-minutes-field > span { font-size: 13px; }
+
+  /* 「手機版」的「加工數量登記」的「實際工時（分）輸入框」字體大小。 */
+  .duration-fields input.actual-minutes-input { font-size: 24px; }
+
+  /* 「手機版」的「加工數量登記」的「實際總時間標題」字體大小。 */
+  .duration-fields > div span { font-size: 12px; }
+
+  /* 「手機版」的「加工數量登記」的「實際總時間數字」字體大小。 */
+  .duration-fields > div strong { font-size: 22px; }
+
+  /* 「手機版」的「加工數量登記」的「送出與刪除最後一筆按鈕」字體大小。 */
+  .production-action { font-size: 19px; }
+
+  /* ---------- 加工時間計算彈出視窗 ---------- */
+
+  /* 「手機版」的「加工時間計算」的「視窗說明」字體大小。 */
+  .modal-intro { font-size: 16px; }
+
+  /* 「手機版」的「加工時間計算」的「總工時與扣除工時標題」字體大小。 */
+  .duration-row > strong { font-size: 16px; }
+
+  /* 「手機版」的「加工時間計算」的「時與分欄位標題」字體大小。 */
+  .duration-row label { font-size: 16px; }
+
+  /* 「手機版」的「加工時間計算」的「時與分輸入框」字體大小。 */
+  .duration-row input { font-size: 20px; }
+
+  /* 「手機版」的「加工時間計算」的「減去文字」字體大小。 */
+  .duration-operator { font-size: 16px; }
+
+  /* 「手機版」的「加工時間計算」的「計算結果標題」字體大小。 */
+  .time-result span { font-size: 16px; }
+
+  /* 「手機版」的「加工時間計算」的「計算結果數字」字體大小。 */
+  .time-result strong { font-size: 20px; }
+
+  /* ---------- 加工數量查詢與訂單完工預估 ---------- */
+
+  /* 「手機版」的「加工數量查詢」的「日期區間、最後一筆、全部與下載 Excel 按鈕」字體大小。 */
+  .query-button { font-size: 16px; }
+
+  /* 「手機版」的「加工數量查詢」的「訂單完工預估工具標題」字體大小。 */
+  .query-utility-bar strong { font-size: 16px; }
+
+  /* 「手機版」的「加工數量查詢」的「訂單完工預估工具說明」字體大小。 */
+  .query-utility-bar small { font-size: 13px; }
+
+  /* 「手機版」的「加工數量查詢」的「開啟訂單完工預估按鈕」字體大小。 */
+  .query-utility-bar > button { font-size: 16px; }
+
+  /* 「手機版」的「訂單完工預估」的「功能標題」字體大小。 */
+  .forecast-head strong { font-size: 17px; }
+
+  /* 「手機版」的「訂單完工預估」的「功能說明」字體大小。 */
+  .forecast-head small { font-size: 13px; }
+
+  /* 「手機版」的「訂單完工預估」的「訂單總數量欄位標題」字體大小。 */
+  .forecast-head > label { font-size: 18px; }
+
+  /* 「手機版」的「訂單完工預估」的「訂單總數量輸入框」字體大小。 */
+  .forecast-head input.order-quantity-input { font-size: 20px; }
+
+  /* 「手機版」的「訂單完工預估」的「尚未輸入或沒有歷史資料提示」字體大小。 */
+  .forecast-placeholder { font-size: 16px; }
+
+  /* 「手機版」的「訂單完工預估」的「結果卡片標題」字體大小。 */
+  .forecast-grid span { font-size: 12px; }
+
+  /* 「手機版」的「訂單完工預估」的「結果卡片數字」字體大小。 */
+  .forecast-grid strong { font-size: 21px; }
+
+  /* 「手機版」的「訂單完工預估」的「結果卡片單位」字體大小。 */
+  .forecast-grid small { font-size: 11px; }
+
+  /* 「手機版」的「訂單完工預估」的「計算公式說明」字體大小。 */
+  .forecast-note { font-size: 11px; }
+
+  /* 「手機版」的「加工數量查詢」的「永久刪除標題」字體大小。 */
+  .query-danger-zone strong { font-size: 16px; }
+
+  /* 「手機版」的「加工數量查詢」的「永久刪除說明」字體大小。 */
+  .query-danger-zone small { font-size: 13px; }
+
+  /* 「手機版」的「加工數量查詢」的「永久刪除按鈕」字體大小。 */
+  .query-danger-zone button { font-size: 16px; }
+
+  /* ---------- 管理產品編號與機台 ---------- */
+
+  /* 「手機版」的「管理產品編號與機台」的「新增與刪除說明」字體大小。 */
+  .option-help { font-size: 13px; }
+
+  /* 「手機版」的「管理產品編號與機台」的「目前資料標題」字體大小。 */
+  .option-list-head span { font-size: 16px; }
+
+  /* 「手機版」的「管理產品編號與機台」的「目前資料筆數」字體大小。 */
+  .option-list-head small { font-size: 13px; }
+
+  /* 「手機版」的「管理產品編號與機台」的「產品編號或機台文字」字體大小。 */
+  .option-list-item > span { font-size: 15px; }
+
+  /* ---------- 加工數量查詢結果 ---------- */
+
+  /* 「手機版」的「加工數量查詢結果」的「產品編號標題」字體大小。 */
+  .result-title span { font-size: 13px; }
+
+  /* 「手機版」的「加工數量查詢結果」的「產品編號文字」字體大小。 */
+  .result-title strong { font-size: 20px; }
+
+  /* 「手機版」的「加工數量查詢結果」的「日期範圍或最後日期說明」字體大小。 */
+  .result-title small { font-size: 13px; }
+
+  /* 「手機版」的「加工數量查詢結果」的「表格標題列」字體大小。 */
+  .production-table th { font-size: 16px; }
+
+  /* 「手機版」的「加工數量查詢結果」的「表格資料列」字體大小。 */
+  .production-table td { font-size: 16px; }
+
+  /* 「手機版」的「加工數量查詢結果」的「單筆刪除按鈕」字體大小。 */
+  .production-row-delete { font-size: 14px; }
+
+  /* 「手機版」的「加工數量查詢結果」的「沒有資料提示」字體大小。 */
+  .production-empty { font-size: 16px; }
+
+  /* 「手機版」的「加工數量查詢全部統計」的「統計卡片標題」字體大小。 */
+  .production-totals span { font-size: 13px; }
+
+  /* 「手機版」的「加工數量查詢全部統計」的「統計卡片數字」字體大小。 */
+  .production-totals strong { font-size: 23px; }
+
+  /* 「手機版」的「加工數量查詢全部統計」的「統計卡片單位」字體大小。 */
+  .production-totals small { font-size: 12px; }
+
+  /* ---------- 庫存總覽 ---------- */
+
+  /* 「手機版」的「庫存總覽」的「統計卡片標題」字體大小。 */
+  .stat-card > span { font-size: 14px; }
+
+  /* 「手機版」的「庫存總覽」的「統計卡片主要數字」字體大小。 */
+  .stat-card strong { font-size: 34px; }
+
+  /* 「手機版」的「庫存總覽」的「統計卡片補充說明」字體大小。 */
+  .stat-card small { font-size: 11px; }
+
+  /* 「手機版」的「庫存總覽」的「近 14 天出入庫圖表標題與圖例」字體大小。 */
+  .chart-head { font-size: 12px; }
+
+  /* 「手機版」的「庫存總覽」的「圖表日期與數量文字」字體大小。 */
+  .chart-wrap text { font-size: 11px; }
+
+  /* ---------- 出入庫歷史、庫存盤點與刀具資料 ---------- */
+
+  /* 「手機版」的「出入庫歷史、庫存盤點與刀具資料」的「搜尋框、分類、類型與日期欄位」字體大小。 */
+  .search-field input, .select-wrap select, .date-wrap input { font-size: 16px; }
+
+  /* 「手機版」的「出入庫歷史」的「入庫、出庫與採購金額摘要」字體大小。 */
+  .movement-summary { font-size: 14px; }
+
+  /* 「手機版」的「庫存盤點」的「盤點操作說明標題」字體大小。 */
+  .stocktake-guide strong { font-size: 16px; }
+
+  /* 「手機版」的「庫存盤點」的「盤點操作說明內容」字體大小。 */
+  .stocktake-guide p { font-size: 14px; }
+
+  /* 「手機版」的「庫存盤點」的「刀具項目、總庫存、待調整標題」字體大小。 */
+  .stocktake-summary span { font-size: 13px; }
+
+  /* 「手機版」的「庫存盤點」的「刀具項目、總庫存、待調整數字」字體大小。 */
+  .stocktake-summary strong { font-size: 23px; }
+
+  /* 「手機版」的「庫存盤點」的「統計卡片補充說明」字體大小。 */
+  .stocktake-summary small { font-size: 13px; }
+
+  /* 「手機版」的「出入庫歷史、庫存盤點與刀具資料」的「表格標題列」字體大小。 */
+  .data-table th { font-size: 15px; }
+
+  /* 「手機版」的「出入庫歷史、庫存盤點與刀具資料」的「表格資料列」字體大小。 */
+  .data-table td { font-size: 15px; }
+
+  /* 「手機版」的「刀具資料與庫存盤點」的「刀具編號」字體大小。 */
+  .data-table .code { font-size: 16px; }
+
+  /* 「手機版」的「出入庫歷史、庫存盤點與刀具資料」的「表格補充小字」字體大小。 */
+  .data-table small { font-size: 13px; }
+
+  /* 「手機版」的「庫存盤點」的「實際盤點數量輸入框」字體大小。 */
+  .stocktake-quantity input { font-size: 17px; }
+
+  /* 「手機版」的「庫存盤點」的「實際盤點數量單位」字體大小。 */
+  .stocktake-quantity span { font-size: 12px; }
+
+  /* 「手機版」的「庫存盤點」的「盤點差異文字」字體大小。 */
+  .stocktake-difference { font-size: 15px; }
+
+  /* 「手機版」的「庫存盤點」的「盤點備註輸入框」字體大小。 */
+  .stocktake-note { font-size: 16px; }
+
+  /* 「手機版」的「庫存盤點」的「更新數量按鈕」字體大小。 */
+  .stocktake-save { font-size: 15px; }
+
+  /* 「手機版」的「刀具資料」的「已知單價」字體大小。 */
+  .known-price { font-size: 14px; }
+
+  /* 「手機版」的「刀具資料」的「未設定價格標籤」字體大小。 */
+  .unknown-price { font-size: 12px; }
+
+  /* 「手機版」的「刀具資料」的「庫存數量」字體大小。 */
+  .quantity { font-size: 20px !important; }
+
+  /* 「手機版」的「出入庫歷史與刀具資料」的「分類與出入庫標籤」字體大小。 */
+  .tag { font-size: 13px; }
+
+  /* 「手機版」的「出入庫歷史與歷史價格」的「價格漲跌小字」字體大小。 */
+  .price-cell small, .history-price small { font-size: 12px; }
+
+  /* 「手機版」的「出入庫歷史與刀具資料」的「沒有資料提示」字體大小。 */
+  .empty-state { font-size: 16px; }
+
+  /* ---------- 所有彈出視窗與表單 ---------- */
+
+  /* 「手機版」的「所有彈出視窗」的「視窗主標題」字體大小。 */
+  .modal-head h2 { font-size: 23px; }
+
+  /* 「手機版」的「出入庫彈出視窗」的「入庫與出庫切換按鈕」字體大小。 */
+  .segmented button { font-size: 17px; }
+
+  /* 「手機版」的「新增刀具、出入庫與管理員驗證表單」的「欄位標題」字體大小。 */
+  .field > span { font-size: 16px; }
+
+  /* 「手機版」的「新增刀具、出入庫與管理員驗證表單」的「輸入框、下拉選單與備註輸入框」字體大小。 */
+  .field input, .field select, .field textarea { font-size: 20px; }
+
+  /* 「手機版」的「新增刀具」的「目前庫存區塊標題」字體大小。 */
+  .initial-stock legend { font-size: 13px; }
+
+  /* 「手機版」的「出入庫」的「目前庫存提示」字體大小。 */
+  .stock-hint { font-size: 13px; }
+
+  /* 「手機版」的「出入庫」的「刀具動態搜尋結果」字體大小。 */
+  .product-picker-menu button { font-size: 16px; }
+
+  /* 「手機版」的「出入庫」的「刀具動態搜尋結果庫存文字」字體大小。 */
+  .product-picker-menu button small { font-size: 13px; }
+
+  /* 「手機版」的「出入庫」的「找不到刀具提示」字體大小。 */
+  .product-picker-empty { font-size: 16px; }
+
+  /* 「手機版」的「新增刀具與入庫」的「採購總價標題」字體大小。 */
+  .total-preview > span { font-size: 14px; }
+
+  /* 「手機版」的「新增刀具與入庫」的「採購總價數字」字體大小。 */
+  .modal .total-preview strong { font-size: 21px; }
+
+  /* 「手機版」的「新增刀具與入庫」的「數量乘單價算式」字體大小。 */
+  .total-preview small { font-size: 12px; }
+
+  /* 「手機版」的「所有表單」的「錯誤訊息與一般提示」字體大小。 */
+  .form-error, .form-message { font-size: 14px; }
+
+  /* ---------- 資料備份、管理員驗證與刪除 ---------- */
+
+  /* 「手機版」的「資料備份與管理員功能」的「安全說明與區塊說明」字體大小。 */
+  .admin-security-note span, .admin-data-heading span { font-size: 13px; }
+
+  /* 「手機版」的「資料備份與管理員功能」的「區塊標題」字體大小。 */
+  .admin-security-note strong, .admin-data-heading strong { font-size: 16px; }
+
+  /* 「手機版」的「資料備份」的「選擇 Excel 檔案文字」字體大小。 */
+  .admin-file-picker { font-size: 16px; }
+
+  /* 「手機版」的「資料備份」的「匯入資料筆數卡片標題」字體大小。 */
+  .admin-preview span { font-size: 12px; }
+
+  /* 「手機版」的「資料備份」的「匯入資料筆數」字體大小。 */
+  .admin-preview b { font-size: 19px; }
+
+  /* 「手機版」的「管理員刪除驗證」的「警告標題」字體大小。 */
+  .admin-delete-warning strong { font-size: 16px; }
+
+  /* 「手機版」的「管理員刪除驗證」的「警告內容」字體大小。 */
+  .admin-delete-warning span { font-size: 14px; }
+
+  /* 「手機版」的「資料備份」的「操作成功訊息」字體大小。 */
+  .admin-success { font-size: 14px; }
+
+  /* ---------- 歷史價格 ---------- */
+
+  /* 「手機版」的「歷史價格」的「最新、最低、最高卡片標題」字體大小。 */
+  .price-stats .stat-card > span { font-size: 13px; }
+
+  /* 「手機版」的「歷史價格」的「最新、最低、最高價格數字」字體大小。 */
+  .price-stats .stat-card strong { font-size: 20px; }
+
+  /* ---------- 舊版登入保留畫面 ---------- */
+
+  /* 「手機版」的「舊版登入保留畫面」的「英文小標」字體大小。 */
+  .auth-eyebrow { font-size: 12px; }
+
+  /* 「手機版」的「舊版登入保留畫面」的「主標題」字體大小。 */
+  .auth-card h1 { font-size: 30px; }
+
+  /* 「手機版」的「舊版登入保留畫面」的「說明文字」字體大小。 */
+  .auth-copy { font-size: 14px; }
+}
