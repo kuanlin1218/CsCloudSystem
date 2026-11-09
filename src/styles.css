@@ -1,477 +1,1410 @@
+/*
+ * 全站中文搜尋註解版。
+ * 每段註解固定使用：「功能名稱」的「區塊名稱」的「元件名稱」相關格式。
+ * 在 VS Code 按 Ctrl + F，直接搜尋畫面上的中文，例如：訂單總數量、實際工時（時）、盤點備註、公司 Logo。
+ * font-size＝字體大小；width／height＝寬高；padding＝內距；margin＝外距；gap＝元件間距；background＝背景。
+ */
+/* === 全站畫面名稱逐行註解版 === */
+
+
+
+/* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式。 */
 :root {
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改color-scheme。 */
   color-scheme: dark;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改字型。 */
   font-family: Inter, "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改font-synthesis。 */
   font-synthesis: none;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --bg。 */
   --bg: #080c0e;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --sidebar。 */
   --sidebar: #070a0c;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --panel。 */
   --panel: #13181c;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --panel-2。 */
   --panel-2: #0d1215;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --panel-hover。 */
   --panel-hover: #191f23;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --line。 */
   --line: #2a3238;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --line-soft。 */
   --line-soft: rgba(113, 132, 143, .13);
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --text。 */
   --text: #e9eef1;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --muted。 */
   --muted: #8a98a3;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --yellow。 */
   --yellow: #ffc23a;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --yellow-2。 */
   --yellow-2: #ffd44d;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --green。 */
   --green: #3dccb3;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改共用顏色變數 --red。 */
   --red: #ff795c;
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改背景。 */
   background: var(--bg);
+
+  /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式：本行可修改文字或圖示顏色。 */
   color: var(--text);
+
+/* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式。 */
 }
 
+
+/* 「整個網站」的「所有畫面」的「尺寸計算方式」相關格式：本行可修改box-sizing。 */
 * { box-sizing: border-box; }
+
+/* 「整個網站」的「所有畫面」的「頁面本體」相關格式：本行可修改外距、最小寬度、最小高度、背景。 */
 body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--bg); }
+
+/* 「整個網站」的「所有表單」的「按鈕與輸入欄位共用樣式」相關格式：本行可修改字型／粗細／大小。 */
 button, input, select, textarea { font: inherit; }
+
+/* 「整個網站」的「所有表單」的「按鈕與輸入欄位共用樣式」相關格式：本行可修改文字或圖示顏色。 */
 button { color: inherit; }
+
+/* 「整個網站」的「所有表單」的「按鈕與輸入欄位共用樣式」相關格式：本行可修改button、outline、outline-offset。 */
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 
+
+/* 「整個網站」的「最外層」的「網站背景與高度」相關格式：本行可修改最小高度、背景顏色。 */
 .app-shell { min-height: 100vh; background-color: var(--bg); }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「整個側邊欄」相關格式：本行可修改定位方式、四邊位置、顯示層級、寬度、排列方式、flex-direction、背景、border-right。 */
 .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 40; width: 292px; display: flex; flex-direction: column; background: var(--sidebar); border-right: 1px solid #252c31; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「系統名稱與標誌區」相關格式：本行可修改排列方式、垂直對齊、元件間距、內距。 */
 .brand { display: flex; align-items: center; gap: 16px; padding: 20px; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「系統標誌」相關格式：本行可修改定位方式、寬度、高度、文字或圖示顏色、排列方式、place-items、flex。 */
 .brand-mark { position: relative; width: 34px; height: 34px; color: var(--yellow); display: grid; place-items: center; flex: 0 0 auto; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「系統標誌」相關格式：本行可修改寬度、高度、stroke-width。 */
 .brand-mark svg { width: 34px; height: 34px; stroke-width: 1.4; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「系統標誌」相關格式：本行可修改定位方式、寬度、高度、圓角、背景、上方位置、左側位置。 */
 .brand-mark i { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #0a0d0f; top: 18px; left: 14px; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「庫存管理系統標題」相關格式：本行可修改排列方式、字體大小、字距。 */
 .brand strong { display: block; font-size: 21px; letter-spacing: .04em; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「英文副標題」相關格式：本行可修改排列方式、上方外距、文字或圖示顏色、字型／粗細／大小、字距。 */
 .brand small { display: block; margin-top: 2px; color: #a7bdcb; font: 11px/1.2 ui-monospace, "Cascadia Code", monospace; letter-spacing: .25em; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「功能選單排列區」相關格式：本行可修改內距。 */
 .sidebar nav { padding: 3px 8px; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「總覽、出入庫、庫存盤點、刀具資料按鈕」相關格式：本行可修改寬度、排列方式、垂直對齊、元件間距、邊框、圓角、背景、文字或圖示顏色、內距、字體大小、字體粗細、cursor、文字對齊。 */
 .nav-item { width: 100%; display: flex; align-items: center; gap: 16px; border: 0; border-radius: 6px; background: transparent; color: #d9e0e5; padding: 12px 14px; font-size: 18px; font-weight: 700; cursor: pointer; text-align: left; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「總覽、出入庫、庫存盤點、刀具資料按鈕」相關格式：本行可修改寬度、高度、文字或圖示顏色。 */
 .nav-item svg { width: 20px; height: 20px; color: #c6d0d6; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「總覽、出入庫、庫存盤點、刀具資料按鈕」相關格式：本行可修改背景。 */
 .nav-item:hover { background: #12171a; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「總覽、出入庫、庫存盤點、刀具資料按鈕」相關格式：本行可修改定位方式、背景。 */
 .nav-item.active { position: relative; background: #1a2024; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「總覽、出入庫、庫存盤點、刀具資料按鈕」相關格式：本行可修改content、定位方式、左側位置、上方位置、下方位置、寬度、圓角、背景。 */
 .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 4px; background: var(--yellow); }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「底部雲端狀態區」相關格式：本行可修改上方外距、內距、border-top、排列方式、元件間距。 */
 .sidebar-foot { margin-top: auto; padding: 16px 12px 24px; border-top: 1px solid #252c31; display: grid; gap: 9px; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「雲端資料與免登入狀態」相關格式：本行可修改排列方式、垂直對齊、元件間距、文字或圖示顏色、字體大小、內距。 */
 .status-line { display: flex; align-items: center; gap: 11px; color: #b6c0c6; font-size: 14px; padding: 5px 8px; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「雲端資料與免登入狀態」相關格式：本行可修改寬度。 */
 .status-line svg { width: 18px; }
+
+/* 「庫存管理系統」的「電腦版左側選單」的「舊版登出按鈕保留樣式」相關格式：本行可修改字體大小。 */
 .logout { font-size: 15px; }
 
+
+/* 「整個網站」的「主要內容區」的「格線背景與版面」相關格式：本行可修改最小高度、左側外距、背景顏色、背景圖案、background-size。 */
 .main-panel { min-height: 100vh; margin-left: 292px; background-color: var(--bg); background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px); background-size: 40px 40px; }
+
+/* 「系統首頁」的「首頁外框」的「寬度、對齊與背景」相關格式：本行可修改左側外距。 */
 .wide-panel { margin-left: 0; }
+
+/* 「系統首頁」的「首頁外框」的「寬度、對齊與背景」相關格式：本行可修改左側外距、最小高度、排列方式、垂直對齊。 */
 .portal-panel { margin-left: 0; min-height: 100vh; display: flex; align-items: center; }
+
+/* 「系統首頁」的「首頁外框」的「寬度、對齊與背景」相關格式：本行可修改背景。 */
 .portal-shell { background: radial-gradient(circle at 50% 15%, rgba(61,204,179,.06), transparent 36%), var(--bg); }
+
+/* 「庫存管理系統」的「一般內容頁」的「內容最大寬度與四周留白」相關格式：本行可修改最大寬度、外距、內距。 */
 .page-content { max-width: 1080px; margin: 0 auto; padding: 34px 40px 64px; }
+
+/* 「庫存管理系統」的「一般內容頁」的「頁面標題區」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、下方外距。 */
 .page-title { min-height: 82px; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+
+/* 「庫存管理系統」的「一般內容頁」的「主標題上方英文小標」相關格式：本行可修改排列方式、文字或圖示顏色、字型／粗細／大小、字距、text-transform。 */
 .page-title > div:first-child > span { display: block; color: #a8c0ce; font: 13px ui-monospace, "Cascadia Code", monospace; letter-spacing: .22em; text-transform: uppercase; }
+
+/* 「庫存管理系統」的「一般內容頁」的「總覽、出入庫、庫存盤點、刀具資料主標題」相關格式：本行可修改外距、字體大小、行高、字距、text-shadow。 */
 .page-title h1 { margin: 7px 0 0; font-size: clamp(32px, 4vw, 42px); line-height: 1; letter-spacing: .02em; text-shadow: 2px 2px 0 rgba(255,121,92,.5); }
+
+/* 「庫存管理系統」的「一般內容頁」的「右上方操作按鈕區」相關格式：本行可修改排列方式、元件間距、上方內距。 */
 .title-actions { display: flex; gap: 10px; padding-top: 20px; }
+
+/* 「整個網站」的「所有畫面」的「共用按鈕」相關格式：本行可修改邊框、圓角、最小高度、內距、排列方式、垂直對齊、水平對齊、元件間距、字體粗細、字體大小、cursor、動畫速度。 */
 .button { border: 1px solid transparent; border-radius: 7px; min-height: 46px; padding: 0 20px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-weight: 850; font-size: 17px; cursor: pointer; transition: transform .12s ease, filter .12s ease; }
+
+/* 「整個網站」的「所有畫面」的「共用按鈕」相關格式：本行可修改位移或旋轉、filter。 */
 .button:hover { transform: translateY(-1px); filter: brightness(1.07); }
+
+/* 「整個網站」的「所有畫面」的「共用按鈕」相關格式：本行可修改cursor、透明度、位移或旋轉。 */
 .button:disabled { cursor: not-allowed; opacity: .6; transform: none; }
+
+/* 「整個網站」的「所有畫面」的「共用按鈕」相關格式：本行可修改寬度。 */
 .button svg { width: 19px; }
+
+/* 「整個網站」的「主要操作」的「黃色主要按鈕」相關格式：本行可修改文字或圖示顏色、背景、邊框顏色。 */
 .button.primary { color: #111; background: linear-gradient(100deg, #ffbb37, #ffd64d); border-color: #d99b21; }
+
+/* 「庫存管理系統」的「入庫功能」的「綠色入庫按鈕」相關格式：本行可修改文字或圖示顏色、背景。 */
 .button.inbound { color: #071c18; background: var(--green); }
+
+/* 「整個網站」的「刪除或出庫功能」的「紅色按鈕」相關格式：本行可修改文字或圖示顏色、背景。 */
 .button.outbound { color: #25100a; background: var(--red); }
 
+
+/* 「整個網站」的「頁面頂端」的「示範模式提示」相關格式：本行可修改外距、內距、排列方式、垂直對齊、水平對齊、元件間距、border-bottom、背景、文字或圖示顏色、字體大小。 */
 .demo-banner, .error-banner { margin: 0; padding: 10px 22px; display: flex; align-items: center; justify-content: center; gap: 9px; border-bottom: 1px solid rgba(255,194,58,.25); background: rgba(255,194,58,.07); color: #dfc583; font-size: 13px; }
+
+/* 「整個網站」的「頁面頂端」的「示範模式提示」相關格式：本行可修改寬度。 */
 .demo-banner svg { width: 17px; }
+
+/* 「整個網站」的「頁面頂端」的「錯誤訊息與重試按鈕」相關格式：本行可修改文字或圖示顏色、背景、邊框顏色。 */
 .error-banner { color: #ffb5a5; background: rgba(255,121,92,.1); border-color: rgba(255,121,92,.25); }
+
+/* 「整個網站」的「頁面頂端」的「錯誤訊息與重試按鈕」相關格式：本行可修改文字或圖示顏色、邊框、背景、text-decoration、cursor。 */
 .error-banner button { color: var(--text); border: 0; background: transparent; text-decoration: underline; cursor: pointer; }
 
+
+/* 「系統首頁」的「整個首頁」的「首頁寬度與留白」相關格式：本行可修改寬度、最大寬度、上方內距。 */
 .home-page { width: 100%; max-width: 900px; padding-top: 28px; }
+
+/* 「系統首頁」的「首頁主視覺」的「Logo、主標題與副標題外框」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、flex-direction、內距、邊框、圓角、背景、文字對齊、捲動方式。 */
 .home-hero { min-height: 245px; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 34px; border: 1px solid var(--line); border-radius: 10px; background: radial-gradient(circle at 50% 0%, rgba(255,194,58,.15), transparent 43%), linear-gradient(135deg, rgba(61,204,179,.07), rgba(255,121,92,.05)), #101518; text-align: center; overflow: hidden; }
+
+/* 「系統首頁」的「首頁主視覺」的「舊版標誌保留樣式」相關格式：本行可修改定位方式、寬度、高度、排列方式、place-items、文字或圖示顏色、下方外距。 */
 .home-mark { position: relative; width: 58px; height: 58px; display: grid; place-items: center; color: var(--yellow); margin-bottom: 15px; }
+
+/* 「系統首頁」的「首頁主視覺」的「舊版標誌保留樣式」相關格式：本行可修改寬度、高度、stroke-width、定位方式、圓角、背景、上方位置、左側位置。 */
 .home-mark svg { width: 58px; height: 58px; stroke-width: 1.3; }.home-mark i { position: absolute; width: 11px; height: 11px; border-radius: 50%; background: #101518; top: 31px; left: 24px; }
 
+
+/* 「系統首頁」的「首頁主視覺」的「公司 Logo」相關格式。 */
 .home-company-logo {
+
+  /* 「系統首頁」的「首頁主視覺」的「公司 Logo」相關格式：本行可修改寬度。 */
   width: 120px;
+
+  /* 「系統首頁」的「首頁主視覺」的「公司 Logo」相關格式：本行可修改高度。 */
   height: 90px;
+
+  /* 「系統首頁」的「首頁主視覺」的「公司 Logo」相關格式：本行可修改object-fit。 */
   object-fit: contain;
+
+  /* 「系統首頁」的「首頁主視覺」的「公司 Logo」相關格式：本行可修改排列方式。 */
   display: block;
+
+  /* 「系統首頁」的「首頁主視覺」的「公司 Logo」相關格式：本行可修改外距。 */
   margin: 0 auto;
+
+/* 「系統首頁」的「首頁主視覺」的「公司 Logo」相關格式。 */
 }
 
 
 
 
+
+/* 「系統首頁」的「首頁主視覺」的「CHYUAN SHEU CNC CLOUD 英文標題」相關格式：本行可修改文字或圖示顏色、字型／粗細／大小、字距。 */
 .home-eyebrow { color: #9fb4c0; font: 12px ui-monospace, "Cascadia Code", monospace; letter-spacing: .24em; }
+
+/* 「系統首頁」的「首頁主視覺」的「詮栩 CNC 雲端系統主標題」相關格式：本行可修改外距、字體大小、字距、text-shadow。 */
 .home-hero h1 { margin: 9px 0 6px; font-size: clamp(36px, 5vw, 54px); letter-spacing: .05em; text-shadow: 3px 3px 0 rgba(255,121,92,.38); }
+
+/* 「系統首頁」的「首頁主視覺」的「加工資訊與庫存管理整合平台副標題」相關格式：本行可修改外距、文字或圖示顏色、字體大小、字距。 */
 .home-hero p { margin: 0; color: #91a1aa; font-size: 16px; letter-spacing: .05em; }
+
+/* 「系統首頁」的「功能選擇」的「SYSTEM FUNCTIONS 與功能選擇標題」相關格式：本行可修改排列方式、垂直對齊、水平對齊、元件間距、外距。 */
 .home-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin: 34px 2px 15px; }
+
+/* 「系統首頁」的「功能選擇」的「SYSTEM FUNCTIONS 與功能選擇標題」相關格式：本行可修改文字或圖示顏色、字型／粗細／大小、字距、外距、字體大小。 */
 .home-section-head span { color: #8ca7b6; font: 11px ui-monospace, monospace; letter-spacing: .2em; }.home-section-head h2 { margin: 5px 0 0; font-size: 25px; }
+
+/* 「系統首頁」的「功能選擇」的「SYSTEM FUNCTIONS 與功能選擇標題」相關格式：本行可修改文字或圖示顏色。 */
 .home-section-head > small { color: #75838c; }
+
+/* 「系統首頁」的「功能選擇」的「功能卡片排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距。 */
 .function-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+/* 「系統首頁」的「功能選擇」的「四張功能卡片欄數」相關格式：本行可修改欄位數量與寬度。 */
 .portal-functions { grid-template-columns: repeat(2, 1fr); }
+
+/* 「系統首頁」的「功能選擇」的「功能卡片」相關格式：本行可修改定位方式、最小高度、排列方式、垂直對齊、flex-direction、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、文字對齊、cursor、捲動方式、動畫速度。 */
 .function-card { position: relative; min-height: 142px; display: flex; align-items: flex-start; flex-direction: column; gap: 13px; padding: 20px; border: 1px solid #313b40; border-radius: 9px; background: #141a1e; color: var(--text); text-align: left; cursor: pointer; overflow: hidden; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+
+/* 「系統首頁」的「功能選擇」的「功能卡片」相關格式：本行可修改content、定位方式、左側位置、右側位置、下方位置、高度、背景。 */
 .function-card::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--card-accent); }
+
+/* 「系統首頁」的「功能選擇」的「功能卡片」相關格式：本行可修改位移或旋轉、邊框顏色、陰影。 */
 .function-card:not(:disabled):hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--card-accent) 55%, #303b41); box-shadow: 0 14px 35px rgba(0,0,0,.23); }
+
+/* 「系統首頁」的「功能選擇」的「功能卡片圖示」相關格式：本行可修改寬度、高度、排列方式、place-items、圓角、背景、文字或圖示顏色。 */
 .function-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 8px; background: color-mix(in srgb, var(--card-accent) 14%, transparent); color: var(--card-accent); }.function-icon svg { width: 22px; }
+
+/* 「系統首頁」的「功能選擇」的「加工數量登記、加工數量查詢、庫存管理系統、資料備份／還原標題」相關格式：本行可修改排列方式、字體大小、上方外距、文字或圖示顏色。 */
 .function-copy strong { display: block; font-size: 19px; }.function-copy small { display: block; margin-top: 5px; color: #8998a1; font-size: 13px; }
+
+/* 「系統首頁」的「功能選擇」的「功能卡片右上箭頭」相關格式：本行可修改定位方式、右側位置、上方位置、寬度、文字或圖示顏色、位移或旋轉。 */
 .function-arrow { position: absolute; right: 18px; top: 25px; width: 18px; color: #6f7d85; transform: rotate(-90deg); }
+
+/* 「系統首頁」的「功能選擇」的「功能卡片」相關格式：本行可修改共用顏色變數 --card-accent。 */
 .function-card.green { --card-accent: var(--green); }.function-card.orange { --card-accent: var(--red); }.function-card.yellow { --card-accent: var(--yellow); }
+
+/* 「系統首頁」的「功能選擇」的「功能卡片」相關格式：本行可修改共用顏色變數 --card-accent。 */
 .function-card.pink { --card-accent: #ff66ad; }.function-card.sunset { --card-accent: #ffb65c; }.function-card.purple { --card-accent: #bd7aff; }
+
+/* 「系統首頁」的「未來功能」的「尚未開放的功能卡片」相關格式：本行可修改排列方式、垂直對齊、元件間距、外距、文字或圖示顏色、字體大小、內距、邊框、圓角、字型／粗細／大小、字距。 */
 .future-head { display: flex; align-items: center; gap: 12px; margin: 30px 2px 13px; color: #8b9aa3; font-size: 14px; }.future-head small { padding: 4px 8px; border: 1px solid #343e44; border-radius: 20px; color: #718089; font: 10px ui-monospace, monospace; letter-spacing: .12em; }
+
+/* 「系統首頁」的「功能選擇」的「功能卡片」相關格式：本行可修改最小高度、透明度、cursor、定位方式、右側位置、上方位置、內距、圓角、背景、文字或圖示顏色、字體大小、font-style。 */
 .function-card.is-future { min-height: 125px; opacity: .72; cursor: default; }.function-card.is-future em { position: absolute; right: 14px; top: 15px; padding: 4px 8px; border-radius: 20px; background: #20272b; color: #87959d; font-size: 11px; font-style: normal; }
 
+
+/* 「加工數量登記與加工數量查詢」的「整個頁面」的「頁面寬度與留白」相關格式：本行可修改寬度、最小高度、外距、內距。 */
 .production-page { width: min(1050px, 100%); min-height: 100vh; margin: 0 auto; padding: 32px 34px 64px; }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「標題外框」相關格式：本行可修改定位方式、最小高度、排列方式、垂直對齊、水平對齊、下方外距、內距、邊框、圓角、背景、文字對齊、陰影。 */
 .production-head { position: relative; min-height: 150px; display: flex; align-items: center; justify-content: center; margin-bottom: 22px; padding: 30px 170px; border: 1px solid var(--line); border-radius: 10px; background: radial-gradient(circle at 50% 0, rgba(255,194,58,.13), transparent 52%), #101518; text-align: center; box-shadow: 0 15px 45px rgba(0,0,0,.18); }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「標題外框」相關格式：本行可修改排列方式、justify-items。 */
 .production-head > div { display: grid; justify-items: center; }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「標題外框」相關格式：本行可修改文字或圖示顏色、字型／粗細／大小、字距。 */
 .production-head > div > span:not(.production-head-icon) { color: #8fa7b4; font: 11px ui-monospace, monospace; letter-spacing: .2em; }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「頁面主標題」相關格式：本行可修改外距、字體大小、text-shadow。 */
 .production-head h1 { margin: 7px 0 0; font-size: clamp(30px, 5vw, 46px); text-shadow: 3px 3px 0 rgba(255,121,92,.34); }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「標題圖示」相關格式：本行可修改寬度、高度、排列方式、place-items、下方外距、圓角、背景、文字或圖示顏色。 */
 .production-head-icon { width: 44px; height: 44px; display: grid; place-items: center; margin-bottom: 8px; border-radius: 10px; background: rgba(255,194,58,.11); color: var(--yellow); }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「標題圖示」相關格式：本行可修改寬度。 */
 .production-head-icon svg { width: 24px; }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「系統首頁返回按鈕」相關格式：本行可修改定位方式、左側位置、上方位置、高度、排列方式、垂直對齊、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、cursor。 */
 .production-back { position: absolute; left: 20px; top: 20px; height: 39px; display: flex; align-items: center; gap: 4px; padding: 0 12px; border: 1px solid #334047; border-radius: 6px; background: #11181c; color: #b4c1c8; cursor: pointer; }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「系統首頁返回按鈕」相關格式：本行可修改邊框顏色、文字或圖示顏色。 */
 .production-back:hover { border-color: #62747e; color: white; }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「系統首頁返回按鈕」相關格式：本行可修改寬度。 */
 .production-back svg { width: 18px; }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「雲端資料／示範資料狀態」相關格式：本行可修改定位方式、右側位置、上方位置、內距、邊框、圓角、背景、文字或圖示顏色、字體大小。 */
 .production-mode { position: absolute; right: 20px; top: 20px; padding: 6px 10px; border: 1px solid rgba(61,204,179,.28); border-radius: 20px; background: rgba(61,204,179,.08); color: var(--green); font-size: 12px; }
+
+/* 「加工數量登記與加工數量查詢」的「頁面頂端」的「雲端資料／示範資料狀態」相關格式：本行可修改邊框顏色、背景、文字或圖示顏色。 */
 .production-mode.demo { border-color: rgba(255,194,58,.27); background: rgba(255,194,58,.08); color: var(--yellow); }
+
+/* 「加工數量登記」的「登記表單」的「整張表單卡片」相關格式：本行可修改內距、邊框、圓角、背景、陰影。 */
 .production-card { padding: 24px; border: 1px solid var(--line); border-radius: 10px; background: rgba(18,24,28,.97); box-shadow: 0 15px 45px rgba(0,0,0,.18); }
+
+/* 「加工數量登記與加工數量查詢」的「日期、產品編號、機台、數量、備註」的「整列共用格式」相關格式：本行可修改最小高度、排列方式、欄位數量與寬度、垂直對齊、下方外距、邊框、圓角、背景、捲動方式。 */
 .production-field-row { min-height: 58px; display: grid; grid-template-columns: 215px minmax(0, 1fr); align-items: stretch; margin-bottom: 13px; border: 1px solid #303a40; border-radius: 7px; background: #0c1114; overflow: visible; }
+
+/* 「加工數量登記與加工數量查詢」的「日期、產品編號、機台、數量、備註」的「左側欄位標題」相關格式：本行可修改排列方式、垂直對齊、水平對齊、內距、border-right、文字或圖示顏色、背景、字體大小、字體粗細。 */
 .production-field-row > label:first-child { display: flex; align-items: center; justify-content: center; padding: 10px 16px; border-right: 1px solid #303a40; color: #f0bcd4; background: #151c20; font-size: 18px; font-weight: 850; }
+
+/* 「加工數量登記與加工數量查詢」的「日期、產品編號、機台、數量、備註」的「整列共用格式」相關格式：本行可修改寬度、最小寬度、邊框、圓角、背景、文字或圖示顏色、outline。 */
 .production-field-row > input, .production-field-row > select, .production-field-row > textarea, .production-field-row > .editable-combo { width: 100%; min-width: 0; border: 0; border-radius: 0 7px 7px 0; background: transparent; color: var(--text); outline: 0; }
+
+/* 「加工數量登記與加工數量查詢」的「日期、產品編號、機台、數量、備註」的「整列共用格式」相關格式：本行可修改內距。 */
 .production-field-row > input, .production-field-row > select, .production-field-row > textarea { padding: 13px 18px; }
-.production-field-row > input { color-scheme: dark; text-align: center; font-size: 18px; }
+
+/* 「加工數量登記與加工數量查詢」的「日期與數量」的「輸入框文字與對齊」相關格式：本行可修改color-scheme、文字對齊、字體大小。 */
+.production-field-row > input { color-scheme: dark; text-align: center; font-size: 20px; }
+
+/* 「加工數量登記與加工數量查詢」的「產品編號與機台」的「下拉選單」相關格式：本行可修改appearance、color-scheme、文字對齊、text-align-last、字體大小、cursor、背景圖案、background-position、background-size、background-repeat。 */
 .production-field-row > select { appearance: none; color-scheme: dark; text-align: center; text-align-last: center; font-size: 18px; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, #87959d 50%), linear-gradient(135deg, #87959d 50%, transparent 50%); background-position: calc(100% - 20px) 51%, calc(100% - 14px) 51%; background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; }
+
+/* 「加工數量登記」的「備註」的「輸入框」相關格式：本行可修改最小高度、resize。 */
 .production-field-row > textarea { min-height: 80px; resize: vertical; }
+
+/* 「加工數量登記與加工數量查詢」的「可輸入選單」的「輸入框」相關格式：本行可修改高度、最小高度、邊框、圓角、背景、文字對齊、字體大小。 */
 .production-field-row .editable-combo input { height: 100%; min-height: 56px; border: 0; border-radius: 0 7px 7px 0; background: transparent; text-align: center; font-size: 18px; }
+
+/* 「加工數量登記與加工數量查詢」的「日期、產品編號、機台、數量、備註」的「整列共用格式」相關格式：本行可修改邊框顏色、陰影。 */
 .production-field-row:focus-within { border-color: #687a84; box-shadow: 0 0 0 2px rgba(104,122,132,.12); }
+
+/* 「加工數量登記」的「備註」的「整列格式」相關格式：本行可修改垂直對齊。 */
 .note-row { align-items: stretch; }
+
+/* 「加工數量登記」的「基礎資料」的「管理產品編號與機台區塊」相關格式：本行可修改排列方式、垂直對齊、水平對齊、元件間距、下方外距、內距、邊框、圓角、背景。 */
 .production-data-tools { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; padding: 14px 15px; border: 1px solid #303a40; border-radius: 8px; background: #0d1316; }
+
+/* 「加工數量登記」的「基礎資料」的「管理產品編號與機台區塊」相關格式：本行可修改排列方式、文字或圖示顏色、字體粗細、上方外距。 */
 .production-data-tools > div:first-child span { display: block; color: var(--yellow); font-weight: 850; }.production-data-tools > div:first-child small { display: block; margin-top: 4px; color: #82919a; }
+
+/* 「加工數量登記」的「基礎資料」的「管理產品編號與機台區塊」相關格式：本行可修改排列方式、元件間距。 */
 .production-data-tools > div:last-child { display: flex; gap: 8px; }
+
+/* 「加工數量登記」的「基礎資料」的「管理產品編號與管理機台按鈕」相關格式：本行可修改最小高度、排列方式、垂直對齊、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、字體粗細、cursor。 */
 .production-data-tools button { min-height: 40px; display: flex; align-items: center; gap: 7px; padding: 0 13px; border: 1px solid #3a464d; border-radius: 6px; background: #151c20; color: #d8e1e5; font-weight: 750; cursor: pointer; }
+
+/* 「加工數量登記」的「基礎資料」的「管理產品編號與管理機台按鈕」相關格式：本行可修改邊框顏色、文字或圖示顏色、背景、寬度。 */
 .production-data-tools button:hover { border-color: var(--yellow); color: var(--yellow); background: rgba(255,194,58,.05); }.production-data-tools svg { width: 17px; }
+
+/* 「加工時間計算」的「計算內容」的「整個計算區塊」相關格式：本行可修改外距、內距、邊框、圓角、背景。 */
 .time-calculator { margin: 22px 0; padding: 18px; border: 1px dashed #3a474e; border-radius: 8px; background: rgba(8,12,14,.55); }
+
+/* 「加工時間計算」的「計算內容」的「整個計算區塊」相關格式：本行可修改排列方式、垂直對齊、元件間距、內距、文字或圖示顏色、字體大小、字體粗細。 */
 .time-calculator legend { display: flex; align-items: center; gap: 8px; padding: 0 8px; color: var(--yellow); font-size: 17px; font-weight: 850; }
+
+/* 「加工時間計算」的「計算內容」的「整個計算區塊」相關格式：本行可修改寬度。 */
 .time-calculator legend svg { width: 20px; }
+
+/* 「加工時間計算」的「計算內容」的「整個計算區塊」相關格式：本行可修改外距、文字或圖示顏色、字體大小。 */
 .time-calculator > p { margin: 0 0 15px; color: #80919b; font-size: 13px; }
+
+/* 「加工時間計算」的「計算內容」的「整個計算區塊」相關格式：本行可修改排列方式、元件間距。 */
 .duration-calculation { display: grid; gap: 10px; }
+
+/* 「加工時間計算」的「總工時與扣除工時」的「整列輸入區」相關格式：本行可修改排列方式、欄位數量與寬度、垂直對齊、元件間距、內距、邊框、圓角、背景。 */
 .duration-row { display: grid; grid-template-columns: 150px 1fr 1fr; align-items: center; gap: 12px; padding: 12px; border: 1px solid #313d44; border-radius: 7px; background: #10171b; }
+
+/* 「加工時間計算」的「總工時與扣除工時」的「左側標題」相關格式：本行可修改文字或圖示顏色。 */
 .duration-row > strong { color: #b7c3c9; }
+
+/* 「加工時間計算」的「總工時與扣除工時」的「時／分欄位」相關格式：本行可修改最小寬度、排列方式、欄位數量與寬度、垂直對齊、元件間距、文字或圖示顏色。 */
 .duration-row label { min-width: 0; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 9px; color: #8f9da5; }
+
+/* 「加工時間計算」的「總工時與扣除工時」的「時／分輸入框」相關格式：本行可修改寬度、最小寬度、高度、內距、邊框、圓角、背景、文字或圖示顏色、文字對齊、outline。 */
 .duration-row input { width: 100%; min-width: 0; height: 43px; padding: 0 10px; border: 1px solid #3a464d; border-radius: 5px; background: #0b1013; color: var(--text); text-align: center; outline: 0; }
+
+/* 「加工時間計算」的「總工時與扣除工時」的「時／分輸入框」相關格式：本行可修改邊框顏色。 */
 .duration-row input:focus { border-color: var(--yellow); }
+
+/* 「加工時間計算」的「總工時減去扣除工時」的「減去符號」相關格式：本行可修改寬度、外距、內距、border-left、border-right、文字或圖示顏色、字體粗細。 */
 .duration-operator { width: max-content; margin: 0 auto; padding: 4px 12px; border-left: 1px solid var(--red); border-right: 1px solid var(--red); color: var(--red); font-weight: 850; }
+
+/* 「加工時間計算」的「時間輸入」的「欄位排列」相關格式：本行可修改排列方式、欄位數量與寬度、垂直對齊、元件間距。 */
 .time-range { display: grid; grid-template-columns: 1fr auto 1fr auto; align-items: end; gap: 12px; }
+
+/* 「加工時間計算」的「時間輸入」的「欄位標題」相關格式：本行可修改排列方式、元件間距、文字或圖示顏色、字體大小。 */
 .time-range label, .duration-fields label { display: grid; gap: 7px; color: #a8b6bd; font-size: 13px; }
+
+/* 「加工時間計算」的「時間輸入」的「輸入框」相關格式：本行可修改寬度、高度、內距、邊框、圓角、背景、文字或圖示顏色、color-scheme、文字對齊、outline。 */
 .time-range input, .duration-fields input { width: 100%; height: 46px; padding: 0 12px; border: 1px solid #354149; border-radius: 6px; background: #10171b; color: var(--text); color-scheme: dark; text-align: center; outline: 0; }
+
+/* 「加工數量登記」的「實際工時（時）」的「欄位標題」相關格式：本行可修改字體大小。 */
+.duration-fields label.actual-hours-field > span { font-size: 13px; }
+
+/* 「加工數量登記」的「實際工時（時）」的「輸入框」相關格式：本行可修改字體大小。 */
+.duration-fields input.actual-hours-input { font-size: 18px; }
+
+/* 「加工數量登記」的「實際工時（分）」的「欄位標題」相關格式：本行可修改字體大小。 */
+.duration-fields label.actual-minutes-field > span { font-size: 13px; }
+
+/* 「加工數量登記」的「實際工時（分）」的「輸入框」相關格式：本行可修改字體大小。 */
+.duration-fields input.actual-minutes-input { font-size: 18px; }
+
+/* 「加工時間計算」的「時間輸入」的「欄位排列」相關格式：本行可修改下方內距、文字或圖示顏色、字體粗細。 */
 .time-minus { padding-bottom: 12px; color: #7f8d95; font-weight: 800; }
+
+/* 「加工時間計算」的「計算操作」的「計算實際工時按鈕」相關格式：本行可修改最小高度、邊框顏色、文字或圖示顏色、背景。 */
 .calculator-button { min-height: 46px; border-color: #6b5521; color: var(--yellow); background: #1a1b17; }
+
+/* 「加工時間計算」的「計算操作」的「計算實際工時按鈕」相關格式：本行可修改邊框顏色、背景。 */
 .calculator-button:hover { border-color: var(--yellow); background: rgba(255,194,58,.08); }
+
+/* 「加工數量登記」的「實際工時與總時間」的「三欄排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、上方外距。 */
 .duration-fields { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 12px; margin-top: 16px; }
+
+/* 「加工數量登記」的「實際總時間」的「結果卡片」相關格式：本行可修改排列方式、align-content、justify-items、內距、邊框、圓角、背景。 */
 .duration-fields > div { display: grid; align-content: center; justify-items: center; padding: 7px 12px; border: 1px solid rgba(255,194,58,.25); border-radius: 6px; background: rgba(255,194,58,.05); }
-.duration-fields > div span { color: #899aa4; font-size: 12px; }.duration-fields > div strong { margin-top: 3px; color: var(--yellow); font: 800 20px ui-monospace, monospace; }
+
+/* 「加工數量登記」的「實際總時間」的「標題與分鐘數字」相關格式：本行可修改文字或圖示顏色、字體大小、上方外距、字型／粗細／大小。 */
+.duration-fields > div span { color: #899aa4; font-size: 12px; }.duration-fields > div strong { margin-top: 3px; color: var(--yellow); font: 800 22px ui-monospace, monospace; }
+
+/* 「加工數量登記」的「實際加工時間」的「整個輸入區塊」相關格式：本行可修改外距、內距、邊框、圓角、背景。 */
 .time-entry-panel { margin: 20px 0; padding: 17px; border: 1px solid #344148; border-radius: 8px; background: #0d1316; }
+
+/* 「加工數量登記」的「實際加工時間」的「標題列」相關格式：本行可修改排列方式、垂直對齊、水平對齊、元件間距。 */
 .time-entry-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+
+/* 「加工數量登記」的「實際加工時間」的「標題列」相關格式：本行可修改排列方式、垂直對齊、元件間距、寬度、文字或圖示顏色。 */
 .time-entry-head > div { display: flex; align-items: center; gap: 11px; }.time-entry-head > div > svg { width: 23px; color: var(--yellow); }
+
+/* 「加工數量登記」的「實際加工時間」的「標題與說明文字」相關格式：本行可修改排列方式、文字或圖示顏色、上方外距。 */
 .time-entry-head strong { display: block; color: #e2e9ec; }.time-entry-head small { display: block; margin-top: 3px; color: #81919a; }
+
+/* 「加工數量登記」的「實際加工時間」的「加工時間計算按鈕」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、字體粗細、cursor、white-space。 */
 .time-entry-head > button, .query-utility-bar > button { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; border: 1px solid #6b5521; border-radius: 6px; background: rgba(255,194,58,.055); color: var(--yellow); font-weight: 800; cursor: pointer; white-space: nowrap; }
+
+/* 「加工數量登記」的「實際加工時間」的「加工時間計算按鈕」相關格式：本行可修改邊框顏色、背景、寬度。 */
 .time-entry-head > button:hover, .query-utility-bar > button:hover:not(:disabled) { border-color: var(--yellow); background: rgba(255,194,58,.1); }.time-entry-head > button svg, .query-utility-bar > button svg { width: 18px; }
+
+/* 「加工數量登記」的「實際加工時間」的「輸入欄位上方間距」相關格式：本行可修改上方外距。 */
 .duration-fields.compact { margin-top: 14px; }
+
+/* 「加工數量登記」的「表單底部」的「錯誤訊息」相關格式：本行可修改下方外距。 */
 .production-error { margin-bottom: 14px; }
+
+/* 「加工數量登記」的「表單底部」的「送出登記與刪除最後一筆按鈕」相關格式：本行可修改寬度、最小高度、排列方式、垂直對齊、水平對齊、元件間距、上方外距、邊框、圓角、文字或圖示顏色、字體大小、字體粗細、cursor。 */
 .production-action { width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; border: 0; border-radius: 8px; color: #08110e; font-size: 19px; font-weight: 900; cursor: pointer; }
+
+/* 「加工數量登記」的「表單底部」的「送出登記與刪除最後一筆按鈕」相關格式：本行可修改寬度、透明度、cursor。 */
 .production-action svg { width: 21px; }.production-action:disabled { opacity: .48; cursor: not-allowed; }
+
+/* 「加工數量登記」的「表單底部」的「送出登記按鈕」相關格式：本行可修改邊框、背景。 */
 .save-action { border: 1px solid #d6a62d; background: var(--yellow); }.save-action:hover { background: var(--yellow-2); }
+
+/* 「加工數量登記」的「表單底部」的「刪除最後一筆按鈕」相關格式：本行可修改邊框、文字或圖示顏色、背景、邊框顏色。 */
 .delete-action { border: 1px solid rgba(255,121,92,.45); color: var(--red); background: rgba(255,121,92,.06); }.delete-action:hover { border-color: var(--red); background: rgba(255,121,92,.11); }
+
+/* 「加工數量查詢」的「查詢條件」的「日期與產品編號查詢卡片」相關格式：本行可修改下方外距。 */
 .query-card { margin-bottom: 22px; }
+
+/* 「加工數量查詢」的「查詢條件」的「欄位排列」相關格式：本行可修改排列方式、元件間距。 */
 .query-fields { display: grid; gap: 12px; }
+
+/* 「加工數量查詢」的「查詢條件」的「日期與產品編號查詢卡片」相關格式：本行可修改文字或圖示顏色。 */
 .query-card .production-field-row > label:first-child { color: #5de67a; }
+
+/* 「加工數量查詢」的「查詢工具」的「訂單完工預估工具列」相關格式：本行可修改排列方式、垂直對齊、水平對齊、元件間距、上方外距、內距、邊框、圓角、背景。 */
 .query-utility-bar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 20px; padding: 14px 15px; border: 1px solid #344148; border-radius: 8px; background: #0d1316; }
+
+/* 「加工數量查詢」的「查詢工具」的「訂單完工預估工具列」相關格式：本行可修改排列方式、垂直對齊、元件間距、寬度、文字或圖示顏色。 */
 .query-utility-bar > div { display: flex; align-items: center; gap: 11px; }.query-utility-bar > div > svg { width: 22px; color: var(--yellow); }
+
+/* 「加工數量查詢」的「查詢工具」的「輔助工具標題與說明」相關格式：本行可修改排列方式、文字或圖示顏色、上方外距、透明度、cursor。 */
 .query-utility-bar strong { display: block; color: #e1e8eb; }.query-utility-bar small { display: block; margin-top: 3px; color: #81919a; }.query-utility-bar > button:disabled { opacity: .42; cursor: not-allowed; }
+
+/* 「訂單完工預估」的「整個功能」的「內容外框」相關格式：本行可修改上方外距、內距、邊框、圓角、背景。 */
 .order-forecast { margin-top: 20px; padding: 17px; border: 1px solid #344148; border-radius: 8px; background: #0d1316; }
+
+/* 「訂單完工預估」的「標題與訂單總數量」的「排列區」相關格式：本行可修改排列方式、垂直對齊、水平對齊、元件間距。 */
 .forecast-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+
+/* 「訂單完工預估」的「依全部歷史資料估算」的「標題、說明與圖示」相關格式：本行可修改排列方式、垂直對齊、元件間距、寬度、文字或圖示顏色、字體大小、上方外距。 */
 .forecast-head > div { display: flex; align-items: center; gap: 11px; }.forecast-head > div > svg { width: 24px; color: var(--yellow); }.forecast-head strong { display: block; color: #e1e8eb; font-size: 17px; }.forecast-head small { display: block; margin-top: 3px; color: #81919a; }
-.forecast-head > label { display: grid; gap: 6px; color: #93a3ab; font-size: 12px; }
-.forecast-head input { width: 210px; height: 44px; padding: 0 13px; border: 1px solid #3a464d; border-radius: 6px; background: #090e11; color: var(--text); text-align: right; outline: 0; }.forecast-head input:focus { border-color: var(--yellow); }.forecast-head input:disabled { opacity: .5; }
+
+/* 「訂單完工預估」的「訂單總數量」的「欄位標題」相關格式：本行可修改排列方式、元件間距、文字或圖示顏色、字體大小。 */
+.forecast-head > label { display: grid; gap: 6px; color: #93a3ab; font-size: 18px; }
+
+/* 「訂單完工預估」的「訂單總數量」的「輸入框」相關格式：本行可修改寬度、高度、內距、邊框、圓角、背景、文字或圖示顏色、文字對齊、outline、邊框顏色、透明度。 */
+.forecast-head input.order-quantity-input { width: 210px; height: 44px; padding: 0 13px; border: 1px solid #3a464d; border-radius: 6px; background: #090e11; color: var(--text); text-align: right; outline: 0; }.forecast-head input.order-quantity-input:focus { border-color: var(--yellow); }.forecast-head input.order-quantity-input:disabled { opacity: .5; }
+
+/* 「訂單完工預估」的「尚未輸入或沒有歷史資料」的「提示框」相關格式：本行可修改外距、內距、邊框、圓角、文字或圖示顏色、文字對齊。 */
 .forecast-placeholder { margin: 15px 0 0; padding: 14px; border: 1px dashed #303a40; border-radius: 6px; color: #76858e; text-align: center; }.forecast-placeholder.warning { color: #d5b45f; }
+
+/* 「訂單完工預估」的「預估結果」的「五張結果卡片排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、上方外距。 */
 .forecast-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 16px; }
+
+/* 「訂單完工預估」的「已完成數量、平均每日產量、剩餘數量、預估剩餘天數、預估完工日期」的「每一張結果卡片」相關格式：本行可修改最小高度、排列方式、place-content、justify-items、內距、邊框、圓角、背景、文字對齊、邊框顏色。 */
 .forecast-grid > div { min-height: 82px; display: grid; place-content: center; justify-items: center; padding: 10px; border: 1px solid #2e393f; border-radius: 6px; background: #12191c; text-align: center; }.forecast-grid > div.accent { border-color: rgba(255,194,58,.27); background: rgba(255,194,58,.045); }
+
+/* 「訂單完工預估」的「預估結果卡片」的「標題與數字」相關格式：本行可修改文字或圖示顏色、字體大小、上方外距、字型／粗細／大小。 */
 .forecast-grid span { color: #84949c; font-size: 12px; }.forecast-grid strong { margin-top: 7px; color: #e4ecef; font: 800 21px ui-monospace, monospace; }.forecast-grid .accent strong { color: var(--yellow); }.forecast-grid small { color: #82919a; font-size: 11px; }
+
+/* 「訂單完工預估」的「預估結果」的「計算公式說明」相關格式：本行可修改外距、文字或圖示顏色、字體大小、行高。 */
 .forecast-note { margin: 12px 0 0; color: #65747c; font-size: 11px; line-height: 1.6; }
+
+/* 「加工時間計算」的「視窗說明」的「說明文字」相關格式：本行可修改外距、文字或圖示顏色、行高。 */
 .modal-intro { margin: -6px 0 18px; color: #8e9da5; line-height: 1.7; }
+
+/* 「加工時間計算」的「計算內容」的「整個計算區塊」相關格式：本行可修改內距、邊框、圓角、背景。 */
 .modal-calculation { padding: 15px; border: 1px dashed #3a474e; border-radius: 8px; background: rgba(8,12,14,.55); }
+
+/* 「整個網站」的「所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改上方外距、下方外距。 */
 .modal-tool-error { margin-top: 14px; margin-bottom: 0; }
+
+/* 「加工時間計算」的「計算結果」的「結果顯示框」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、上方外距、內距、邊框、圓角、背景、文字或圖示顏色、字型／粗細／大小、邊框顏色。 */
 .time-result { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 14px; padding: 14px 16px; border: 1px solid #303a40; border-radius: 7px; background: #101619; }.time-result span { color: #82919a; }.time-result strong { color: #9aa8af; font: 800 20px ui-monospace, monospace; }.time-result.has-result { border-color: rgba(61,204,179,.36); background: rgba(61,204,179,.055); }.time-result.has-result strong { color: var(--green); }
+
+/* 「整個網站」的「所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改排列方式、水平對齊、元件間距、上方外距、上方內距、border-top、最小寬度。 */
 .modal-tool-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 17px; border-top: 1px solid var(--line); }.modal-tool-actions .button { min-width: 130px; justify-content: center; }
+
+/* 「訂單完工預估」的「所選產品」的「產品編號顯示區」相關格式：本行可修改排列方式、垂直對齊、元件間距、外距、內距、邊框、圓角、背景、文字或圖示顏色、字型／粗細／大小。 */
 .forecast-modal-product { display: flex; align-items: center; gap: 12px; margin: -5px 0 18px; padding: 12px 14px; border: 1px solid #303a40; border-radius: 7px; background: #0e1417; }.forecast-modal-product span { color: #83929a; }.forecast-modal-product strong { color: var(--yellow); font: 800 17px ui-monospace, monospace; }
+
+/* 「訂單完工預估」的「訂單總數量」的「輸入區外框」相關格式：本行可修改內距、邊框、圓角、背景。 */
 .modal-forecast-head { padding: 16px; border: 1px solid #344148; border-radius: 8px; background: #0d1316; }
+
+/* 「加工數量查詢」的「查詢操作」的「日期區間查詢、查詢最後一筆、查詢全部、下載 Excel 按鈕排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、上方外距。 */
 .query-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+
+/* 「加工數量查詢」的「查詢操作」的「查詢與下載按鈕」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、邊框、圓角、背景、文字或圖示顏色、字體大小、字體粗細、cursor、陰影。 */
 .query-button { min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 9px; border: 1px solid #36434a; border-radius: 8px; background: #151c20; color: #dbe4e8; font-size: 18px; font-weight: 850; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,.14); }
+
+/* 「加工數量查詢」的「查詢操作」的「查詢與下載按鈕」相關格式：本行可修改透明度、cursor、寬度。 */
 .query-button:disabled { opacity: .42; cursor: not-allowed; }.query-button svg { width: 20px; }
+
+/* 「加工數量查詢」的「查詢操作」的「查詢與下載按鈕」相關格式：本行可修改位移或旋轉、背景。 */
 .query-button:not(:disabled):hover { transform: translateY(-1px); background: #1b2429; }
+
+/* 「加工數量查詢」的「查詢操作」的「四種查詢與下載按鈕顏色」相關格式：本行可修改邊框顏色、文字或圖示顏色。 */
 .query-button.range { border-color: #496473; color: #a8d4ea; }.query-button.latest { border-color: #655885; color: #c8b7ee; }.query-button.all { border-color: #7c6429; color: var(--yellow); }.query-button.export { border-color: #356f62; color: var(--green); }
+
+/* 「加工數量查詢」的「永久刪除產品資料」的「整個警告區塊」相關格式：本行可修改排列方式、垂直對齊、水平對齊、元件間距、上方外距、內距、邊框、圓角、背景。 */
 .query-danger-zone { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 22px; padding: 14px; border: 1px solid rgba(255,121,92,.23); border-radius: 7px; background: rgba(255,121,92,.035); }
+
+/* 「加工數量查詢」的「永久刪除產品資料」的「標題與說明」相關格式：本行可修改排列方式、文字或圖示顏色、上方外距。 */
 .query-danger-zone strong { display: block; color: #efa08f; }.query-danger-zone small { display: block; margin-top: 4px; color: #876f6a; }
+
+/* 「加工數量查詢」的「永久刪除產品資料」的「永久刪除按鈕」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、字體粗細、cursor、white-space、邊框顏色、透明度、寬度。 */
 .query-danger-zone button { min-height: 43px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; border: 1px solid rgba(255,121,92,.45); border-radius: 6px; background: rgba(255,121,92,.07); color: var(--red); font-weight: 800; cursor: pointer; white-space: nowrap; }.query-danger-zone button:hover:not(:disabled) { border-color: var(--red); background: rgba(255,121,92,.12); }.query-danger-zone button:disabled { opacity: .42; cursor: not-allowed; }.query-danger-zone svg { width: 18px; }
+
+/* 「加工數量登記」的「管理產品編號與管理機台」的「新增與刪除說明」相關格式：本行可修改外距、文字或圖示顏色、字體大小。 */
 .option-help { margin: -7px 0 5px; color: #82919a; font-size: 13px; }
+
+/* 「加工數量登記」的「管理產品編號與管理機台」的「新增按鈕」相關格式：本行可修改寬度、上方外距。 */
 .option-add-button { width: 100%; margin-top: 15px; }
+
+/* 「加工數量登記」的「管理產品編號與管理機台」的「目前資料標題與筆數」相關格式：本行可修改排列方式、垂直對齊、水平對齊、外距、上方內距、border-top。 */
 .option-list-head { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 9px; padding-top: 18px; border-top: 1px solid var(--line); }
+
+/* 「加工數量登記」的「管理產品編號與管理機台」的「目前資料標題與筆數」相關格式：本行可修改字體粗細、文字或圖示顏色。 */
 .option-list-head span { font-weight: 850; }.option-list-head small { color: #82919a; }
+
+/* 「加工數量登記」的「管理產品編號與管理機台」的「選項清單」相關格式：本行可修改排列方式、元件間距、最大高度、上下捲動、右側內距。 */
 .option-list { display: grid; gap: 7px; max-height: 260px; overflow-y: auto; padding-right: 3px; }
+
+/* 「加工數量登記」的「管理產品編號與管理機台」的「每筆選項資料列」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、內距、邊框、圓角、背景。 */
 .option-list-item { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 6px 8px 6px 14px; border: 1px solid #303a40; border-radius: 6px; background: #101619; }
+
+/* 「加工數量登記」的「管理產品編號與管理機台」的「產品編號或機台文字」相關格式：本行可修改最小寬度、捲動方式、文字或圖示顏色、字型／粗細／大小、text-overflow、white-space。 */
 .option-list-item > span { min-width: 0; overflow: hidden; color: #dce5e9; font: 700 15px ui-monospace, monospace; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 「加工數量登記」的「管理產品編號與管理機台」的「每筆資料刪除按鈕」相關格式：本行可修改寬度、高度、flex、排列方式、place-items、邊框、圓角、背景、文字或圖示顏色、cursor。 */
 .option-list-item button { width: 35px; height: 35px; flex: 0 0 auto; display: grid; place-items: center; border: 0; border-radius: 5px; background: transparent; color: #87949b; cursor: pointer; }
+
+/* 「加工數量登記」的「管理產品編號與管理機台」的「每筆資料刪除按鈕」相關格式：本行可修改文字或圖示顏色、背景、透明度、cursor、寬度。 */
 .option-list-item button:hover { color: var(--red); background: rgba(255,121,92,.09); }.option-list-item button:disabled { opacity: .5; cursor: wait; }.option-list-item svg { width: 17px; }
+
+/* 「加工數量登記」的「管理產品編號與管理機台」的「選項清單」相關格式：本行可修改內距、邊框、圓角、文字或圖示顏色、文字對齊。 */
 .option-empty { padding: 25px 12px; border: 1px dashed #303a40; border-radius: 6px; color: #74828a; text-align: center; }
+
+/* 「加工數量查詢」的「查詢結果」的「整個結果區」相關格式：本行可修改捲動方式、邊框、圓角、背景、陰影。 */
 .production-results { overflow: hidden; border: 1px solid #354149; border-radius: 9px; background: #11171b; box-shadow: 0 15px 45px rgba(0,0,0,.2); }
+
+/* 「加工數量查詢」的「查詢結果」的「結果標題與筆數」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、內距、背景、文字或圖示顏色。 */
 .result-title { min-height: 60px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 18px; background: #18352c; color: #d9eee7; }
+
+/* 「加工數量查詢」的「查詢結果」的「結果標題與筆數」相關格式：本行可修改文字或圖示顏色、字體大小、字型／粗細／大小、左側外距。 */
 .result-title span { color: #8fb6a9; font-size: 13px; }.result-title strong { color: #fff; font: 800 20px ui-monospace, monospace; }.result-title small { margin-left: auto; color: #9ab8ad; }
+
+/* 「加工數量查詢」的「查詢結果」的「表格左右捲動外框」相關格式：本行可修改左右捲動。 */
 .production-table-wrap { overflow-x: auto; }
+
+/* 「加工數量查詢」的「查詢結果」的「加工紀錄表格」相關格式：本行可修改寬度、最小寬度、border-collapse、文字對齊。 */
 .production-table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: center; }
+
+/* 「加工數量查詢」的「查詢結果」的「日期、產品／機台、時、分、數量、總時間、備註、操作標題列」相關格式：本行可修改高度、內距、背景、文字或圖示顏色、字體大小。 */
 .production-table th { height: 48px; padding: 0 12px; background: #176b94; color: white; font-size: 16px; }
+
+/* 「加工數量查詢」的「查詢結果」的「每筆加工紀錄資料列」相關格式：本行可修改高度、內距、border-bottom、文字或圖示顏色。 */
 .production-table td { height: 52px; padding: 8px 12px; border-bottom: 1px solid #2a3338; color: #dce6eb; }
+
+/* 「加工數量查詢」的「查詢結果」的「加工紀錄表格」相關格式：本行可修改背景。 */
 .production-table tbody tr:nth-child(even) { background: #171e22; }
+
+/* 「加工數量查詢」的「查詢結果」的「加工紀錄表格」相關格式：本行可修改背景。 */
 .production-table tbody tr:hover { background: #1d272c; }
+
+/* 「加工數量查詢」的「查詢結果」的「加工紀錄表格」相關格式：本行可修改最大寬度、white-space。 */
 .production-table:not(.compact) td:nth-last-child(2) { max-width: 220px; white-space: normal; }
+
+/* 「加工數量查詢」的「查詢結果」的「加工紀錄表格」相關格式：本行可修改最小寬度、背景、文字或圖示顏色、字體粗細。 */
 .production-table.compact { min-width: 600px; }.production-table tfoot td { background: rgba(255,221,53,.11); color: var(--yellow); font-weight: 850; }
+
+/* 「加工數量查詢」的「查詢結果」的「刪除操作欄」相關格式：本行可修改寬度。 */
 .production-table .record-action-column { width: 104px; }
+
+/* 「加工數量查詢」的「查詢結果」的「單筆刪除按鈕」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、字體粗細、cursor、white-space。 */
 .production-row-delete { min-height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; border: 1px solid rgba(255,121,92,.42); border-radius: 5px; background: rgba(255,121,92,.06); color: var(--red); font-weight: 800; cursor: pointer; white-space: nowrap; }
+
+/* 「加工數量查詢」的「查詢結果」的「單筆刪除按鈕」相關格式：本行可修改邊框顏色、背景、透明度、cursor、寬度。 */
 .production-row-delete:hover:not(:disabled) { border-color: var(--red); background: rgba(255,121,92,.13); }.production-row-delete:disabled { opacity: .45; cursor: wait; }.production-row-delete svg { width: 16px; }
+
+/* 「加工數量查詢」的「查詢結果」的「沒有資料提示」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、flex-direction、元件間距、文字或圖示顏色、寬度。 */
 .production-empty { min-height: 180px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 13px; color: #7e8c95; }.production-empty svg { width: 30px; }
+
+/* 「加工數量查詢」的「查詢全部統計」的「五張統計卡片排列」相關格式：本行可修改排列方式、欄位數量與寬度、背景。 */
 .production-totals { display: grid; grid-template-columns: repeat(5, 1fr); background: rgba(255,221,53,.10); }
+
+/* 「加工數量查詢」的「查詢全部統計」的「總天數、總數量、總時間、一天平均、一顆平均卡片」相關格式：本行可修改最小高度、排列方式、place-content、justify-items、內距、border-right。 */
 .production-totals > div { min-height: 94px; display: grid; place-content: center; justify-items: center; padding: 12px; border-right: 1px solid rgba(255,221,53,.13); }
+
+/* 「加工數量查詢」的「查詢全部統計」的「總天數、總數量、總時間、一天平均、一顆平均卡片」相關格式：本行可修改border-right、文字或圖示顏色、字體大小、上方外距、字型／粗細／大小。 */
 .production-totals > div:last-child { border-right: 0; }.production-totals span { color: #d4bd65; font-size: 13px; }.production-totals strong { margin-top: 7px; color: var(--yellow); font: 800 23px ui-monospace, monospace; }.production-totals small { font-size: 12px; color: #baa755; }
 
+
+/* 「庫存管理系統」的「庫存總覽」的「四張統計卡片排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距。 */
 .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+
+/* 「庫存管理系統」的「庫存總覽」的「單張統計卡片」相關格式：本行可修改最小高度、內距、邊框、圓角、背景、陰影。 */
 .stat-card { min-height: 142px; padding: 22px 20px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+
+/* 「庫存管理系統」的「庫存總覽」的「庫存總數、庫存價值、本月入庫、本月出庫卡片標題」相關格式：本行可修改排列方式、文字或圖示顏色、字型／粗細／大小、字距。 */
 .stat-card > span { display: block; color: #88a7b8; font: 14px ui-monospace, "Cascadia Code", monospace; letter-spacing: .05em; }
+
+/* 「庫存管理系統」的「庫存總覽」的「四張統計卡片主要數字」相關格式：本行可修改排列方式、外距、字型／粗細／大小、字距。 */
 .stat-card strong { display: block; margin: 10px 0 4px; font: 42px/1 ui-monospace, "Cascadia Code", monospace; letter-spacing: .03em; }
+
+/* 「庫存管理系統」的「庫存總覽」的「四張統計卡片補充說明」相關格式：本行可修改文字或圖示顏色、字型／粗細／大小。 */
 .stat-card small { color: #91aab8; font: 14px ui-monospace, "Cascadia Code", monospace; }
+
+/* 「庫存管理系統」的「庫存總覽」的「單張統計卡片」相關格式：本行可修改文字或圖示顏色。 */
 .stat-card.yellow strong, .yellow-text { color: var(--yellow); }
+
+/* 「庫存管理系統」的「庫存總覽」的「單張統計卡片」相關格式：本行可修改文字或圖示顏色。 */
 .stat-card.green strong, .green-text { color: var(--green); }
+
+/* 「庫存管理系統」的「庫存總覽」的「單張統計卡片」相關格式：本行可修改文字或圖示顏色。 */
 .stat-card.red strong, .red-text { color: var(--red); }
 
+
+/* 「庫存管理系統」的「近 14 天出入庫圖表」的「整張圖表卡片」相關格式：本行可修改上方外距、邊框、圓角、背景、捲動方式。 */
 .chart-card { margin-top: 30px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); overflow: hidden; }
+
+/* 「庫存管理系統」的「近 14 天出入庫圖表」的「圖表標題與圖例」相關格式：本行可修改排列方式、水平對齊、垂直對齊、內距、文字或圖示顏色、字型／粗細／大小、字距。 */
 .chart-head { display: flex; justify-content: space-between; align-items: center; padding: 23px 25px 4px; color: #91aab8; font: 14px ui-monospace, "Cascadia Code", monospace; letter-spacing: .08em; }
+
+/* 「庫存管理系統」的「近 14 天出入庫圖表」的「入庫與出庫圖例」相關格式：本行可修改排列方式、垂直對齊、元件間距。 */
 .legend { display: flex; align-items: center; gap: 8px; }
+
+/* 「庫存管理系統」的「近 14 天出入庫圖表」的「入庫與出庫圖例」相關格式：本行可修改寬度、高度、圓角、左側外距。 */
 .legend i { width: 11px; height: 11px; border-radius: 2px; margin-left: 12px; }
+
+/* 「庫存管理系統」的「近 14 天出入庫圖表」的「入庫與出庫圖例」相關格式：本行可修改背景。 */
 .green-dot { background: var(--green); }.red-dot { background: var(--red); }
+
+/* 「庫存管理系統」的「近 14 天出入庫圖表」的「長條圖區」相關格式：本行可修改左右捲動、內距。 */
 .chart-wrap { overflow-x: auto; padding: 0 14px 10px; }
+
+/* 「庫存管理系統」的「近 14 天出入庫圖表」的「長條圖區」相關格式：本行可修改排列方式、寬度、最小寬度、高度。 */
 .chart-wrap svg { display: block; width: 100%; min-width: 680px; height: auto; }
+
+/* 「庫存管理系統」的「近 14 天出入庫圖表」的「長條圖區」相關格式：本行可修改stroke、stroke-dasharray。 */
 .chart-wrap line { stroke: #2b3439; stroke-dasharray: 4 5; }
+
+/* 「庫存管理系統」的「近 14 天出入庫圖表」的「長條圖區」相關格式：本行可修改fill、字型／粗細／大小。 */
 .chart-wrap text { fill: #7f8b93; font: 11px ui-monospace, monospace; }
+
+/* 「庫存管理系統」的「近 14 天出入庫圖表」的「入庫與出庫長條顏色」相關格式：本行可修改fill。 */
 .bar-in { fill: var(--green); }.bar-out { fill: var(--red); }
 
+
+/* 「出入庫歷史與刀具資料」的「搜尋與篩選」的「整個篩選卡片」相關格式：本行可修改邊框、圓角、背景、內距、下方外距。 */
 .filter-card { border: 1px solid var(--line); border-radius: 7px; background: var(--panel); padding: 15px; margin-bottom: 20px; }
+
+/* 「刀具資料」的「搜尋與分類」的「搜尋框與分類選單排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距。 */
 .product-filter { display: grid; grid-template-columns: 1fr 200px; gap: 15px; }
+
+/* 「庫存盤點」的「頁面說明」的「盤點操作說明區」相關格式：本行可修改排列方式、垂直對齊、元件間距、下方外距、內距、邊框、圓角、背景、寬度、flex、文字或圖示顏色、外距、行高。 */
 .stocktake-guide { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; padding: 16px 18px; border: 1px solid rgba(61,204,179,.26); border-radius: 7px; background: rgba(61,204,179,.045); }.stocktake-guide > svg { width: 25px; flex: 0 0 auto; color: var(--green); }.stocktake-guide strong { color: #dce8e6; }.stocktake-guide p { margin: 5px 0 0; color: #8ba19f; line-height: 1.65; }
+
+/* 「庫存盤點」的「盤點統計」的「刀具項目、總庫存、待調整卡片」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、下方外距、最小高度、align-content、內距、邊框、圓角、背景、文字或圖示顏色、字體大小、外距、字型／粗細／大小、邊框顏色。 */
 .stocktake-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }.stocktake-summary > div { min-height: 96px; display: grid; align-content: center; padding: 15px 17px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); }.stocktake-summary span { color: #899aa4; font-size: 13px; }.stocktake-summary strong { margin: 5px 0 2px; color: #e8f0f3; font: 800 28px ui-monospace, monospace; }.stocktake-summary small { color: #75868f; }.stocktake-summary .attention { border-color: rgba(255,194,58,.35); background: rgba(255,194,58,.045); }.stocktake-summary .attention strong { color: var(--yellow); }
+
+/* 「庫存盤點」的「盤點操作」的「錯誤訊息」相關格式：本行可修改外距。 */
 .stocktake-error { margin: -7px 0 15px; }
+
+/* 「出入庫歷史、庫存盤點與刀具資料」的「搜尋」的「整個搜尋框」相關格式：本行可修改高度、排列方式、垂直對齊、元件間距、邊框、圓角、背景、文字或圖示顏色、內距。 */
 .search-field, .select-wrap, .date-wrap { height: 46px; display: flex; align-items: center; gap: 10px; border: 1px solid #333d43; border-radius: 6px; background: #11171a; color: var(--muted); padding: 0 13px; }
+
+/* 「出入庫歷史、庫存盤點與刀具資料」的「搜尋」的「整個搜尋框」相關格式：本行可修改邊框顏色、陰影。 */
 .search-field:focus-within, .select-wrap:focus-within, .date-wrap:focus-within { border-color: #687781; box-shadow: 0 0 0 2px rgba(104,119,129,.16); }
+
+/* 「出入庫歷史、庫存盤點與刀具資料」的「搜尋」的「放大鏡圖示」相關格式：本行可修改寬度、flex。 */
 .search-field svg, .date-wrap svg { width: 20px; flex: 0 0 auto; }
+
+/* 「出入庫歷史、庫存盤點與刀具資料」的「搜尋」的「搜尋關鍵字輸入框」相關格式：本行可修改最小寬度、flex、文字或圖示顏色、背景、邊框、outline。 */
 .search-field input, .select-wrap select, .date-wrap input { min-width: 0; flex: 1; color: var(--text); background: transparent; border: 0; outline: 0; }
+
+/* 「出入庫歷史、庫存盤點與刀具資料」的「搜尋」的「搜尋關鍵字輸入框」相關格式：本行可修改文字或圖示顏色、透明度。 */
 .search-field input::placeholder { color: #818b93; opacity: 1; }
+
+/* 「出入庫歷史、庫存盤點與刀具資料」的「搜尋」的「清除搜尋按鈕」相關格式：本行可修改寬度、高度、邊框、背景、文字或圖示顏色、cursor。 */
 .search-field button { width: 28px; height: 28px; border: 0; background: transparent; color: #7e8990; cursor: pointer; }
+
+/* 「出入庫歷史、庫存盤點與刀具資料」的「搜尋」的「清除搜尋按鈕」相關格式：本行可修改寬度。 */
 .search-field button svg { width: 16px; }
+
+/* 「出入庫歷史與刀具資料」的「篩選」的「下拉選單外框」相關格式：本行可修改定位方式、文字或圖示顏色、字體粗細。 */
 .select-wrap { position: relative; color: var(--text); font-weight: 700; }
+
+/* 「出入庫歷史與刀具資料」的「篩選」的「類型或分類下拉選單」相關格式：本行可修改寬度、appearance、cursor。 */
 .select-wrap select { width: 100%; appearance: none; cursor: pointer; }
+
+/* 「出入庫歷史與刀具資料」的「篩選」的「下拉選單外框」相關格式：本行可修改寬度、pointer-events、文字或圖示顏色。 */
 .select-wrap > svg { width: 18px; pointer-events: none; color: var(--muted); }
+
+/* 「出入庫歷史」的「日期篩選」的「日期欄位外框」相關格式：本行可修改文字或圖示顏色、字體粗細。 */
 .date-wrap { color: var(--text); font-weight: 700; }
+
+/* 「出入庫歷史」的「日期篩選」的「開始與結束日期輸入框」相關格式：本行可修改color-scheme。 */
 .date-wrap input { color-scheme: dark; }
+
+/* 「出入庫歷史」的「篩選」的「類型與日期欄位排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、上方外距。 */
 .filter-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 14px; }
+
+/* 「出入庫歷史」的「列表上方統計」的「筆數、入庫、出庫、採購金額」相關格式：本行可修改排列方式、元件間距、垂直對齊、內距、文字或圖示顏色、字型／粗細／大小。 */
 .movement-summary { display: flex; gap: 20px; align-items: center; padding: 0 5px 15px; color: #8ca2af; font: 17px ui-monospace, "Cascadia Code", monospace; }
 
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「外框與左右捲動」相關格式：本行可修改寬度、邊框、圓角、背景、左右捲動、scrollbar-color。 */
 .table-card { width: 100%; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); overflow-x: auto; scrollbar-color: #9c9c9c #2e2e2e; }
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「整張表格」相關格式：本行可修改寬度、border-collapse、white-space。 */
 .data-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「標題列」相關格式：本行可修改高度、文字或圖示顏色、字體大小、字體粗細、文字對齊、內距、border-bottom。 */
 .data-table th { height: 45px; color: #8f9ba4; font-size: 15px; font-weight: 700; text-align: left; padding: 0 11px; border-bottom: 1px solid var(--line); }
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「每筆資料列」相關格式：本行可修改高度、內距、border-bottom、字體大小。 */
 .data-table td { height: 66px; padding: 0 11px; border-bottom: 1px solid var(--line); font-size: 15px; }
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「整張表格」相關格式：本行可修改border-bottom。 */
 .data-table tbody tr:last-child td { border-bottom: 0; }
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「整張表格」相關格式：本行可修改背景。 */
 .data-table tbody tr:hover { background: rgba(255,255,255,.018); }
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「數量、單價與金額」相關格式：本行可修改文字對齊、字型。 */
 .data-table .number { text-align: right; font-family: ui-monospace, "Cascadia Code", monospace; }
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「刀具編號」相關格式：本行可修改文字或圖示顏色、字型／粗細／大小。 */
 .data-table .code { color: var(--yellow); font: 700 16px ui-monospace, "Cascadia Code", monospace; }
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「刀具品名」相關格式：本行可修改字體粗細、最大寬度、捲動方式、text-overflow。 */
 .data-table .product-name { font-weight: 700; max-width: 310px; overflow: hidden; text-overflow: ellipsis; }
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「整張表格」相關格式：本行可修改文字或圖示顏色、white-space。 */
 .data-table .muted { color: #89949c; }.data-table .nowrap { white-space: nowrap; }
+
+/* 「刀具資料與出入庫歷史」的「資料表格」的「整張表格」相關格式：本行可修改文字或圖示顏色。 */
 .data-table small { color: #94a2aa; }
+
+/* 「庫存盤點」的「刀具清單」的「盤點表格」相關格式：本行可修改最小寬度、背景。 */
 .stocktake-table { min-width: 1260px; }.stocktake-table tbody tr.has-stocktake-difference { background: rgba(255,194,58,.025); }.stocktake-table tbody tr.has-stocktake-difference:hover { background: rgba(255,194,58,.05); }
+
+/* 「庫存盤點」的「目前單價」的「已知價格標示」相關格式：本行可修改文字或圖示顏色、字型／粗細／大小、排列方式、垂直對齊、高度、內距、邊框、圓角、背景、字體大小、字體粗細。 */
 .known-price { color: #b7c4ca; font: 700 14px ui-monospace, monospace; }.unknown-price { display: inline-flex; align-items: center; height: 27px; padding: 0 9px; border: 1px solid rgba(255,194,58,.25); border-radius: 4px; background: rgba(255,194,58,.055); color: #d4b663; font-size: 12px; font-weight: 800; }
+
+/* 「庫存盤點」的「實際盤點數量」的「數量輸入框」相關格式：本行可修改寬度、高度、排列方式、垂直對齊、捲動方式、邊框、圓角、背景、邊框顏色、陰影、最小寬度、內距、文字或圖示顏色、字型／粗細／大小、文字對齊、outline、字體大小。 */
 .stocktake-quantity { width: 150px; height: 42px; display: flex; align-items: center; overflow: hidden; border: 1px solid #3a464d; border-radius: 5px; background: #0b1013; }.stocktake-quantity:focus-within { border-color: var(--yellow); box-shadow: 0 0 0 2px rgba(255,194,58,.1); }.stocktake-quantity.invalid { border-color: var(--red); }.stocktake-quantity input { width: 100%; min-width: 0; height: 100%; padding: 0 10px; border: 0; background: transparent; color: #eef4f6; font: 800 17px ui-monospace, monospace; text-align: right; outline: 0; }.stocktake-quantity span { padding: 0 10px 0 4px; color: #7f8f97; font-size: 12px; }
+
+/* 「庫存盤點」的「差異」的「差異數字」相關格式：本行可修改字體粗細、文字或圖示顏色、字體大小。 */
 .stocktake-difference { font-weight: 850; }.stocktake-difference.positive { color: var(--green); }.stocktake-difference.negative, .stocktake-difference.invalid { color: var(--red); }.stocktake-difference.invalid { font-size: 12px; }
+
+/* 「庫存盤點」的「盤點備註」的「備註輸入框」相關格式：本行可修改寬度、高度、內距、邊框、圓角、背景、文字或圖示顏色、outline、邊框顏色。 */
 .stocktake-note { width: 190px; height: 40px; padding: 0 10px; border: 1px solid #343f45; border-radius: 5px; background: #0d1316; color: var(--text); outline: 0; }.stocktake-note:focus { border-color: #687a84; }.stocktake-note::placeholder { color: #69777f; }
+
+/* 「庫存盤點」的「更新數量」的「更新數量按鈕」相關格式：本行可修改最小寬度、最小高度、排列方式、垂直對齊、水平對齊、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、字體粗細、cursor、white-space、邊框顏色、透明度、寬度。 */
 .stocktake-save { min-width: 112px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 11px; border: 1px solid rgba(61,204,179,.4); border-radius: 5px; background: rgba(61,204,179,.07); color: var(--green); font-weight: 850; cursor: pointer; white-space: nowrap; }.stocktake-save:hover:not(:disabled) { border-color: var(--green); background: rgba(61,204,179,.13); }.stocktake-save:disabled { opacity: .35; cursor: not-allowed; }.stocktake-save svg { width: 16px; }
+
+/* 「刀具資料」的「單價」的「單價與漲跌幅」相關格式：本行可修改字體粗細、文字或圖示顏色。 */
 .price-cell > span { font-weight: 800; color: #edf4f7; }
+
+/* 「刀具資料」的「單價」的「單價與漲跌幅」相關格式：本行可修改排列方式、左側外距、字體粗細、字體大小。 */
 .price-cell small, .history-price small { display: inline-block; margin-left: 6px; font-weight: 850; font-size: 12px; }
+
+/* 「刀具資料」的「單價」的「漲價與降價顏色」相關格式：本行可修改文字或圖示顏色。 */
 .price-up { color: var(--red) !important; }.price-down { color: var(--green) !important; }
+
+/* 「刀具資料與出入庫歷史」的「數量」的「數量文字」相關格式：本行可修改字體大小、文字或圖示顏色。 */
 .quantity { font-size: 20px !important; color: #e8f2f7; }
+
+/* 「刀具資料與出入庫歷史」的「分類與類型」的「標籤外觀」相關格式：本行可修改排列方式、垂直對齊、高度、內距、圓角、字體粗細、字體大小。 */
 .tag { display: inline-flex; align-items: center; height: 25px; padding: 0 10px; border-radius: 4px; font-weight: 800; font-size: 13px; }
+
+/* 「出入庫歷史」的「類型」的「入庫與出庫標籤顏色」相關格式：本行可修改文字或圖示顏色、背景。 */
 .tag.in { color: var(--green); background: rgba(61,204,179,.12); }.tag.out { color: var(--red); background: rgba(255,121,92,.12); }
+
+/* 「刀具資料與出入庫歷史」的「分類與類型」的「標籤外觀」相關格式：本行可修改背景、文字或圖示顏色。 */
 .tag.neutral { background: #1c2226; color: #dde6ea; }
+
+/* 「出入庫歷史」的「備註」的「備註欄位」相關格式：本行可修改最大寬度、捲動方式、text-overflow。 */
 .note-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+
+/* 「刀具資料與出入庫歷史」的「最右側操作」的「操作按鈕排列」相關格式：本行可修改排列方式、水平對齊、元件間距。 */
 .row-actions { display: flex; justify-content: flex-end; gap: 3px; }
+
+/* 「刀具資料與出入庫歷史」的「最右側操作」的「入庫、出庫、歷史價格、編輯、刪除按鈕」相關格式：本行可修改寬度、高度、排列方式、place-items、邊框、圓角、背景、文字或圖示顏色、cursor。 */
 .row-actions button { width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 5px; background: transparent; color: #9eabb3; cursor: pointer; }
+
+/* 「刀具資料與出入庫歷史」的「最右側操作」的「入庫、出庫、歷史價格、編輯、刪除按鈕」相關格式：本行可修改背景、文字或圖示顏色。 */
 .row-actions button:hover { background: #22292e; color: white; }.row-actions .danger-icon:hover { color: var(--red); }
+
+/* 「刀具資料與出入庫歷史」的「最右側操作」的「操作按鈕排列」相關格式：本行可修改文字或圖示顏色。 */
 .row-actions .in-icon { color: var(--green); }.row-actions .out-icon { color: var(--red); }.row-actions .history-icon { color: var(--yellow); }
+
+/* 「刀具資料」的「最右側操作」的「操作欄寬度」相關格式：本行可修改最小寬度。 */
 .product-actions { min-width: 176px; }
+
+/* 「刀具資料與出入庫歷史」的「最右側操作」的「操作按鈕排列」相關格式：本行可修改寬度。 */
 .row-actions svg { width: 17px; }
+
+/* 「整個網站」的「資料清單」的「沒有資料時的提示」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、flex-direction、元件間距、文字或圖示顏色。 */
 .empty-state { min-height: 170px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; color: #71808a; }
+
+/* 「整個網站」的「資料清單」的「沒有資料時的提示」相關格式：本行可修改寬度。 */
 .empty-state svg { width: 30px; }
 
+
+/* 「整個網站」的「所有彈出視窗」的「視窗外黑色遮罩」相關格式：本行可修改定位方式、四邊位置、顯示層級、排列方式、place-items、內距、背景、backdrop-filter、捲動方式。 */
 .modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 18px; background: rgba(0,0,0,.76); backdrop-filter: blur(3px); overflow: auto; }
+
+/* 「整個網站」的「所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改寬度、最大寬度、最大高度、左右捲動、上下捲動、overscroll-behavior、邊框、圓角、背景、陰影、內距。 */
 .modal { width: min(560px, 100%); max-width: 100vw; max-height: calc(100vh - 36px); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; border: 1px solid #303940; border-radius: 7px; background: #0b1013; box-shadow: 0 24px 80px rgba(0,0,0,.65); padding: 26px 30px 30px; }
+
+/* 「新增／編輯刀具與大型工具」的「彈出視窗」的「大型視窗寬度」相關格式：本行可修改寬度。 */
 .modal.large { width: min(780px, 100%); }
+
+/* 「整個網站」的「所有彈出視窗」的「標題列與關閉按鈕」相關格式：本行可修改排列方式、垂直對齊、水平對齊、下方外距。 */
 .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+
+/* 「整個網站」的「所有彈出視窗」的「視窗主標題」相關格式：本行可修改外距、字體大小。 */
 .modal-head h2 { margin: 0; font-size: 23px; }
+
+/* 「整個網站」的「所有彈出視窗與手機選單」的「關閉圖示按鈕」相關格式：本行可修改寬度、高度、排列方式、place-items、邊框、圓角、背景、文字或圖示顏色、cursor。 */
 .icon-button { width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 5px; background: transparent; color: #939ea5; cursor: pointer; }
+
+/* 「整個網站」的「所有彈出視窗與手機選單」的「關閉圖示按鈕」相關格式：本行可修改文字或圖示顏色、背景、寬度。 */
 .icon-button:hover { color: white; background: #1b2226; }.icon-button svg { width: 21px; }
+
+/* 「出入庫」的「入庫／出庫切換」的「切換按鈕外框」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、內距、圓角、背景、下方外距。 */
 .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 5px; border-radius: 6px; background: #1c2226; margin-bottom: 24px; }
-.segmented button { height: 46px; border: 0; border-radius: 5px; background: transparent; color: #8d969c; font-weight: 800; font-size: 17px; cursor: pointer; }
+
+/* 「出入庫」的「入庫／出庫切換」的「兩個切換按鈕」相關格式：本行可修改高度、邊框、圓角、背景、文字或圖示顏色、字體粗細、字體大小、cursor。 */
+.segmented button { height: 40px; border: 0; border-radius: 5px; background: transparent; color: #8d969c; font-weight: 800; font-size: 17px; cursor: pointer; }
+
+/* 「出入庫」的「入庫／出庫切換」的「切換按鈕外框」相關格式：本行可修改文字或圖示顏色、背景。 */
 .segmented .selected-in { color: #071c18; background: var(--green); }.segmented .selected-out { color: #241009; background: var(--red); }
+
+/* 「新增／編輯刀具與出入庫」的「表單」的「兩欄或三欄排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距。 */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 20px; }
+
+/* 「新增刀具」的「目前庫存」的「數量、單價、購入日期三欄排列」相關格式：本行可修改欄位數量與寬度。 */
 .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+/* 「新增／編輯刀具」的「規格、尺寸、斷屑槽、材質與廠牌、供應商、單位」的「兩組欄位區塊」相關格式：本行可修改上方外距。 */
 .dynamic-fields, .common-fields { margin-top: 18px; }
+
+/* 「新增／編輯刀具與出入庫」的「表單欄位」的「欄位共用排列」相關格式：本行可修改排列方式、元件間距、下方外距。 */
 .field { display: grid; gap: 7px; margin-bottom: 18px; }
+
+/* 「新增／編輯刀具與出入庫」的「表單」的「兩欄或三欄排列」相關格式：本行可修改外距。 */
 .form-grid .field { margin: 0; }
+
+/* 「新增／編輯刀具與出入庫」的「整列欄位」的「上方間距」相關格式：本行可修改上方外距。 */
 .field.wide { margin-top: 18px; }
+
+/* 「新增／編輯刀具與出入庫」的「規格、尺寸、斷屑槽、材質、廠牌、供應商、單位、數量、單價、日期、備註」的「欄位標題」相關格式：本行可修改字體大小、字體粗細。 */
 .field > span { font-size: 16px; font-weight: 800; }
+
+/* 「新增／編輯刀具與出入庫」的「表單欄位」的「輸入框、選單與備註框」相關格式：本行可修改寬度、最小高度、邊框、圓角、背景、文字或圖示顏色、內距、outline。 */
 .field input, .field select, .field textarea { width: 100%; min-height: 46px; border: 1px solid #303a40; border-radius: 5px; background: #0b1013; color: var(--text); padding: 10px 14px; outline: 0; }
+
+/* 「新增／編輯刀具與出入庫」的「表單欄位」的「輸入框、選單與備註框」相關格式：本行可修改邊框顏色。 */
 .field input:focus, .field select:focus, .field textarea:focus { border-color: #697a84; }
+
+/* 「新增／編輯刀具與出入庫」的「表單欄位」的「輸入框、選單與備註框」相關格式：本行可修改文字或圖示顏色、背景、border-style。 */
 .field input:disabled { color: #6f7880; background: #0a0e10; border-style: dashed; }
+
+/* 「新增／編輯刀具與出入庫」的「備註」的「多行輸入框」相關格式：本行可修改最小高度、resize。 */
 .field textarea { min-height: 76px; resize: vertical; }
+
+/* 「新增／編輯刀具」的「分類」的「分類下拉選單」相關格式：本行可修改color-scheme。 */
 .field select { color-scheme: dark; }
+
+/* 「新增／編輯刀具與出入庫」的「表單欄位」的「輸入框、選單與備註框」相關格式：本行可修改文字或圖示顏色、透明度。 */
 .field input::placeholder, .field textarea::placeholder { color: #77848d; opacity: 1; }
+
+/* 「新增／編輯刀具」的「品名（自動組合）」的「自動組合品名文字」相關格式：本行可修改文字或圖示顏色、字型。 */
 .field .composed-name { color: #98b7c9; font-family: ui-monospace, "Cascadia Code", monospace; }
+
+/* 「新增／編輯刀具」的「規格、尺寸、斷屑槽、材質、廠牌、供應商、單位」的「可輸入下拉選單」相關格式：本行可修改定位方式、排列方式。 */
 .editable-combo { position: relative; display: block; }
+
+/* 「新增／編輯刀具與出入庫」的「表單欄位」的「欄位共用排列」相關格式：本行可修改右側內距。 */
 .field .editable-combo input { padding-right: 42px; }
+
+/* 「新增／編輯刀具」的「規格、尺寸、斷屑槽、材質、廠牌、供應商、單位」的「可輸入下拉選單」相關格式：本行可修改排列方式、透明度。 */
 .editable-combo input::-webkit-calendar-picker-indicator { display: none !important; opacity: 0; }
+
+/* 「新增／編輯刀具」的「規格、尺寸、斷屑槽、材質、廠牌、供應商、單位」的「可輸入下拉選單」相關格式：本行可修改定位方式、右側位置、上方位置、寬度、高度、位移或旋轉、文字或圖示顏色、pointer-events。 */
 .editable-combo > svg { position: absolute; right: 13px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: #8b989f; pointer-events: none; }
+
+/* 「新增／編輯刀具」的「規格、尺寸、斷屑槽、材質、廠牌、供應商、單位」的「可輸入下拉選單」相關格式：本行可修改文字或圖示顏色。 */
 .editable-combo:focus-within > svg { color: var(--yellow); }
+
+/* 「新增／編輯刀具」的「可輸入下拉選單」的「選項清單」相關格式：本行可修改排列方式。 */
 .editable-combo-menu { display: block; }
+
+/* 「新增／編輯刀具」的「可輸入下拉選單」的「選項清單」相關格式：本行可修改最小高度。 */
 .editable-combo-menu button { min-height: 44px; }
+
+/* 「新增／編輯刀具」的「可輸入下拉選單」的「選項清單」相關格式：本行可修改排列方式。 */
 .editable-combo-menu .product-picker-empty { display: block; }
+
+/* 「新增刀具」的「目前庫存」的「數量、單價與購入日期區塊」相關格式：本行可修改外距、內距、邊框、圓角。 */
 .initial-stock { margin: 21px 0 0; padding: 14px 15px 16px; border: 1px dashed #313b41; border-radius: 5px; }
+
+/* 「新增刀具」的「目前庫存」的「區塊標題」相關格式：本行可修改內距、文字或圖示顏色、字型／粗細／大小。 */
 .initial-stock legend { padding: 0 5px; color: #8fa7b5; font: 13px ui-monospace, monospace; }
+
+/* 「出入庫」的「刀具選擇」的「目前庫存提示」相關格式：本行可修改外距、文字或圖示顏色、字體大小。 */
 .stock-hint { margin: -10px 0 18px; color: #83949e; font-size: 13px; }.stock-hint strong { color: var(--yellow); }
+
+/* 「出入庫」的「刀具」的「搜尋選擇元件」相關格式：本行可修改定位方式。 */
 .product-picker { position: relative; }
+
+/* 「出入庫」的「刀具」的「搜尋輸入框與圖示」相關格式：本行可修改定位方式、排列方式、垂直對齊。 */
 .product-picker-input { position: relative; display: flex; align-items: center; }
+
+/* 「新增／編輯刀具與出入庫」的「表單欄位」的「欄位共用排列」相關格式：本行可修改左側內距、右側內距。 */
 .field .product-picker-input input { padding-left: 42px; padding-right: 42px; }
+
+/* 「出入庫」的「刀具」的「搜尋輸入框與圖示」相關格式：本行可修改定位方式、顯示層級、寬度、高度、文字或圖示顏色、pointer-events。 */
 .product-picker-input > svg { position: absolute; z-index: 1; width: 18px; height: 18px; color: #7f8d95; pointer-events: none; }
+
+/* 「出入庫」的「刀具」的「搜尋輸入框與圖示」相關格式：本行可修改左側位置、右側位置。 */
 .product-picker-input > svg:first-child { left: 14px; }.product-picker-input > svg:last-child { right: 13px; }
+
+/* 「出入庫」的「刀具」的「搜尋選擇元件」相關格式：本行可修改文字或圖示顏色。 */
 .product-picker:focus-within .product-picker-input > svg { color: var(--yellow); }
+
+/* 「出入庫」的「刀具」的「動態搜尋結果清單」相關格式：本行可修改定位方式、顯示層級、左側位置、右側位置、上方位置、最大高度、上下捲動、內距、邊框、圓角、背景、陰影。 */
 .product-picker-menu { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 6px); max-height: 260px; overflow-y: auto; padding: 5px; border: 1px solid #39444b; border-radius: 6px; background: #11171a; box-shadow: 0 18px 45px rgba(0,0,0,.58); }
+
+/* 「出入庫」的「刀具」的「動態搜尋結果選項」相關格式：本行可修改寬度、最小高度、排列方式、垂直對齊、水平對齊、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、文字對齊、cursor。 */
 .product-picker-menu button { width: 100%; min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 8px 10px; border: 0; border-radius: 4px; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+
+/* 「出入庫」的「刀具」的「動態搜尋結果選項」相關格式：本行可修改背景。 */
 .product-picker-menu button:hover, .product-picker-menu button[aria-selected="true"] { background: #20282d; }
+
+/* 「出入庫」的「刀具」的「動態搜尋結果選項」相關格式：本行可修改最小寬度、捲動方式、text-overflow、white-space、文字或圖示顏色、右側外距。 */
 .product-picker-menu button span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.product-picker-menu button b { color: var(--yellow); margin-right: 10px; }
+
+/* 「出入庫」的「刀具」的「動態搜尋結果選項」相關格式：本行可修改flex、文字或圖示顏色。 */
 .product-picker-menu button small { flex: 0 0 auto; color: #8da0ab; }
+
+/* 「出入庫」的「刀具」的「找不到刀具提示」相關格式：本行可修改內距、文字或圖示顏色、文字對齊。 */
 .product-picker-empty { padding: 18px 10px; color: #7f8d95; text-align: center; }
+
+/* 「新增刀具與入庫」的「採購總價」的「總價預覽框」相關格式：本行可修改上方外距、最小高度、排列方式、垂直對齊、元件間距、內距、邊框、圓角、背景。 */
 .total-preview { margin-top: 17px; min-height: 58px; display: flex; align-items: center; gap: 14px; padding: 10px 14px; border: 1px solid rgba(255,194,58,.24); border-radius: 5px; background: rgba(255,194,58,.055); }
+
+/* 「新增刀具與入庫」的「採購總價」的「標題與總金額」相關格式：本行可修改文字或圖示顏色、字體大小、字型／粗細／大小。 */
 .total-preview > span { color: #91a7b3; font-size: 14px; }.total-preview strong { color: var(--yellow); font: 800 24px ui-monospace, "Cascadia Code", monospace; }
+
+/* 「新增刀具與入庫」的「採購總價」的「數量乘單價算式」相關格式：本行可修改左側外距、文字或圖示顏色、字型／粗細／大小。 */
 .total-preview small { margin-left: auto; color: #7f8d95; font: 12px ui-monospace, monospace; }
+
+/* 「整個網站」的「所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改寬度、上方外距。 */
 .modal-submit { width: 100%; margin-top: 19px; }
+
+/* 「整個網站」的「表單」的「錯誤訊息」相關格式：本行可修改外距、內距、圓角、背景、文字或圖示顏色、字體大小。 */
 .form-error, .form-message { margin: 16px 0 0; padding: 10px 12px; border-radius: 4px; background: rgba(255,121,92,.09); color: #ff9a83; font-size: 14px; }
+
+/* 「整個網站」的「表單」的「一般提示訊息」相關格式：本行可修改文字或圖示顏色、背景。 */
 .form-message { color: #d9be79; background: rgba(255,194,58,.08); }
+
+/* 「刀具資料」的「歷史價格」的「彈出視窗寬度」相關格式：本行可修改寬度。 */
 .modal.price-history { width: min(650px, 100%); }
+
+/* 「資料備份／還原」的「管理員功能」的「彈出視窗寬度」相關格式：本行可修改寬度。 */
 .modal.admin-data { width: min(720px, 100%); }
+
+/* 「資料備份／還原」的「管理員限定功能」的「密碼安全說明」相關格式：本行可修改排列方式、垂直對齊、元件間距、外距、內距、邊框、圓角、背景。 */
 .admin-security-note { display: flex; align-items: flex-start; gap: 13px; margin: -3px 0 20px; padding: 14px; border: 1px solid rgba(189,122,255,.26); border-radius: 7px; background: rgba(189,122,255,.06); }
+
+/* 「資料備份／還原」的「管理員限定功能」的「密碼安全說明」相關格式：本行可修改flex、寬度、文字或圖示顏色。 */
 .admin-security-note > svg { flex: 0 0 auto; width: 22px; color: #c99aff; }
+
+/* 「資料備份／還原」的「管理員限定功能」的「密碼安全說明」相關格式：本行可修改排列方式。 */
 .admin-security-note strong, .admin-security-note span, .admin-data-heading strong, .admin-data-heading span { display: block; }
+
+/* 「資料備份／還原」的「管理員限定功能」的「密碼安全說明」相關格式：本行可修改上方外距、文字或圖示顏色、字體大小、行高。 */
 .admin-security-note span, .admin-data-heading span { margin-top: 3px; color: #8da0aa; font-size: 13px; line-height: 1.5; }
+
+/* 「資料備份／還原」的「匯出完整備份與整理後匯入」的「功能區塊」相關格式：本行可修改上方外距、內距、邊框、圓角、背景。 */
 .admin-data-section { margin-top: 18px; padding: 18px; border: 1px solid #2c363c; border-radius: 8px; background: #101619; }
+
+/* 「資料備份／還原」的「匯出完整備份與整理後匯入」的「功能區塊」相關格式：本行可修改邊框顏色。 */
 .admin-data-section.danger-zone { border-color: rgba(255,121,92,.28); }
+
+/* 「資料備份／還原」的「匯出完整備份與整理後匯入」的「區塊標題與圖示」相關格式：本行可修改排列方式、垂直對齊、元件間距、下方外距。 */
 .admin-data-heading { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 15px; }
+
+/* 「資料備份／還原」的「匯出完整備份與整理後匯入」的「區塊標題與圖示」相關格式：本行可修改flex、寬度、文字或圖示顏色。 */
 .admin-data-heading > svg { flex: 0 0 auto; width: 21px; color: var(--yellow); }
+
+/* 「資料備份／還原」的「整理後匯入」的「危險操作樣式」相關格式：本行可修改文字或圖示顏色。 */
 .danger-zone .admin-data-heading > svg { color: var(--red); }
+
+/* 「資料備份／還原與管理員刪除驗證」的「確認操作」的「下載、匯入或刪除按鈕」相關格式：本行可修改寬度。 */
 .admin-action { width: 100%; }
+
+/* 「資料備份／還原」的「整理後匯入」的「選擇 Excel 檔案按鈕」相關格式：本行可修改最小高度、排列方式、垂直對齊、元件間距、內距、邊框、圓角、文字或圖示顏色、cursor、捲動方式。 */
 .admin-file-picker { min-height: 52px; display: flex; align-items: center; gap: 11px; padding: 10px 13px; border: 1px dashed #4a5961; border-radius: 6px; color: #cbd7dc; cursor: pointer; overflow: hidden; }
+
+/* 「資料備份／還原」的「整理後匯入」的「選擇 Excel 檔案按鈕」相關格式：本行可修改邊框顏色、背景。 */
 .admin-file-picker:hover { border-color: var(--yellow); background: rgba(255,194,58,.04); }
+
+/* 「資料備份／還原」的「整理後匯入」的「選擇 Excel 檔案按鈕」相關格式：本行可修改定位方式、寬度、高度、透明度、pointer-events。 */
 .admin-file-picker input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* 「資料備份／還原」的「整理後匯入」的「選擇 Excel 檔案按鈕」相關格式：本行可修改flex、寬度、文字或圖示顏色、捲動方式、text-overflow、white-space。 */
 .admin-file-picker svg { flex: 0 0 auto; width: 20px; color: var(--yellow); }.admin-file-picker span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 「資料備份／還原」的「匯入資料預覽」的「四張筆數卡片排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、外距。 */
 .admin-preview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 13px 0; }
+
+/* 「資料備份／還原」的「匯入資料預覽」的「四張筆數卡片」相關格式：本行可修改內距、圓角、背景、文字或圖示顏色、文字對齊、字體大小。 */
 .admin-preview span { padding: 10px 6px; border-radius: 5px; background: #192126; color: #8fa0aa; text-align: center; font-size: 12px; }
+
+/* 「資料備份／還原」的「匯入資料預覽」的「刀具、出入庫、加工紀錄、管理選項筆數」相關格式：本行可修改排列方式、下方外距、文字或圖示顏色、字型／粗細／大小。 */
 .admin-preview b { display: block; margin-bottom: 2px; color: #eef3f5; font: 800 19px ui-monospace, monospace; }
+
+/* 「資料備份／還原」的「整理後匯入」的「危險操作樣式」相關格式：本行可修改上方外距。 */
 .danger-zone .field { margin-top: 14px; }
+
+/* 「資料備份／還原」的「操作結果」的「成功訊息」相關格式：本行可修改外距、內距、圓角、文字或圖示顏色、背景。 */
 .admin-success { margin: 16px 0 0; padding: 10px 12px; border-radius: 4px; color: #8ee3d3; background: rgba(61,204,179,.09); }
+
+/* 「管理員刪除驗證」的「此操作無法復原」的「警告內容」相關格式：本行可修改排列方式、垂直對齊、元件間距、內距、邊框、圓角、背景。 */
 .admin-delete-warning { display: flex; align-items: flex-start; gap: 13px; padding: 15px; border: 1px solid rgba(255,121,92,.32); border-radius: 7px; background: rgba(255,121,92,.07); }
+
+/* 「管理員刪除驗證」的「此操作無法復原」的「警告內容」相關格式：本行可修改flex、寬度、文字或圖示顏色。 */
 .admin-delete-warning > svg { flex: 0 0 auto; width: 22px; color: var(--red); }
+
+/* 「管理員刪除驗證」的「此操作無法復原」的「警告內容」相關格式：本行可修改排列方式。 */
 .admin-delete-warning strong, .admin-delete-warning span { display: block; }
+
+/* 「管理員刪除驗證」的「此操作無法復原」的「警告內容」相關格式：本行可修改上方外距、文字或圖示顏色、字體大小、行高。 */
 .admin-delete-warning span { margin-top: 5px; color: #aab5bb; font-size: 14px; line-height: 1.6; }
+
+/* 「刀具資料」的「歷史價格」的「三張價格卡片排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、下方外距。 */
 .price-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+
+/* 「刀具資料」的「歷史價格」的「最新、最低、最高價格卡片」相關格式：本行可修改最小高度、內距。 */
 .price-stats .stat-card { min-height: 96px; padding: 17px 15px; }
+
+/* 「刀具資料」的「歷史價格」的「最新、最低、最高價格數字」相關格式：本行可修改字體大小、上方外距。 */
 .price-stats .stat-card strong { font-size: 25px; margin-top: 8px; }
+
+/* 「刀具資料」的「歷史價格」的「最新、最低、最高價格卡片」相關格式：本行可修改排列方式。 */
 .price-stats .stat-card small { display: none; }
+
+/* 「刀具資料」的「歷史價格」的「購入日期、單價、數量、供應商表格」相關格式：本行可修改border-top、左右捲動。 */
 .price-history-table { border-top: 1px solid var(--line); overflow-x: auto; }
+
+/* 「刀具資料」的「歷史價格」的「購入日期、單價、數量、供應商表格」相關格式：本行可修改高度。 */
 .price-history-table .data-table td { height: 54px; }
+
+/* 「刀具資料」的「歷史價格」的「歷史單價數字」相關格式：本行可修改字體粗細、文字或圖示顏色。 */
 .history-price { font-weight: 800; color: #edf4f7; }
 
+
+/* 「整個網站」的「操作完成」的「右下角成功通知」相關格式：本行可修改定位方式、顯示層級、右側位置、下方位置、排列方式、垂直對齊、元件間距、最小高度、內距、邊框、圓角、背景、文字或圖示顏色、陰影。 */
 .toast { position: fixed; z-index: 200; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 18px; border: 1px solid rgba(61,204,179,.35); border-radius: 6px; background: #10211e; color: #89ead9; box-shadow: 0 10px 35px rgba(0,0,0,.5); }
+
+/* 「整個網站」的「操作完成」的「右下角成功通知」相關格式：本行可修改寬度。 */
 .toast svg { width: 19px; }
+
+/* 「整個網站」的「資料載入中」的「骨架動畫」相關格式：本行可修改排列方式、元件間距、高度、邊框、圓角、背景、background-size、animation。 */
 .skeleton { display: grid; gap: 14px; }.skeleton i { display: block; height: 110px; border: 1px solid #222a2e; border-radius: 7px; background: linear-gradient(90deg, #12171a 25%, #1a2023 50%, #12171a 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+
+/* 「整個網站」的「資料載入中」的「骨架動畫」相關格式：本行可修改background-position。 */
 @keyframes shimmer { to { background-position: -200% 0; } }
 
+
+/* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改最小高度、排列方式、place-items、內距、定位方式、背景、捲動方式。 */
 .auth-screen { min-height: 100vh; display: grid; place-items: center; padding: 24px; position: relative; background: #080c0e; overflow: hidden; }
+
+/* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改定位方式、四邊位置、背景圖案、background-size、mask-image。 */
 .auth-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(circle, black, transparent 75%); }
+
+/* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改定位方式、寬度、內距、邊框、圓角、背景、陰影。 */
 .auth-card { position: relative; width: min(460px, 100%); padding: 32px; border: 1px solid var(--line); border-radius: 8px; background: rgba(12,17,20,.96); box-shadow: 0 24px 90px rgba(0,0,0,.5); }
+
+/* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改內距。 */
 .auth-brand { padding: 0 0 34px; }
+
+/* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改外距、文字或圖示顏色、字型／粗細／大小、字距。 */
 .auth-eyebrow { margin: 0 0 8px; color: #91aab8; font: 12px ui-monospace, monospace; letter-spacing: .22em; }
+
+/* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改外距、字體大小、文字或圖示顏色、行高。 */
 .auth-card h1 { margin: 0 0 10px; font-size: 30px; }.auth-copy { margin: 0 0 26px; color: #8f9da6; line-height: 1.7; font-size: 14px; }
+
+/* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改上方外距、下方外距、寬度。 */
 .auth-card .field.wide { margin-top: 0; margin-bottom: 16px; }.auth-submit { width: 100%; margin-top: 4px; }
+
+/* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改寬度、上方外距、邊框、背景、文字或圖示顏色、text-decoration、cursor。 */
 .auth-switch { width: 100%; margin-top: 18px; border: 0; background: transparent; color: #a8b5bc; text-decoration: underline; cursor: pointer; }
+
+/* 「整個網站」的「初始載入」的「全頁載入動畫」相關格式：本行可修改最小高度、排列方式、place-content、justify-items、文字或圖示顏色、背景。 */
 .loading-screen { min-height: 100vh; display: grid; place-content: center; justify-items: center; color: #91a1aa; background: #080c0e; }
+
+/* 「整個網站」的「初始載入」的「全頁載入動畫」相關格式：本行可修改寬度、高度、邊框、border-top-color、圓角、animation、位移或旋轉。 */
 .loader { width: 36px; height: 36px; border: 3px solid #253037; border-top-color: var(--yellow); border-radius: 50%; animation: spin .8s linear infinite; }@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 「庫存管理系統」的「手機版頂端列」的「選單、標題與狀態點」相關格式：本行可修改排列方式。 */
 .mobile-header, .mobile-close, .nav-scrim { display: none; }
 
+
+/* 「平板與手機版」的「螢幕寬度 900px 以下」的「響應式版面」相關格式。 */
 @media (max-width: 900px) {
+
+  /* 「平板與手機版」的「庫存管理系統－電腦版左側選單」的「整個側邊欄」相關格式：本行可修改寬度、位移或旋轉、動畫速度、陰影。 */
   .sidebar { width: 270px; transform: translateX(-105%); transition: transform .2s ease; box-shadow: 14px 0 50px rgba(0,0,0,.45); }
+
+  /* 「平板與手機版」的「庫存管理系統」的「已開啟的左側功能選單」相關格式：本行可修改位移或旋轉。 */
   .sidebar.is-open { transform: translateX(0); }
+
+  /* 「平板與手機版」的「庫存管理系統－手機版側邊選單」的「關閉按鈕與黑色遮罩」相關格式：本行可修改排列方式、左側外距。 */
   .mobile-close { display: grid; margin-left: auto; }
+
+  /* 「平板與手機版」的「庫存管理系統－手機版側邊選單」的「關閉按鈕與黑色遮罩」相關格式：本行可修改排列方式、定位方式、四邊位置、顯示層級、邊框、背景。 */
   .nav-scrim { display: block; position: fixed; inset: 0; z-index: 35; border: 0; background: rgba(0,0,0,.58); }
+
+  /* 「平板與手機版」的「整個網站－主要內容區」的「格線背景與版面」相關格式：本行可修改左側外距。 */
   .main-panel { margin-left: 0; }
+
+  /* 「平板與手機版」的「系統首頁－首頁外框」的「寬度、對齊與背景」相關格式：本行可修改垂直對齊。 */
   .portal-panel { align-items: flex-start; }
+
+  /* 「平板與手機版」的「庫存管理系統－手機版頂端列」的「選單、標題與狀態點」相關格式：本行可修改定位方式、上方位置、顯示層級、高度、排列方式、垂直對齊、水平對齊、內距、border-bottom、背景、backdrop-filter。 */
   .mobile-header { position: sticky; top: 0; z-index: 30; height: 58px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: 1px solid var(--line); background: rgba(8,12,14,.94); backdrop-filter: blur(12px); }
+
+  /* 「平板與手機版」的「庫存管理系統頂端列」的「右側黃色狀態圓點」相關格式：本行可修改寬度、高度、圓角、背景。 */
   .mobile-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); }
+
+  /* 「平板與手機版」的「庫存管理系統－一般內容頁」的「內容最大寬度與四周留白」相關格式：本行可修改內距。 */
   .page-content { padding: 26px 22px 50px; }
+
+  /* 「平板與手機版」的「刀具資料－搜尋與分類」的「搜尋框與分類選單排列」相關格式：本行可修改欄位數量與寬度。 */
   .product-filter { grid-template-columns: 1fr; }
+
+  /* 「平板與手機版」的「系統首頁－功能選擇」的「功能卡片排列」相關格式：本行可修改欄位數量與寬度。 */
   .function-grid { grid-template-columns: 1fr 1fr; }
+
+  /* 「平板與手機版」的「系統首頁－功能選擇」的「四張功能卡片欄數」相關格式：本行可修改欄位數量與寬度。 */
   .portal-functions { grid-template-columns: 1fr 1fr; }
+
+  /* 「平板與手機版」的「加工數量登記與加工數量查詢－整個頁面」的「頁面寬度與留白」相關格式：本行可修改內距。 */
   .production-page { padding: 24px 22px 50px; }
+
+  /* 「平板與手機版」的「加工數量登記與加工數量查詢－頁面頂端」的「標題外框」相關格式：本行可修改左右內距。 */
   .production-head { padding-inline: 140px; }
+
+  /* 「平板與手機版」的「加工時間計算－時間輸入」的「欄位排列」相關格式：本行可修改欄位數量與寬度。 */
   .time-range { grid-template-columns: 1fr auto 1fr; }
+
+  /* 「平板與手機版」的「加工時間計算－計算操作」的「計算實際工時按鈕」相關格式：本行可修改grid-column。 */
   .calculator-button { grid-column: 1 / -1; }
+
+  /* 「平板與手機版」的「加工數量查詢－查詢全部統計」的「五張統計卡片排列」相關格式：本行可修改欄位數量與寬度。 */
   .production-totals { grid-template-columns: repeat(3, 1fr); }
+
+  /* 「平板與手機版」的「訂單完工預估－預估結果」的「五張結果卡片排列」相關格式：本行可修改欄位數量與寬度。 */
   .forecast-grid { grid-template-columns: repeat(3, 1fr); }
+
+/* 「平板與手機版」的「訂單完工預估－預估結果」的「五張結果卡片排列」相關格式。 */
 }
 
+
+/* 「手機版」的「螢幕寬度 620px 以下」的「響應式版面」相關格式。 */
 @media (max-width: 620px) {
+
+  /* 「手機版」的「整個網站－頁面頂端」的「示範模式提示」相關格式：本行可修改垂直對齊、水平對齊、字體大小、內距。 */
   .demo-banner { align-items: flex-start; justify-content: flex-start; font-size: 12px; padding: 9px 14px; }
+
+  /* 「手機版」的「庫存管理系統－一般內容頁」的「內容最大寬度與四周留白」相關格式：本行可修改內距。 */
   .page-content { padding: 22px 14px 42px; }
+
+  /* 「手機版」的「庫存管理系統－一般內容頁」的「頁面標題區」相關格式：本行可修改最小高度、垂直對齊、下方外距。 */
   .page-title { min-height: 0; align-items: flex-end; margin-bottom: 22px; }
+
+  /* 「手機版」的「庫存管理系統－一般內容頁」的「總覽、出入庫、庫存盤點、刀具資料主標題」相關格式：本行可修改字體大小。 */
   .page-title h1 { font-size: 30px; }
+
+  /* 「手機版」的「庫存管理系統－一般內容頁」的「右上方操作按鈕區」相關格式：本行可修改上方內距、元件間距。 */
   .title-actions { padding-top: 0; gap: 7px; }
+
+  /* 「手機版」的「庫存管理系統－一般內容頁」的「右上方操作按鈕區」相關格式：本行可修改最小寬度、內距、字體大小、外距。 */
   .title-actions .button { min-width: 46px; padding: 0 13px; font-size: 0; }.title-actions .button svg { margin: 0; }
+
+  /* 「手機版」的「庫存管理系統－一般內容頁」的「頁面標題區」相關格式：本行可修改字體大小、內距。 */
   .page-title:has(.button.primary) .title-actions .button { font-size: 14px; padding: 0 13px; }
+
+  /* 「手機版」的「庫存管理系統－庫存總覽」的「四張統計卡片排列」相關格式：本行可修改欄位數量與寬度、元件間距。 */
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 9px; }
+
+  /* 「手機版」的「系統首頁－整個首頁」的「首頁寬度與留白」相關格式：本行可修改上方內距、最小高度、內距、字體大小、上方外距。 */
   .home-page { padding-top: 14px; }.home-hero { min-height: 205px; padding: 25px 16px; }.home-hero h1 { font-size: 34px; }.home-section-head { margin-top: 25px; }
+
+  /* 「手機版」的「系統首頁－功能選擇」的「功能卡片排列」相關格式：本行可修改欄位數量與寬度、元件間距、最小高度、內距、寬度、高度、flex-direction、垂直對齊、右側內距。 */
   .function-grid { grid-template-columns: 1fr; gap: 10px; }.function-card, .function-card.is-future { min-height: 112px; padding: 17px; }.function-icon { width: 38px; height: 38px; }.function-card { flex-direction: row; align-items: center; }.function-copy { padding-right: 40px; }
+
+  /* 「手機版」的「系統首頁－功能選擇」的「四張功能卡片欄數」相關格式：本行可修改欄位數量與寬度。 */
   .portal-functions { grid-template-columns: 1fr; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢－整個頁面」的「頁面寬度與留白」相關格式：本行可修改內距。 */
   .production-page { padding: 14px 12px 40px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢－頁面頂端」的「標題外框」相關格式：本行可修改最小高度、垂直對齊、內距。 */
   .production-head { min-height: 180px; align-items: flex-end; padding: 65px 14px 24px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢－頁面頂端」的「頁面主標題」相關格式：本行可修改字體大小。 */
   .production-head h1 { font-size: 30px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢－頁面頂端」的「系統首頁返回按鈕」相關格式：本行可修改左側位置、上方位置、右側位置。 */
   .production-back { left: 12px; top: 12px; }.production-mode { right: 12px; top: 14px; }
+
+  /* 「手機版」的「加工數量登記－登記表單」的「整張表單卡片」相關格式：本行可修改內距。 */
   .production-card { padding: 13px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢－日期、產品編號、機台、數量、備註」的「整列共用格式」相關格式：本行可修改欄位數量與寬度、最小高度。 */
   .production-field-row { grid-template-columns: 112px minmax(0, 1fr); min-height: 54px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢－日期、產品編號、機台、數量、備註」的「左側欄位標題」相關格式：本行可修改內距、字體大小。 */
   .production-field-row > label:first-child { padding: 8px; font-size: 15px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢－日期、產品編號、機台、數量、備註」的「整列共用格式」相關格式：本行可修改左右內距、字體大小。 */
   .production-field-row > input, .production-field-row > textarea { padding-inline: 10px; font-size: 16px; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢－產品編號與機台」的「下拉選單」相關格式：本行可修改左右內距、字體大小、文字對齊、text-align-last、background-position。 */
   .production-field-row > select { padding-inline: 10px 30px; font-size: 15px; text-align: left; text-align-last: left; background-position: calc(100% - 16px) 51%, calc(100% - 10px) 51%; }
+
+  /* 「手機版」的「加工數量登記與加工數量查詢－可輸入選單」的「輸入框」相關格式：本行可修改最小高度、左側內距、右側內距、文字對齊、字體大小。 */
   .production-field-row .editable-combo input { min-height: 52px; padding-left: 10px; padding-right: 34px; text-align: left; font-size: 15px; }
+
+  /* 「手機版」的「加工數量登記－基礎資料」的「管理產品編號與機台區塊」相關格式：本行可修改垂直對齊、flex-direction、排列方式、欄位數量與寬度、水平對齊。 */
   .production-data-tools { align-items: stretch; flex-direction: column; }.production-data-tools > div:last-child { display: grid; grid-template-columns: 1fr 1fr; }.production-data-tools button { justify-content: center; }
+
+  /* 「手機版」的「加工數量登記－實際加工時間」的「標題列」相關格式：本行可修改垂直對齊、flex-direction、寬度、欄位數量與寬度、grid-column。 */
   .time-entry-head, .query-utility-bar { align-items: stretch; flex-direction: column; }.time-entry-head > button, .query-utility-bar > button { width: 100%; }.duration-fields.compact { grid-template-columns: 1fr 1fr; }.duration-fields.compact > div { grid-column: 1 / -1; }
+
+  /* 「手機版」的「加工時間計算－總工時與扣除工時」的「整列輸入區」相關格式：本行可修改欄位數量與寬度、元件間距、grid-column。 */
   .duration-row { grid-template-columns: 1fr 1fr; gap: 9px; }.duration-row > strong { grid-column: 1 / -1; }.duration-row label { grid-template-columns: 1fr auto; }
+
+  /* 「手機版」的「加工時間計算－計算內容」的「整個計算區塊」相關格式：本行可修改內距、欄位數量與寬度、排列方式、grid-column。 */
   .time-calculator { padding: 13px; }.time-range { grid-template-columns: 1fr 1fr; }.time-minus { display: none; }.calculator-button { grid-column: 1 / -1; }
+
+  /* 「手機版」的「加工數量登記－實際工時與總時間」的「三欄排列」相關格式：本行可修改欄位數量與寬度、grid-column。 */
   .duration-fields { grid-template-columns: 1fr 1fr; }.duration-fields > div { grid-column: 1 / -1; }
+
+  /* 「手機版」的「加工數量查詢－查詢操作」的「日期區間查詢、查詢最後一筆、查詢全部、下載 Excel 按鈕排列」相關格式：本行可修改欄位數量與寬度、元件間距、最小高度、字體大小。 */
   .query-actions { grid-template-columns: 1fr; gap: 9px; }.query-button { min-height: 48px; font-size: 16px; }
-  .forecast-head { align-items: stretch; flex-direction: column; }.forecast-head input { width: 100%; text-align: left; }.forecast-grid { grid-template-columns: 1fr 1fr; }.forecast-grid > div:last-child { grid-column: 1 / -1; }
+
+  /* 「手機版」的「訂單完工預估－標題與訂單總數量」的「排列區」相關格式：本行可修改垂直對齊、flex-direction、寬度、文字對齊、欄位數量與寬度、grid-column。 */
+  .forecast-head { align-items: stretch; flex-direction: column; }.forecast-head input.order-quantity-input { width: 100%; text-align: left; }.forecast-grid { grid-template-columns: 1fr 1fr; }.forecast-grid > div:last-child { grid-column: 1 / -1; }
+
+  /* 「手機版」的「加工時間計算－計算內容」的「整個計算區塊」相關格式：本行可修改內距、排列方式、欄位數量與寬度、寬度、垂直對齊、flex-direction、元件間距。 */
   .modal-calculation { padding: 11px; }.modal-tool-actions { display: grid; grid-template-columns: 1fr; }.modal-tool-actions .button { width: 100%; }.time-result { align-items: flex-start; flex-direction: column; gap: 5px; }
+
+  /* 「手機版」的「加工數量查詢－永久刪除產品資料」的「整個警告區塊」相關格式：本行可修改垂直對齊、flex-direction、寬度、white-space。 */
   .query-danger-zone { align-items: stretch; flex-direction: column; }.query-danger-zone button { width: 100%; white-space: normal; }
+
+  /* 「手機版」的「加工數量查詢－查詢結果」的「結果標題與筆數」相關格式：本行可修改flex-wrap、水平對齊、寬度、左側外距。 */
   .result-title { flex-wrap: wrap; justify-content: flex-start; }.result-title small { width: 100%; margin-left: 0; }
+
+  /* 「手機版」的「加工數量查詢－查詢全部統計」的「五張統計卡片排列」相關格式：本行可修改欄位數量與寬度、最小高度、grid-column。 */
   .production-totals { grid-template-columns: 1fr 1fr; }.production-totals > div { min-height: 82px; }.production-totals > div:last-child { grid-column: 1 / -1; }
+
+  /* 「手機版」的「庫存管理系統－庫存總覽」的「單張統計卡片」相關格式：本行可修改最小高度、內距、字體大小。 */
   .stat-card { min-height: 116px; padding: 16px 14px; }.stat-card strong { font-size: clamp(25px, 8vw, 34px); }.stat-card small { font-size: 11px; }
+
+  /* 「手機版」的「庫存管理系統－近 14 天出入庫圖表」的「整張圖表卡片」相關格式：本行可修改上方外距、內距、字體大小。 */
   .chart-card { margin-top: 18px; }.chart-head { padding: 18px 14px 2px; font-size: 12px; }
+
+  /* 「手機版」的「出入庫歷史－篩選」的「類型與日期欄位排列」相關格式：本行可修改欄位數量與寬度。 */
   .filter-row { grid-template-columns: 1fr; }
+
+  /* 「手機版」的「庫存盤點－頁面說明」的「盤點操作說明區」相關格式：本行可修改內距、欄位數量與寬度、元件間距、最小高度、grid-column、字體大小。 */
   .stocktake-guide { padding: 14px; }.stocktake-summary { grid-template-columns: 1fr 1fr; gap: 8px; }.stocktake-summary > div { min-height: 82px; padding: 12px; }.stocktake-summary > div:last-child { grid-column: 1 / -1; }.stocktake-summary strong { font-size: 23px; }
+
+  /* 「手機版」的「出入庫歷史－列表上方統計」的「筆數、入庫、出庫、採購金額」相關格式：本行可修改flex-wrap、元件間距、字體大小。 */
   .movement-summary { flex-wrap: wrap; gap: 10px 16px; font-size: 14px; }
+
+  /* 「手機版」的「整個網站－所有彈出視窗」的「視窗外黑色遮罩」相關格式：本行可修改內距、垂直對齊。 */
   .modal-backdrop { padding: 0; align-items: end; }
+
+  /* 「手機版」的「整個網站－所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改寬度、最大高度、圓角、內距。 */
   .modal, .modal.large { width: 100%; max-height: 94vh; border-radius: 10px 10px 0 0; padding: 22px 18px 26px; }
+
+  /* 「手機版」的「整個網站－所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改最小寬度、最大寬度。 */
   .modal form, .modal .form-grid, .modal .field, .modal .product-picker, .modal .editable-combo { min-width: 0; max-width: 100%; }
+
+  /* 「手機版」的「整個網站－所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改最小寬度、最大寬度。 */
   .modal input, .modal select, .modal textarea { min-width: 0; max-width: 100%; }
+
+  /* 「手機版」的「整個網站－所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距。 */
   .modal .total-preview { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; }
+
+  /* 「手機版」的「整個網站－所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改最小寬度、字體大小、文字對齊、overflow-wrap。 */
   .modal .total-preview strong { min-width: 0; font-size: 21px; text-align: right; overflow-wrap: anywhere; }
+
+  /* 「手機版」的「整個網站－所有彈出視窗」的「視窗寬度、高度與內距」相關格式：本行可修改grid-column、左側外距、文字對齊。 */
   .modal .total-preview small { grid-column: 1 / -1; margin-left: 0; text-align: right; }
+
+  /* 「手機版」的「資料備份／還原－匯入資料預覽」的「四張筆數卡片排列」相關格式：本行可修改欄位數量與寬度。 */
   .admin-preview { grid-template-columns: 1fr 1fr; }
+
+  /* 「手機版」的「資料備份／還原－匯出完整備份與整理後匯入」的「功能區塊」相關格式：本行可修改內距。 */
   .admin-data-section { padding: 14px; }
+
+  /* 「手機版」的「新增／編輯刀具與出入庫－表單」的「兩欄或三欄排列」相關格式：本行可修改欄位數量與寬度、元件間距。 */
   .form-grid, .form-grid.three { grid-template-columns: 1fr; gap: 15px; }
+
+  /* 「手機版」的「刀具資料－歷史價格」的「三張價格卡片排列」相關格式：本行可修改欄位數量與寬度、元件間距。 */
   .price-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  /* 「手機版」的「刀具資料－歷史價格」的「最新、最低、最高價格卡片」相關格式：本行可修改內距、最小高度、字體大小。 */
   .price-stats .stat-card { padding: 13px 10px; min-height: 82px; }.price-stats .stat-card strong { font-size: 20px; }
+
+  /* 「手機版」的「新增／編輯刀具與出入庫－整列欄位」的「上方間距」相關格式：本行可修改上方外距。 */
   .field.wide { margin-top: 15px; }.initial-stock { margin-top: 18px; }
+
+  /* 「手機版」的「整個網站－操作完成」的「右下角成功通知」相關格式：本行可修改左側位置、右側位置、下方位置、水平對齊。 */
   .toast { left: 14px; right: 14px; bottom: 14px; justify-content: center; }
+
+  /* 「手機版」的「舊版登入畫面保留樣式－登入功能」的「保留元件」相關格式：本行可修改內距。 */
   .auth-screen { padding: 12px; }.auth-card { padding: 24px 20px; }
+
+/* 「手機版」的「舊版登入畫面保留樣式－登入功能」的「保留元件」相關格式。 */
 }
 
+
+/* 「整個網站」的「無障礙設定」的「減少動畫效果」相關格式：本行可修改scroll-behavior、動畫速度、animation-duration、animation-iteration-count。 */
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
