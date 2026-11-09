@@ -1402,6 +1402,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版」的「舊版登入畫面保留樣式－登入功能」的「保留元件」相關格式：本行可修改內距。 */
   .auth-screen { padding: 12px; }.auth-card { padding: 24px 20px; }
 
+  /* 「手機版」的「加工數量登記」的「實際工時（時）」的「輸入框」相關格式 */
+  .duration-fields input.actual-hours-input {font-size: 24px;}
+
+  /* 「手機版」的「加工數量登記」的「實際工時（分）」的「輸入框」相關格式 */
+  .duration-fields input.actual-minutes-input { font-size: 24px; }
+
 /* 「手機版」的「舊版登入畫面保留樣式－登入功能」的「保留元件」相關格式。 */
 }
 
