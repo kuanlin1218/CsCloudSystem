@@ -659,6 +659,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「加工數量查詢」的「查詢結果」的「刪除操作欄」相關格式：本行可修改寬度。 */
 .production-table .record-action-column { width: 104px; }
 
+/* 「加工數量查詢－查詢最後一筆與其他結果」的「操作欄位標題」：強制隱藏標題文字，只保留資料列按鈕。 */
+.production-table th.record-action-column { color: transparent; font-size: 0 !important; }
+
 /* 「加工數量查詢」的「查詢結果」的「單筆刪除按鈕」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、字體粗細、cursor、white-space。 */
 .production-row-delete { min-height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; border: 1px solid rgba(255,121,92,.42); border-radius: 5px; background: rgba(255,121,92,.06); color: var(--red); font-weight: 800; cursor: pointer; white-space: nowrap; }
 
@@ -2221,4 +2224,101 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .stocktake-table .stocktake-quantity span { padding: 0 5px 0 2px; font-size: 11px; }
   .stocktake-table .stocktake-note { height: 38px; padding: 0 6px; font-size: 14px; }
   .stocktake-table .stocktake-save { min-height: 36px; padding: 0 5px; gap: 4px; font-size: 14px; white-space: normal; }
+}
+
+
+/* ========================================================================== */
+/* 手機版出入庫與庫存盤點比照刀具資料卡排列                                   */
+/* 三種功能使用相同六等分格線、字級、留白與操作按鈕列。                       */
+/* ========================================================================== */
+@media (max-width: 620px) {
+
+  /* 「手機版－出入庫歷史」的「整張單筆資料卡」：改用與刀具資料相同的六等分格線。 */
+  .data-table.movement-table tbody tr { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+  /* 「手機版－出入庫歷史」的「第一行」：編號在左、出入庫類型在右。 */
+  .movement-table td:nth-child(3) { grid-column: 1 / 4; grid-row: 1; }
+  .movement-table td:nth-child(1) { grid-column: 4 / 7; grid-row: 1; }
+
+  /* 「手機版－出入庫歷史」的「第二行」：品名單獨使用整行。 */
+  .movement-table td:nth-child(4) { grid-column: 1 / 7; grid-row: 2; }
+
+  /* 「手機版－出入庫歷史」的「第三行」：供應商、單價、金額並排。 */
+  .movement-table td:nth-child(8) { grid-column: 1 / 3; grid-row: 3; }
+  .movement-table td:nth-child(6) { grid-column: 3 / 5; grid-row: 3; }
+  .movement-table td:nth-child(7) { grid-column: 5 / 7; grid-row: 3; }
+
+  /* 「手機版－出入庫歷史」的「第四行」：數量在左、日期在右。 */
+  .movement-table td:nth-child(5) { grid-column: 1 / 4; grid-row: 4; }
+  .movement-table td:nth-child(2) { grid-column: 4 / 7; grid-row: 4; }
+
+  /* 「手機版－出入庫歷史」的「第五、六行」：備註與刪除按鈕各自使用整行。 */
+  .movement-table td:nth-child(9) { grid-column: 1 / 7; grid-row: 5; }
+  .movement-table td:nth-child(10) { grid-column: 1 / 7; grid-row: 6; }
+  .movement-table td.muted { color: #edf4f7; }
+
+  /* 「手機版－庫存盤點」的「整張單筆資料卡」：改用與刀具資料相同的六等分格線。 */
+  .data-table.stocktake-table tbody tr { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+  /* 「手機版－庫存盤點」的「第一行」：編號在左、分類在右。 */
+  .stocktake-table td:nth-child(1) { grid-column: 1 / 4; grid-row: 1; }
+  .stocktake-table td:nth-child(3) { grid-column: 4 / 7; grid-row: 1; }
+
+  /* 「手機版－庫存盤點」的「第二行」：品名單獨使用整行。 */
+  .stocktake-table td:nth-child(2) { grid-column: 1 / 7; grid-row: 2; }
+
+  /* 「手機版－庫存盤點」的「第三行」：單價狀態、帳面庫存、差異並排。 */
+  .stocktake-table td:nth-child(4) { grid-column: 1 / 3; grid-row: 3; }
+  .stocktake-table td:nth-child(5) { grid-column: 3 / 5; grid-row: 3; }
+  .stocktake-table td:nth-child(7) { grid-column: 5 / 7; grid-row: 3; }
+
+  /* 「手機版－庫存盤點」的「第四行」：實際數量在左、盤點備註在右。 */
+  .stocktake-table td:nth-child(6) { grid-column: 1 / 4; grid-row: 4; }
+  .stocktake-table td:nth-child(9) { grid-column: 4 / 7; grid-row: 4; }
+
+  /* 「手機版－庫存盤點」的「第五行」：只保留更新數量按鈕，不重複顯示更新標題。 */
+  .stocktake-table td:nth-child(8) { grid-column: 1 / 7; grid-row: 5; }
+  .stocktake-table td:nth-child(8)::before { content: none; }
+}
+
+
+/* ========================================================================== */
+/* 電腦版出入庫與庫存盤點比照刀具資料表格                                     */
+/* 使用自然欄寬、相同列高字級與換行方式，不再強制百分比分欄。                 */
+/* ========================================================================== */
+@media (min-width: 621px) {
+
+  /* 「電腦版－出入庫與庫存盤點」的「整張表格」：改成與刀具資料相同的自然欄寬。 */
+  .movement-table,
+  .stocktake-table { width: 100%; min-width: 0; table-layout: auto; white-space: normal; }
+
+  /* 「電腦版－出入庫與庫存盤點」的「所有欄位」：取消先前固定百分比寬度。 */
+  .movement-table th,
+  .stocktake-table th { width: auto !important; }
+
+  /* 「電腦版－出入庫與庫存盤點」的「標題與資料列」：完全比照刀具資料表格。 */
+  .movement-table th,
+  .stocktake-table th { height: 40px; padding: 0 7px; font-size: 13px; }
+  .movement-table td,
+  .stocktake-table td { height: 56px; padding: 5px 7px; font-size: 14px; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
+
+  /* 「電腦版－出入庫與庫存盤點」的「編號、品名、數量與分類標籤」：比照刀具資料。 */
+  .movement-table .code,
+  .stocktake-table .code { font-size: 14px; white-space: nowrap; }
+  .movement-table .product-name,
+  .stocktake-table .product-name { max-width: 230px; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+  .movement-table .quantity,
+  .stocktake-table .quantity { font-size: 17px !important; white-space: nowrap; }
+  .movement-table .tag,
+  .stocktake-table .tag { padding: 0 7px; font-size: 12px; }
+
+  /* 「電腦版－出入庫」的「備註與刪除按鈕」：使用與刀具資料相同的自然內容寬度。 */
+  .movement-table .note-cell { max-width: 230px; white-space: normal; overflow: visible; text-overflow: clip; }
+  .movement-table .row-actions { min-width: 0; justify-content: flex-end; }
+  .movement-table .row-actions button { width: 29px; height: 31px; }
+
+  /* 「電腦版－庫存盤點」的「輸入框與更新按鈕」：可隨自然欄寬縮放，不撐開表格。 */
+  .stocktake-table .stocktake-quantity,
+  .stocktake-table .stocktake-note,
+  .stocktake-table .stocktake-save { width: 100%; min-width: 0; max-width: 170px; }
 }

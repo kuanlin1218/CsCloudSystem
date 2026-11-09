@@ -802,7 +802,7 @@ function StocktakePage({ products, loading, add, onAdjust }: { products: Product
     </div>
     <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="搜尋編號、品名、廠牌、供應商"/><label className="select-wrap"><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((value) => <option key={value}>{value}</option>)}</select><ChevronDown /></label></div>
     {pageError && <div className="form-error stocktake-error">{pageError}</div>}
-    {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table stocktake-table"><thead><tr><th>編號</th><th>品名</th><th>分類</th><th>單價狀態</th><th className="number">帳面庫存</th><th>實際盤點數量</th><th className="number">差異</th><th>更新</th><th>盤點備註</th></tr></thead><tbody>
+    {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table stocktake-table"><thead><tr><th>編號</th><th>品名</th><th>分類</th><th>單價狀態</th><th className="number">帳面庫存</th><th>實際盤點數量</th><th className="number">差異</th><th aria-label="更新" /><th>盤點備註</th></tr></thead><tbody>
       {filtered.length === 0 ? <EmptyRow colSpan={9} label="沒有符合條件的刀具"/> : filtered.map((product) => {
         const difference = differenceFor(product)
         const invalid = difference === null
