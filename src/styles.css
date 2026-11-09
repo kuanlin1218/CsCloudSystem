@@ -1884,3 +1884,128 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版」的「舊版登入保留畫面」的「說明文字」字體大小。 */
   .auth-copy { font-size: 14px; }
 }
+
+
+/* ========================================================================== */
+/* 手機版表格免左右捲動設定區                                                  */
+/* 將欄位改為可換行或卡片排列；電腦版表格不受影響。                            */
+/* ========================================================================== */
+@media (max-width: 620px) {
+
+  /* 「手機版－加工數量查詢結果」的「表格外框」：關閉左右捲動，文字可自動換行。 */
+  .production-table-wrap { overflow-x: hidden; }
+
+  /* 「手機版－查詢最後一筆」的「日期、產品機台、數量、操作表格」：四欄壓縮在畫面內。 */
+  .production-table.compact { width: 100%; min-width: 0; table-layout: fixed; }
+  .production-table.compact th,
+  .production-table.compact td { height: auto; min-height: 44px; padding: 9px 4px; white-space: normal; overflow-wrap: anywhere; line-height: 1.45; }
+  .production-table.compact th { font-size: 12px; }
+  .production-table.compact td { font-size: 12px; }
+  .production-table.compact th:nth-child(1),
+  .production-table.compact td:nth-child(1) { width: 24%; }
+  .production-table.compact th:nth-child(2),
+  .production-table.compact td:nth-child(2) { width: 43%; }
+  .production-table.compact th:nth-child(3),
+  .production-table.compact td:nth-child(3) { width: 17%; }
+  .production-table.compact th:nth-child(4),
+  .production-table.compact td:nth-child(4) { width: 16%; }
+  .production-table.compact .record-action-column { width: 16%; }
+  .production-table.compact .production-row-delete { width: 32px; min-height: 32px; padding: 0; gap: 0; font-size: 0; }
+  .production-table.compact .production-row-delete svg { width: 15px; }
+
+  /* 「手機版－查詢全部／日期區間」的「多欄加工紀錄表格」：每一筆改為直向資料卡片。 */
+  .production-table:not(.compact) { display: block; width: 100%; min-width: 0; }
+  .production-table:not(.compact) thead { display: none; }
+  .production-table:not(.compact) tbody { display: grid; gap: 12px; }
+  .production-table:not(.compact) tbody tr { display: grid; padding: 8px 12px; border: 1px solid #2c363b; border-radius: 6px; background: #11171a; }
+  .production-table:not(.compact) tbody td { min-width: 0; max-width: none; height: auto; min-height: 39px; display: grid; grid-template-columns: 78px minmax(0, 1fr); align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #252e33; color: #dce6eb; font-size: 14px; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+  .production-table:not(.compact) tbody td:last-child { border-bottom: 0; }
+  .production-table:not(.compact) tbody td::before { color: #82929a; font-size: 12px; font-weight: 750; }
+  .production-table:not(.compact) tbody td:nth-child(1)::before { content: "日期"; }
+  .production-table:not(.compact) tbody td:nth-child(2)::before { content: "機台"; }
+  .production-table:not(.compact) tbody td:nth-child(3)::before { content: "時"; }
+  .production-table:not(.compact) tbody td:nth-child(4)::before { content: "分"; }
+  .production-table:not(.compact) tbody td:nth-child(5)::before { content: "數量"; }
+  .production-table:not(.compact) tbody td:nth-child(6)::before { content: "總時間"; }
+  .production-table:not(.compact) tbody td:nth-child(7)::before { content: "備註"; }
+  .production-table:not(.compact) tbody td:nth-child(8)::before { content: "操作"; }
+  .production-table:not(.compact) .production-row-delete { width: 100%; min-height: 38px; }
+
+  /* 「手機版－出入庫、刀具資料、庫存盤點」的「表格外框」：每一筆改成直向卡片，完全取消左右捲動。 */
+  .table-card { overflow-x: hidden; border: 0; background: transparent; }
+  .data-table.movement-table,
+  .data-table.product-table,
+  .data-table.stocktake-table { display: block; width: 100%; min-width: 0; white-space: normal; }
+  .data-table.movement-table thead,
+  .data-table.product-table thead,
+  .data-table.stocktake-table thead { display: none; }
+  .data-table.movement-table tbody,
+  .data-table.product-table tbody,
+  .data-table.stocktake-table tbody { display: grid; gap: 12px; }
+  .data-table.movement-table tbody tr,
+  .data-table.product-table tbody tr,
+  .data-table.stocktake-table tbody tr { display: grid; padding: 9px 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); }
+  .data-table.movement-table tbody td,
+  .data-table.product-table tbody td,
+  .data-table.stocktake-table tbody td { min-width: 0; max-width: none; height: auto; min-height: 39px; display: grid; grid-template-columns: 82px minmax(0, 1fr); align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #252e33; font-size: 14px; text-align: left; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+  .data-table.movement-table tbody td:last-child,
+  .data-table.product-table tbody td:last-child,
+  .data-table.stocktake-table tbody td:last-child { border-bottom: 0; }
+  .data-table.movement-table tbody td::before,
+  .data-table.product-table tbody td::before,
+  .data-table.stocktake-table tbody td::before { color: #82929a; font: 750 12px system-ui, sans-serif; }
+
+  /* 「手機版－出入庫歷史」的「資料卡片欄位名稱」。 */
+  .movement-table td:nth-child(1)::before { content: "類型"; }
+  .movement-table td:nth-child(2)::before { content: "日期"; }
+  .movement-table td:nth-child(3)::before { content: "編號"; }
+  .movement-table td:nth-child(4)::before { content: "品名"; }
+  .movement-table td:nth-child(5)::before { content: "數量"; }
+  .movement-table td:nth-child(6)::before { content: "單價"; }
+  .movement-table td:nth-child(7)::before { content: "金額"; }
+  .movement-table td:nth-child(8)::before { content: "供應商"; }
+  .movement-table td:nth-child(9)::before { content: "備註"; }
+  .movement-table td:nth-child(10)::before { content: "操作"; }
+
+  /* 「手機版－刀具資料」的「資料卡片欄位名稱」。 */
+  .product-table td:nth-child(1)::before { content: "編號"; }
+  .product-table td:nth-child(2)::before { content: "品名"; }
+  .product-table td:nth-child(3)::before { content: "廠牌"; }
+  .product-table td:nth-child(4)::before { content: "供應商"; }
+  .product-table td:nth-child(5)::before { content: "分類"; }
+  .product-table td:nth-child(6)::before { content: "數量"; }
+  .product-table td:nth-child(7)::before { content: "單價"; }
+  .product-table td:nth-child(8)::before { content: "購入日期"; }
+  .product-table td:nth-child(9)::before { content: "操作"; }
+
+  /* 「手機版－庫存盤點」的「資料卡片欄位名稱」。 */
+  .stocktake-table td:nth-child(1)::before { content: "編號"; }
+  .stocktake-table td:nth-child(2)::before { content: "品名"; }
+  .stocktake-table td:nth-child(3)::before { content: "分類"; }
+  .stocktake-table td:nth-child(4)::before { content: "單價狀態"; }
+  .stocktake-table td:nth-child(5)::before { content: "帳面庫存"; }
+  .stocktake-table td:nth-child(6)::before { content: "實際數量"; }
+  .stocktake-table td:nth-child(7)::before { content: "差異"; }
+  .stocktake-table td:nth-child(8)::before { content: "更新"; }
+  .stocktake-table td:nth-child(9)::before { content: "盤點備註"; }
+
+  /* 「手機版－資料卡片」的「品名、備註、按鈕與輸入框」：解除桌面版固定寬度並允許換行。 */
+  .data-table .product-name,
+  .data-table .note-cell { max-width: none; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+  .data-table .number { text-align: left; }
+  .data-table .row-actions { min-width: 0; justify-content: flex-start; flex-wrap: wrap; }
+  .stocktake-quantity,
+  .stocktake-note,
+  .stocktake-save { width: 100%; min-width: 0; }
+
+  /* 「手機版－沒有資料」的「空白提示」：避免產生假的欄位名稱。 */
+  .data-table tbody tr:has(.empty-state) { display: block; }
+  .data-table tbody td:has(.empty-state) { display: block; padding: 0; border: 0; }
+  .data-table tbody td:has(.empty-state)::before { content: none; }
+
+  /* 「手機版－歷史價格」的「四欄表格」：保留表格外觀但允許文字換行，不左右捲動。 */
+  .price-history-table { overflow-x: hidden; }
+  .price-history-table .data-table { table-layout: fixed; white-space: normal; }
+  .price-history-table .data-table th,
+  .price-history-table .data-table td { padding-left: 5px; padding-right: 5px; font-size: 12px; white-space: normal; overflow-wrap: anywhere; }
+}
