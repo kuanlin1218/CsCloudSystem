@@ -134,7 +134,9 @@ VITE_SUPABASE_ANON_KEY=你的_anon_key
 
 > `anon`／publishable key 本來就是供瀏覽器使用；絕對不要把 `service_role` key 放進 Vite、GitHub Pages 或任何 `VITE_` 變數。真正的資料保護由 Supabase Auth、RLS 與安全 RPC 負責。
 
-首次使用或忘記密碼時，在登入畫面按「忘記密碼或尚未設定密碼」。請先在 Supabase Authentication → URL Configuration 將正式 GitHub Pages 網址加入 Redirect URLs。郵件連結回到網站後會顯示設定新密碼畫面；已公開使用過的舊管理密碼 `16866319` 不可再當登入密碼。
+首次使用或忘記密碼時，在登入畫面按「忘記密碼或尚未設定密碼」。請先在 Supabase Authentication → URL Configuration 將正式 GitHub Pages 網址加入 Redirect URLs。郵件連結回到網站後會顯示設定新密碼畫面；密碼限制為至少 4 位數字，且已公開使用過的舊管理密碼 `16866319` 不可再使用。
+
+Supabase 專案本身也有密碼最短長度設定。請在 Auth 的 Password Security 設定中把 minimum password length 改成 `4`；否則前端雖接受 4 位數字，Supabase 仍會依雲端設定拒絕儲存。
 
 ## 部署到 GitHub Pages
 

@@ -91,7 +91,7 @@ function LoginScreen({ initialMessage }: { initialMessage?: string }) {
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setMessage(''); setSuccess(false)
     if (username.trim().toLowerCase() !== OWNER_USERNAME) { setMessage('登入名稱或密碼不正確'); return }
-    if (!password) { setMessage('請輸入密碼'); return }
+    if (!/^\d{4,}$/.test(password)) { setMessage('密碼必須是至少 4 位數字'); return }
     setBusy(true)
     try { await verifyOwnerPassword(password) }
     catch (error) { setMessage(messageFor(error)) }
@@ -121,7 +121,7 @@ function LoginScreen({ initialMessage }: { initialMessage?: string }) {
       </div>
       <form onSubmit={submit}>
         <Field label="登入名稱" wide><input autoFocus autoCapitalize="none" autoCorrect="off" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入登入名稱" disabled={busy}/></Field>
-        <Field label="密碼" wide><input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="輸入密碼" disabled={busy}/></Field>
+        <Field label="密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 4 位數字" disabled={busy}/></Field>
         {message && <p className={success ? 'admin-success' : 'form-error'}>{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
@@ -138,7 +138,7 @@ function PasswordSetupScreen({ session, complete }: { session: Session; complete
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setMessage('')
-    if (password.length < 8) { setMessage('密碼至少需要 8 個字元'); return }
+    if (!/^\d{4,}$/.test(password)) { setMessage('密碼必須是至少 4 位數字'); return }
     if (password === '16866319') { setMessage('這組舊管理密碼已經公開使用過，請設定不同的新密碼'); return }
     if (password !== confirmation) { setMessage('兩次輸入的密碼不同'); return }
     if (!supabase) return
@@ -161,11 +161,11 @@ function PasswordSetupScreen({ session, complete }: { session: Session; complete
         <img className="auth-logo" src={`${import.meta.env.BASE_URL}company-logo.png`} alt="詮栩公司 Logo"/>
         <p className="auth-eyebrow">FIRST-TIME SECURITY SETUP</p>
         <h1>設定登入密碼</h1>
-        <p className="auth-copy">登入名稱固定為 <b>{OWNER_USERNAME}</b>。請設定一組只有你知道的新密碼。</p>
+        <p className="auth-copy">登入名稱固定為 <b>{OWNER_USERNAME}</b>。請設定至少 4 位數字的新密碼。</p>
       </div>
       <form onSubmit={submit}>
-        <Field label="新密碼" wide><input autoFocus type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="至少 8 個字元" disabled={busy}/></Field>
-        <Field label="再次輸入新密碼" wide><input type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="再次輸入相同密碼" disabled={busy}/></Field>
+        <Field label="新密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 4 位數字" disabled={busy}/></Field>
+        <Field label="再次輸入新密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value.replace(/\D/g, ''))} placeholder="再次輸入相同數字密碼" disabled={busy}/></Field>
         {message && <p className="form-error">{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在安全儲存…' : '儲存密碼並進入系統'}</button>
       </form>
@@ -1008,7 +1008,7 @@ function AdminDeleteModal({ request, close }: { request: AdminDeleteRequest; clo
   const [deleting, setDeleting] = useState(false)
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError('')
-    if (!password) { setError('請輸入登入密碼'); return }
+    if (!/^\d{4,}$/.test(password)) { setError('請輸入至少 4 位數字登入密碼'); return }
     setDeleting(true)
     try { await verifyOwnerPassword(password); await request.execute(); close(true) }
     catch (submitError) { setError(messageFor(submitError)) }
@@ -1017,9 +1017,9 @@ function AdminDeleteModal({ request, close }: { request: AdminDeleteRequest; clo
   return <Modal title={request.title} close={() => !deleting && close(false)}>
     <div className="admin-delete-warning"><Trash2/><div><strong>此操作無法復原</strong><span>{request.description}</span></div></div>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
-      <Field label="登入密碼" wide><input autoFocus type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="輸入帳號登入密碼" disabled={deleting}/></Field>
+      <Field label="登入密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 4 位數字" disabled={deleting}/></Field>
       {error && <div className="form-error">{error}</div>}
-      <button className="button outbound admin-action" type="submit" disabled={deleting || !password}><Trash2/>{deleting ? '正在驗證並刪除…' : '驗證登入密碼並刪除'}</button>
+      <button className="button outbound admin-action" type="submit" disabled={deleting || password.length < 4}><Trash2/>{deleting ? '正在驗證並刪除…' : '驗證登入密碼並刪除'}</button>
     </form>
   </Modal>
 }
@@ -1035,7 +1035,7 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
 
   const exportExcel = async () => {
     setMessage(''); setSuccess(false)
-    if (!password) { setMessage('請先輸入登入密碼'); return }
+    if (!/^\d{4,}$/.test(password)) { setMessage('請先輸入至少 4 位數字登入密碼'); return }
     setBusy('export')
     try {
       await verifyOwnerPassword(password)
@@ -1061,7 +1061,7 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
 
   const importExcel = async () => {
     setMessage(''); setSuccess(false)
-    if (!password) { setMessage('請輸入登入密碼'); return }
+    if (!/^\d{4,}$/.test(password)) { setMessage('請輸入至少 4 位數字登入密碼'); return }
     if (!preview) { setMessage('請先選擇並檢查 Excel 檔案'); return }
     if (confirmation !== '覆蓋資料') { setMessage('請輸入「覆蓋資料」確認執行'); return }
     setBusy('import')
@@ -1078,7 +1078,7 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
 
   return <Modal title="資料備份／還原" close={() => !busy && close()} size="admin-data">
     <div className="admin-security-note"><LockKeyhole/><div><strong>帳號本人限定功能</strong><span>密碼由 Supabase Auth 重新驗證，不會儲存在瀏覽器或網站程式中。</span></div></div>
-    <Field label="登入密碼"><input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="輸入帳號登入密碼" disabled={Boolean(busy)}/></Field>
+    <Field label="登入密碼"><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 4 位數字" disabled={Boolean(busy)}/></Field>
 
     <section className="admin-data-section">
       <div className="admin-data-heading"><Download/><div><strong>1. 匯出完整備份</strong><span>包含刀具、出入庫、加工數量與管理選項</span></div></div>

@@ -17,7 +17,7 @@ export async function requireAuthenticatedUserId(): Promise<string> {
 
 export async function verifyOwnerPassword(password: string): Promise<void> {
   if (isDemoMode || !supabase) throw new Error('目前未連接 Supabase 雲端資料')
-  if (!password) throw new Error('請輸入登入密碼')
+  if (!/^\d{4,}$/.test(password)) throw new Error('登入密碼必須是至少 4 位數字')
   const { data, error } = await supabase.auth.signInWithPassword({ email: OWNER_EMAIL, password })
   if (error) throw new Error('登入密碼不正確')
   if (!isOwnerUser(data.user?.id)) {
