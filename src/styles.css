@@ -72,6 +72,9 @@
 /* 「整個網站」的「所有畫面」的「尺寸計算方式」相關格式：本行可修改box-sizing。 */
 * { box-sizing: border-box; }
 
+/* 「iPhone Chrome／Safari」的「整個網站」的「點擊輸入框後避免文字與頁面自動放大」相關格式：固定 iOS 的自動文字縮放比例。 */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
 /* 「整個網站」的「所有畫面」的「頁面本體」相關格式：本行可修改外距、最小寬度、最小高度、背景。 */
 body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--bg); }
 
