@@ -2488,7 +2488,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     background: #11171a;
   }
 
-  /* 「手機版－所有資料卡」的「內容欄位」相關格式：統一內距、分隔線、字體及顏色。 */
+  /* 「手機版－所有資料卡」的「內容欄位」相關格式：只統一內距、分隔線與字體，保留原本各欄位顏色。 */
   .data-table.product-table tbody td,
   .data-table.movement-table tbody td,
   .data-table.stocktake-table tbody td,
@@ -2498,7 +2498,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     min-height: 0;
     padding: 6px 7px;
     border-bottom: 1px solid #252e33;
-    color: #edf4f7;
     font-size: 18px;
     line-height: 1.35;
     text-align: left;
@@ -2539,12 +2538,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     font-size: 18px !important;
   }
 
-  /* 「手機版－出入庫」的「供應商、金額、日期與備註內容」相關格式：內容維持白色。 */
-  .movement-table td.muted,
-  .movement-table .note-cell {
-    color: #edf4f7;
-  }
-
   /* 「手機版－加工數量查詢」的「查詢最後一筆第一行」：日期與產品機台比照查詢全部並排。 */
   .production-table.compact tbody td:nth-child(1) {
     grid-column: 1 / 2;
@@ -2577,7 +2570,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     padding: 0;
     border: 1px solid #2c363b;
     border-radius: 7px;
-    background: #11171a;
   }
   .latest-production-total > div {
     min-height: 64px;
@@ -2585,8 +2577,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     border-right: 0;
   }
   .latest-production-total > div:last-child { grid-column: auto; }
-  .latest-production-total span { color: #82929a; font-size: 18px; }
-  .latest-production-total strong { margin-top: 3px; color: #edf4f7; font-size: 20px; }
+  .latest-production-total span { font-size: 18px; }
+  .latest-production-total strong { margin-top: 3px; font-size: 20px; }
 
   /* 「手機版－庫存盤點」的「數量、備註與更新按鈕」相關格式：字級與卡片內容一致。 */
   .stocktake-table .stocktake-quantity input,
