@@ -68,7 +68,6 @@
 /* 「整個網站」的「全站主題」的「字型與共用顏色」相關格式。 */
 }
 
-
 /* 「整個網站」的「所有畫面」的「尺寸計算方式」相關格式：本行可修改box-sizing。 */
 * { box-sizing: border-box; }
 
@@ -2623,4 +2622,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
   /* 「手機版－加工數量查詢」的「永久刪除資料說明」：維持容易閱讀但不搶過操作按鈕。 */
   .query-delete-note { font-size: 13px; }
+}
+
+/* 「庫存盤點」的「已知單價內容」：完全比照出入庫單價，繼承相同字型、大小與顏色。 */
+.stocktake-table td.number .known-price {
+  color: inherit !important;
+  font: inherit !important;
 }
