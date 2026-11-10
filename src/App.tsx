@@ -39,6 +39,7 @@ const pageFromLocation = (): Page => {
   return PAGE_VALUES.includes(value) ? value : 'home'
 }
 const pageUrl = (page: Page) => `${window.location.pathname}${window.location.search}#${page}`
+const GUEST_SESSION_KEY = 'cnc-cloud-guest-mode'
 
 type StockModalState = { type: MovementType; productId?: string }
 type AdminDeleteRequest = {
@@ -52,6 +53,7 @@ const messageFor = (error: unknown) => error instanceof Error ? error.message : 
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
+  const [guestMode, setGuestMode] = useState(() => window.sessionStorage.getItem(GUEST_SESSION_KEY) === '1')
   const [authReady, setAuthReady] = useState(isDemoMode)
   const [authMessage, setAuthMessage] = useState('')
   const [forcePasswordSetup, setForcePasswordSetup] = useState(false)
@@ -65,6 +67,10 @@ export default function App() {
         setSession(null)
         setAuthMessage('這個帳號沒有系統使用權限')
       } else {
+        if (nextSession) {
+          window.sessionStorage.removeItem(GUEST_SESSION_KEY)
+          setGuestMode(false)
+        }
         setSession(nextSession)
       }
       setAuthReady(true)
@@ -77,9 +83,21 @@ export default function App() {
     return () => listener.subscription.unsubscribe()
   }, [])
 
+  const enterGuestMode = () => {
+    window.sessionStorage.setItem(GUEST_SESSION_KEY, '1')
+    setAuthMessage('')
+    setGuestMode(true)
+  }
+  const exitGuestMode = () => {
+    window.sessionStorage.removeItem(GUEST_SESSION_KEY)
+    window.history.replaceState({ page: 'home' }, '', pageUrl('home'))
+    setGuestMode(false)
+  }
+
   if (isDemoMode) return <AuthenticatedApp session={null} />
+  if (guestMode) return <AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />
   if (!authReady) return <LoadingScreen label="正在確認安全登入狀態…" />
-  if (!session) return <LoginScreen initialMessage={authMessage} />
+  if (!session) return <LoginScreen initialMessage={authMessage} onGuest={enterGuestMode} />
   if (forcePasswordSetup || session.user.user_metadata?.password_configured !== true) {
     return <PasswordSetupScreen session={session} complete={(user) => { setForcePasswordSetup(false); setSession({ ...session, user }) }} />
   }
@@ -90,7 +108,7 @@ function LoadingScreen({ label }: { label: string }) {
   return <main className="loading-screen"><span className="loader"/><p>{label}</p></main>
 }
 
-function LoginScreen({ initialMessage }: { initialMessage?: string }) {
+function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onGuest: () => void }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState(initialMessage || '')
@@ -126,7 +144,7 @@ function LoginScreen({ initialMessage }: { initialMessage?: string }) {
         <img className="auth-logo" src={`${import.meta.env.BASE_URL}company-logo.png`} alt="詮栩公司 Logo"/>
         <p className="auth-eyebrow">CHYUAN SHEU CNC CLOUD</p>
         <h1>登入雲端系統</h1>
-        <p className="auth-copy">本系統僅限指定帳號使用。</p>
+        <p className="auth-copy">管理員可完整操作；訪客不需登入，只能查看資料。</p>
       </div>
       <form onSubmit={submit}>
         <Field label="登入名稱" wide><input autoFocus autoCapitalize="none" autoCorrect="off" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入登入名稱" disabled={busy}/></Field>
@@ -134,6 +152,8 @@ function LoginScreen({ initialMessage }: { initialMessage?: string }) {
         {message && <p className={success ? 'admin-success' : 'form-error'}>{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
+      <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客查看</button>
+      <p className="auth-guest-note">訪客不能新增、修改、刪除、盤點或下載資料。</p>
       <button className="auth-switch" type="button" onClick={() => void sendPasswordEmail()} disabled={busy}>忘記密碼或尚未設定密碼</button>
     </section>
   </main>
@@ -182,7 +202,7 @@ function PasswordSetupScreen({ session, complete }: { session: Session; complete
   </main>
 }
 
-function AuthenticatedApp({ session }: { session: Session | null }) {
+function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: Session | null; guestMode?: boolean; exitGuest?: () => void }) {
   const [page, setPage] = useState<Page>(pageFromLocation)
   const [products, setProducts] = useState<Product[]>([])
   const [movements, setMovements] = useState<Movement[]>([])
@@ -263,6 +283,7 @@ function AuthenticatedApp({ session }: { session: Session | null }) {
   }, [toast])
 
   const nav = (next: Page) => {
+    if (guestMode && (next === 'production-entry' || next === 'stocktake')) return
     if (window.location.hash !== `#${next}`) window.history.pushState({ page: next }, '', pageUrl(next))
     setPage(next)
     setMobileNav(false)
@@ -272,9 +293,10 @@ function AuthenticatedApp({ session }: { session: Session | null }) {
   const requestAdminDelete = (title: string, description: string, execute: () => Promise<void>) => new Promise<boolean>((resolve) => {
     setAdminDelete({ title, description, execute, resolve })
   })
-  const isHome = page === 'home'
-  const isInventory = page === 'dashboard' || page === 'movements' || page === 'stocktake' || page === 'products'
-  const showTableScrollControls = page === 'production-query' || page === 'movements' || page === 'stocktake' || page === 'products'
+  const activePage: Page = guestMode && page === 'production-entry' ? 'home' : guestMode && page === 'stocktake' ? 'dashboard' : page
+  const isHome = activePage === 'home'
+  const isInventory = activePage === 'dashboard' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
+  const showTableScrollControls = activePage === 'production-query' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
   const productionEntryProductCodes = useMemo(() => productionOptions.filter((option) => option.option_type === 'product').map((option) => option.value).sort(), [productionOptions])
   const productionQueryProductCodes = useMemo(() => [...new Set([
     ...productionEntryProductCodes,
@@ -284,7 +306,7 @@ function AuthenticatedApp({ session }: { session: Session | null }) {
 
   return (
     <div className={`app-shell ${isHome ? 'portal-shell' : ''}`}>
-      {!isDemoMode && !isInventory && <button className="portal-logout" type="button" onClick={() => void supabase?.auth.signOut()}><LogOut />登出</button>}
+      {!isDemoMode && !isInventory && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>}
       {isInventory && <aside className={`sidebar ${mobileNav ? 'is-open' : ''}`}>
         <div className="brand">
           <span className="brand-mark"><Triangle fill="currentColor" /><i /></span>
@@ -293,15 +315,15 @@ function AuthenticatedApp({ session }: { session: Session | null }) {
         </div>
         <nav>
           <NavItem active={false} icon={<Home />} onClick={() => nav('home')}>系統首頁</NavItem>
-          <NavItem active={page === 'dashboard'} icon={<LayoutGrid />} onClick={() => nav('dashboard')}>總覽</NavItem>
-          <NavItem active={page === 'movements'} icon={<ArrowLeftRight />} onClick={() => nav('movements')}>出入庫</NavItem>
-          <NavItem active={page === 'stocktake'} icon={<ClipboardCheck />} onClick={() => nav('stocktake')}>庫存盤點</NavItem>
-          <NavItem active={page === 'products'} icon={<Boxes />} onClick={() => nav('products')}>刀具資料</NavItem>
+          <NavItem active={activePage === 'dashboard'} icon={<LayoutGrid />} onClick={() => nav('dashboard')}>總覽</NavItem>
+          <NavItem active={activePage === 'movements'} icon={<ArrowLeftRight />} onClick={() => nav('movements')}>出入庫</NavItem>
+          {!guestMode && <NavItem active={activePage === 'stocktake'} icon={<ClipboardCheck />} onClick={() => nav('stocktake')}>庫存盤點</NavItem>}
+          <NavItem active={activePage === 'products'} icon={<Boxes />} onClick={() => nav('products')}>刀具資料</NavItem>
         </nav>
         <div className="sidebar-foot">
-          <span className="status-line">{isDemoMode ? <ShieldCheck /> : <Database />} {isDemoMode ? '示範模式' : realtimeConnected ? '雲端即時同步' : '雲端連線中'}</span>
-          <span className="status-line"><UserRound /> {isDemoMode ? '本機示範資料' : session?.user.user_metadata?.username || OWNER_USERNAME}</span>
-          {!isDemoMode && <button className="sidebar-logout" type="button" onClick={() => void supabase?.auth.signOut()}><LogOut />登出系統</button>}
+          <span className="status-line">{guestMode ? <ShieldCheck /> : isDemoMode ? <ShieldCheck /> : <Database />} {guestMode ? '訪客唯讀模式' : isDemoMode ? '示範模式' : realtimeConnected ? '雲端即時同步' : '雲端連線中'}</span>
+          <span className="status-line"><UserRound /> {guestMode ? '僅供查看' : isDemoMode ? '本機示範資料' : session?.user.user_metadata?.username || OWNER_USERNAME}</span>
+          {!isDemoMode && <button className="sidebar-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出系統'}</button>}
         </div>
       </aside>}
 
@@ -314,16 +336,17 @@ function AuthenticatedApp({ session }: { session: Session | null }) {
           <span className="mobile-dot" />
         </header>}
         {isInventory && isDemoMode && <div className="demo-banner"><ShieldCheck /> 目前是可操作的示範模式，資料儲存在這台裝置。設定 Supabase 後會自動切換為雲端模式。</div>}
+        {guestMode && <div className="guest-banner"><ShieldCheck /> 訪客模式僅供查看，無法新增、修改、刪除、盤點、匯出或還原資料。</div>}
         {error && <div className="error-banner">{error}<button onClick={() => void refresh()}>重試</button></div>}
 
-        {page === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} />}
-        {page === 'production-entry' && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} goHome={() => nav('home')} addOption={setProductionOptionModal} onSave={async (input) => {
+        {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} />}
+        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} goHome={() => nav('home')} addOption={setProductionOptionModal} onSave={async (input) => {
           await createProductionRecord(input); await afterSave('加工數量已登記')
         }} onDeleteLast={async (record) => {
           const deleted = await requestAdminDelete('刪除最後一筆加工紀錄', `${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, () => deleteProductionRecord(record.id))
           if (deleted) await afterSave('最後一筆加工紀錄已刪除')
         }} />}
-        {page === 'production-query' && <ProductionQueryPage records={productionRecords} productCodes={productionQueryProductCodes} machines={productionMachines} loading={loading} goHome={() => nav('home')} onUpdateRecord={async (record, input) => {
+        {activePage === 'production-query' && <ProductionQueryPage records={productionRecords} productCodes={productionQueryProductCodes} machines={productionMachines} loading={loading} goHome={() => nav('home')} readOnly={guestMode} onUpdateRecord={async (record, input) => {
           await updateProductionRecord(record.id, input)
           await afterSave('加工紀錄已更新')
         }} onDeleteRecord={async (record) => {
@@ -335,13 +358,13 @@ function AuthenticatedApp({ session }: { session: Session | null }) {
           if (deleted) await afterSave(`${productCode} 的產品編號與全部加工紀錄已永久刪除`)
           return deleted
         }} />}
-        {page === 'dashboard' && <Dashboard products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} />}
-        {page === 'movements' && <MovementsPage products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} onDelete={async (movement) => {
+        {activePage === 'dashboard' && <Dashboard products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} readOnly={guestMode} />}
+        {activePage === 'movements' && <MovementsPage products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} readOnly={guestMode} onDelete={async (movement) => {
           const product = movement.product || products.find((item) => item.id === movement.product_id)
           const deleted = await requestAdminDelete('刪除出入庫紀錄', `${formatDate(movement.movement_date)} 的${movement.movement_type === 'in' ? '入庫' : '出庫'}紀錄「${product?.name || ''}」。庫存會自動重新計算。`, () => deleteMovement(movement.id))
           if (deleted) await afterSave('出入庫紀錄已刪除，庫存已重新計算')
         }} />}
-        {page === 'stocktake' && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} onAdjust={async (product, actualQuantity, notes) => {
+        {activePage === 'stocktake' && !guestMode && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} onAdjust={async (product, actualQuantity, notes) => {
           if (actualQuantity === product.stock_quantity) return true
           if (!window.confirm(`確定將 ${product.code}「${product.name}」的庫存由 ${product.stock_quantity} ${product.unit}調整為 ${actualQuantity} ${product.unit}？`)) return false
           try {
@@ -350,7 +373,7 @@ function AuthenticatedApp({ session }: { session: Session | null }) {
             return true
           } catch (e) { setError(messageFor(e)); return false }
         }} />}
-        {page === 'products' && <ProductsPage products={products} movements={movements} loading={loading} add={() => setProductModal('new')} edit={setProductModal} openStock={(type, productId) => setStockModal({ type, productId })} viewHistory={setPriceHistoryProduct} onDelete={async (p) => {
+        {activePage === 'products' && <ProductsPage products={products} movements={movements} loading={loading} add={() => setProductModal('new')} edit={setProductModal} openStock={(type, productId) => setStockModal({ type, productId })} viewHistory={setPriceHistoryProduct} readOnly={guestMode} onDelete={async (p) => {
           const deleted = await requestAdminDelete('刪除刀具資料', `將刪除 ${p.code}「${p.name}」及其全部出入庫紀錄。`, () => deleteProduct(p.id))
           if (deleted) await afterSave('商品已刪除')
         }} />}
@@ -358,25 +381,25 @@ function AuthenticatedApp({ session }: { session: Session | null }) {
 
       {showTableScrollControls && <TableScrollControls />}
 
-      {stockModal && <StockModal type={stockModal.type} initialProductId={stockModal.productId} products={products} close={() => setStockModal(null)} switchType={(type) => setStockModal((current) => current ? { ...current, type } : null)} save={async (input) => {
+      {!guestMode && stockModal && <StockModal type={stockModal.type} initialProductId={stockModal.productId} products={products} close={() => setStockModal(null)} switchType={(type) => setStockModal((current) => current ? { ...current, type } : null)} save={async (input) => {
         await registerMovement(input); setStockModal(null); await afterSave(input.movement_type === 'in' ? '入庫完成' : '出庫完成')
       }} />}
-      {productModal && <ProductModal product={productModal === 'new' ? null : productModal} products={products} close={() => setProductModal(null)} save={async (input) => {
+      {!guestMode && productModal && <ProductModal product={productModal === 'new' ? null : productModal} products={products} close={() => setProductModal(null)} save={async (input) => {
         if (productModal === 'new') await createProduct(input); else await updateProduct(productModal.id, input)
         setProductModal(null); await afterSave(productModal === 'new' ? '商品已建立' : '商品已更新')
       }} />}
       {priceHistoryProduct && <PriceHistoryModal product={priceHistoryProduct} movements={movements} close={() => setPriceHistoryProduct(null)} />}
-      {productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={(productionOptionModal === 'product' ? productionEntryProductCodes : productionMachines)} close={() => setProductionOptionModal(null)} save={async (value) => {
+      {!guestMode && productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={(productionOptionModal === 'product' ? productionEntryProductCodes : productionMachines)} close={() => setProductionOptionModal(null)} save={async (value) => {
         await createProductionOption(productionOptionModal, value); await afterSave(productionOptionModal === 'product' ? '產品編號已新增' : '機台已新增')
       }} remove={async (value) => {
         const label = productionOptionModal === 'product' ? '產品編號' : '機台'
         const deleted = await requestAdminDelete(`刪除${label}`, `確定刪除${label}「${value}」？過去已登記的加工紀錄會保留。`, () => deleteProductionOption(productionOptionModal, value))
         if (deleted) await afterSave(`${label}已刪除`)
       }} />}
-      {adminDataModal && <AdminDataModal close={() => setAdminDataModal(false)} afterImport={async () => {
+      {!guestMode && adminDataModal && <AdminDataModal close={() => setAdminDataModal(false)} afterImport={async () => {
         await refresh(); setToast('Excel 資料已完整匯入')
       }} />}
-      {adminDelete && <AdminDeleteModal request={adminDelete} close={(result) => {
+      {!guestMode && adminDelete && <AdminDeleteModal request={adminDelete} close={(result) => {
         adminDelete.resolve(result); setAdminDelete(null)
       }} />}
       {toast && <div className="toast"><ShieldCheck />{toast}</div>}
@@ -388,7 +411,7 @@ function NavItem({ active, icon, onClick, children }: { active: boolean; icon: R
   return <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>{icon}<span>{children}</span></button>
 }
 
-function HomePage({ navigate, openAdmin }: { navigate: (page: Page) => void; openAdmin: () => void }) {
+function HomePage({ navigate, openAdmin, guestMode }: { navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean }) {
   return <section className="page-content home-page">
     <div className="home-hero">
       <img
@@ -402,19 +425,19 @@ function HomePage({ navigate, openAdmin }: { navigate: (page: Page) => void; ope
     </div>
     <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div><small>選擇要使用的系統</small></div>
     <div className="function-grid portal-functions">
-      <FunctionCard icon={<ListPlus/>} title="加工數量登記" description="登記數量並自動計算加工時間" tone="pink" onClick={() => navigate('production-entry')}/>
-      <FunctionCard icon={<Search/>} title="加工數量查詢" description="依產品編號查詢與匯出紀錄" tone="sunset" onClick={() => navigate('production-query')}/>
+      <FunctionCard icon={<ListPlus/>} title="加工數量登記" description={guestMode ? '訪客模式無法新增加工紀錄' : '登記數量並自動計算加工時間'} tone="pink" onClick={() => navigate('production-entry')} disabled={guestMode} disabledLabel="登入後使用"/>
+      <FunctionCard icon={<Search/>} title="加工數量查詢" description={guestMode ? '依產品編號查看加工紀錄' : '依產品編號查詢與匯出紀錄'} tone="sunset" onClick={() => navigate('production-query')}/>
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
-      <FunctionCard icon={<FileSpreadsheet/>} title="資料備份／還原" description="匯出或整批匯入 Supabase Excel" tone="purple" onClick={openAdmin}/>
+      <FunctionCard icon={<FileSpreadsheet/>} title="資料備份／還原" description={guestMode ? '訪客模式無法匯出或還原資料' : '匯出或整批匯入 Supabase Excel'} tone="purple" onClick={openAdmin} disabled={guestMode} disabledLabel="管理員限定"/>
     </div>
   </section>
 }
 
-function ProductionHeader({ title, eyebrow, icon, goHome }: { title: string; eyebrow: string; icon: ReactNode; goHome: () => void }) {
+function ProductionHeader({ title, eyebrow, icon, goHome, readOnly = false }: { title: string; eyebrow: string; icon: ReactNode; goHome: () => void; readOnly?: boolean }) {
   return <div className="production-head">
     <button className="production-back" onClick={goHome}><ChevronLeft />系統首頁</button>
     <div><span className="production-head-icon">{icon}</span><span>{eyebrow}</span><h1>{title}</h1></div>
-    <span className={`production-mode ${isDemoMode ? 'demo' : ''}`}>{isDemoMode ? '示範資料' : '雲端資料'}</span>
+    <span className={`production-mode ${readOnly ? 'guest' : isDemoMode ? 'demo' : ''}`}>{readOnly ? '訪客唯讀' : isDemoMode ? '示範資料' : '雲端資料'}</span>
   </div>
 }
 
@@ -480,7 +503,7 @@ function ProductionEntryPage({ records, productCodes, machines, loading, goHome,
 
 type ProductionQueryMode = 'range' | 'latest' | 'all'
 
-function ProductionQueryPage({ records, productCodes, machines, loading, goHome, onUpdateRecord, onDeleteRecord, onDeleteProductRecords }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; goHome: () => void; onUpdateRecord: (record: ProductionRecord, input: ProductionInput) => Promise<void>; onDeleteRecord: (record: ProductionRecord) => Promise<boolean>; onDeleteProductRecords: (productCode: string, count: number) => Promise<boolean> }) {
+function ProductionQueryPage({ records, productCodes, machines, loading, goHome, readOnly, onUpdateRecord, onDeleteRecord, onDeleteProductRecords }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; goHome: () => void; readOnly: boolean; onUpdateRecord: (record: ProductionRecord, input: ProductionInput) => Promise<void>; onDeleteRecord: (record: ProductionRecord) => Promise<boolean>; onDeleteProductRecords: (productCode: string, count: number) => Promise<boolean> }) {
   const [productCode, setProductCode] = useState('')
   const [from, setFrom] = useState(`${today().slice(0, 8)}01`)
   const [to, setTo] = useState(today())
@@ -544,7 +567,7 @@ function ProductionQueryPage({ records, productCodes, machines, loading, goHome,
   }
 
   return <section className="production-page production-query-page">
-    <ProductionHeader title="加工數量查詢" eyebrow="PRODUCTION LOOKUP" icon={<Search />} goHome={goHome} />
+    <ProductionHeader title="加工數量查詢" eyebrow="PRODUCTION LOOKUP" icon={<Search />} goHome={goHome} readOnly={readOnly} />
     <div className="production-card query-card">
       <div className="query-fields">
         <div className="production-field-row"><label>開始日期</label><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
@@ -555,18 +578,18 @@ function ProductionQueryPage({ records, productCodes, machines, loading, goHome,
         <button className="query-button latest" onClick={() => runQuery('latest')}><Clock3 />查詢最後一筆</button>
         <button className="query-button all" onClick={() => runQuery('all')}><Search />查詢全部</button>
         <button className="query-button range" onClick={() => runQuery('range')}><CalendarDays />日期查詢</button>
-        <button className="query-button export" onClick={() => void downloadExcel()} disabled={mode !== 'all' || !results.length || exporting} title={mode === 'all' ? '下載全部查詢結果' : '請先按「查詢全部」'}><Download />{exporting ? '產生中…' : '下載 EXCEL'}</button>
+        {!readOnly && <button className="query-button export" onClick={() => void downloadExcel()} disabled={mode !== 'all' || !results.length || exporting} title={mode === 'all' ? '下載全部查詢結果' : '請先按「查詢全部」'}><Download />{exporting ? '產生中…' : '下載 EXCEL'}</button>}
         <button className="query-button forecast" onClick={() => setShowForecast(true)} disabled={!productCode}><Calculator />訂單完工預估</button>
-        <button className="query-button danger" onClick={() => void deleteAllRecords()} disabled={!productCode || deleting}><Trash2 />{deleting ? '刪除中…' : `永久刪除資料（${selectedRecords.length} 筆）`}</button>
+        {!readOnly && <button className="query-button danger" onClick={() => void deleteAllRecords()} disabled={!productCode || deleting}><Trash2 />{deleting ? '刪除中…' : `永久刪除資料（${selectedRecords.length} 筆）`}</button>}
       </div>
-      <p className="query-delete-note">永久刪除資料會同時移除全部加工紀錄，以及「管理產品編號」中的產品編號，且無法復原。</p>
+      {!readOnly && <p className="query-delete-note">永久刪除資料會同時移除全部加工紀錄，以及「管理產品編號」中的產品編號，且無法復原。</p>}
       {queryError && <div className="form-error production-error">{queryError}</div>}
     </div>
 
     {loading ? <PageSkeleton /> : mode && <div className="production-results">
       <div className="result-title"><span>產品編號</span><strong>{productCode.trim().toUpperCase()}</strong><small>{mode === 'range' ? `${formatDate(from)} ～ ${formatDate(to)}` : mode === 'latest' ? `最後日期 ${formatDate(results[0]?.work_date || '')}・全部機台` : '全部紀錄'}</small></div>
       {results.length === 0 ? <div className="production-empty"><ClipboardList />沒有符合條件的加工紀錄</div> : <>
-        <div className="production-table-wrap"><table className="production-table"><thead><tr><th>日期</th><th>機台</th><th>時</th><th>分</th><th>數量</th><th>總時間</th><th>備註</th><th className="record-action-column" aria-label="操作" /></tr></thead><tbody>{results.map((record) => <tr key={record.id}><td>{formatDate(record.work_date)}</td><td>{record.machine}</td><td>{record.hours}</td><td>{record.minutes}</td><td>{formatNumber(record.quantity)}</td><td>{formatNumber(record.total_minutes)}</td><td>{record.notes || '—'}</td><td><div className="production-row-actions"><button className="production-row-edit" onClick={() => setEditingRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`編輯 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Pencil />編輯</button><button className="production-row-delete" onClick={() => void deleteOneRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`刪除 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Trash2 />{deletingRecordId === record.id ? '刪除中' : '刪除'}</button></div></td></tr>)}</tbody></table></div>
+        <div className="production-table-wrap"><table className={`production-table ${readOnly ? 'guest-read-only-table' : ''}`}><thead><tr><th>日期</th><th>機台</th><th>時</th><th>分</th><th>數量</th><th>總時間</th><th>備註</th>{!readOnly && <th className="record-action-column" aria-label="操作" />}</tr></thead><tbody>{results.map((record) => <tr key={record.id}><td>{formatDate(record.work_date)}</td><td>{record.machine}</td><td>{record.hours}</td><td>{record.minutes}</td><td>{formatNumber(record.quantity)}</td><td>{formatNumber(record.total_minutes)}</td><td>{record.notes || '—'}</td>{!readOnly && <td><div className="production-row-actions"><button className="production-row-edit" onClick={() => setEditingRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`編輯 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Pencil />編輯</button><button className="production-row-delete" onClick={() => void deleteOneRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`刪除 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Trash2 />{deletingRecordId === record.id ? '刪除中' : '刪除'}</button></div></td>}</tr>)}</tbody></table></div>
         <div className="production-totals">
           <div><span>總天數</span><strong>{formatNumber(totals.totalDays)}</strong></div>
           <div><span>總時間</span><strong>{formatNumber(totals.totalMinutes)} <small>分</small></strong></div>
@@ -577,7 +600,7 @@ function ProductionQueryPage({ records, productCodes, machines, loading, goHome,
       </>}
     </div>}
     {showForecast && productCode && <OrderForecastModal productCode={productCode} records={selectedRecords} close={() => setShowForecast(false)} />}
-    {editingRecord && <ProductionRecordEditModal record={editingRecord} productCodes={productCodes} machines={machines} close={() => setEditingRecord(null)} save={async (input) => { await onUpdateRecord(editingRecord, input); setEditingRecord(null) }} />}
+    {!readOnly && editingRecord && <ProductionRecordEditModal record={editingRecord} productCodes={productCodes} machines={machines} close={() => setEditingRecord(null)} save={async (input) => { await onUpdateRecord(editingRecord, input); setEditingRecord(null) }} />}
   </section>
 }
 
@@ -715,8 +738,8 @@ function ProductionOptionModal({ type, values, close, save, remove }: { type: Pr
   </Modal>
 }
 
-function FunctionCard({ icon, title, description, tone, onClick, disabled = false }: { icon: ReactNode; title: string; description: string; tone: string; onClick?: () => void; disabled?: boolean }) {
-  return <button className={`function-card ${tone} ${disabled ? 'is-future' : ''}`} onClick={onClick} disabled={disabled}><span className="function-icon">{icon}</span><span className="function-copy"><strong>{title}</strong><small>{description}</small></span>{disabled ? <em>即將推出</em> : <ChevronDown className="function-arrow"/>}</button>
+function FunctionCard({ icon, title, description, tone, onClick, disabled = false, disabledLabel = '即將推出' }: { icon: ReactNode; title: string; description: string; tone: string; onClick?: () => void; disabled?: boolean; disabledLabel?: string }) {
+  return <button className={`function-card ${tone} ${disabled ? 'is-future' : ''}`} onClick={onClick} disabled={disabled}><span className="function-icon">{icon}</span><span className="function-copy"><strong>{title}</strong><small>{description}</small></span>{disabled ? <em>{disabledLabel}</em> : <ChevronDown className="function-arrow"/>}</button>
 }
 
 function PageTitle({ eyebrow, title, actions }: { eyebrow: string; title: string; actions?: ReactNode }) {
@@ -727,7 +750,7 @@ function StockButtons({ openStock }: { openStock: (type: MovementType) => void }
   return <><button className="button inbound" onClick={() => openStock('in')}><ArrowDownToLine />入庫</button><button className="button outbound" onClick={() => openStock('out')}><ArrowUpFromLine />出庫</button></>
 }
 
-function Dashboard({ products, movements, loading, openStock }: { products: Product[]; movements: Movement[]; loading: boolean; openStock: (t: MovementType) => void }) {
+function Dashboard({ products, movements, loading, openStock, readOnly }: { products: Product[]; movements: Movement[]; loading: boolean; openStock: (t: MovementType) => void; readOnly: boolean }) {
   const month = today().slice(0, 7)
   const inbound = movements.filter((m) => m.movement_type === 'in' && m.movement_date.startsWith(month))
   const outbound = movements.filter((m) => m.movement_type === 'out' && m.movement_date.startsWith(month))
@@ -738,7 +761,7 @@ function Dashboard({ products, movements, loading, openStock }: { products: Prod
   const purchased = inbound.reduce((sum, m) => sum + m.quantity * (m.unit_price || 0), 0)
 
   return <section className="page-content">
-    <PageTitle eyebrow={formatDate(today())} title="庫存總覽" actions={<StockButtons openStock={openStock} />} />
+    <PageTitle eyebrow={formatDate(today())} title="庫存總覽" actions={!readOnly ? <StockButtons openStock={openStock} /> : undefined} />
     {loading ? <PageSkeleton /> : <>
       <div className="stats-grid">
         <StatCard label="庫存總數" value={formatNumber(stock)} note={`${products.length} 項刀具`} />
@@ -781,7 +804,7 @@ function MovementChart({ movements }: { movements: Movement[] }) {
   </article>
 }
 
-function MovementsPage({ products, movements, loading, openStock, onDelete }: { products: Product[]; movements: Movement[]; loading: boolean; openStock: (t: MovementType) => void; onDelete: (movement: Movement) => void }) {
+function MovementsPage({ products, movements, loading, openStock, readOnly, onDelete }: { products: Product[]; movements: Movement[]; loading: boolean; openStock: (t: MovementType) => void; readOnly: boolean; onDelete: (movement: Movement) => void }) {
   const [query, setQuery] = useState('')
   const [type, setType] = useState<'all' | MovementType>('all')
   const [from, setFrom] = useState('')
@@ -795,7 +818,7 @@ function MovementsPage({ products, movements, loading, openStock, onDelete }: { 
   const outQty = filtered.filter((m) => m.movement_type === 'out').reduce((s, m) => s + m.quantity, 0)
   const purchased = filtered.filter((m) => m.movement_type === 'in').reduce((s, m) => s + m.quantity * (m.unit_price || 0), 0)
   return <section className="page-content">
-    <PageTitle eyebrow="STOCK MOVEMENTS" title="出入庫" actions={<StockButtons openStock={openStock} />} />
+    <PageTitle eyebrow="STOCK MOVEMENTS" title="出入庫" actions={!readOnly ? <StockButtons openStock={openStock} /> : undefined} />
     <div className="filter-card">
       <SearchField value={query} setValue={setQuery} placeholder="搜尋編號、品名、廠牌、供應商、備註" />
       <div className="filter-row">
@@ -805,15 +828,15 @@ function MovementsPage({ products, movements, loading, openStock, onDelete }: { 
       </div>
     </div>
     <div className="movement-summary"><span>{filtered.length} 筆</span><b className="green-text">入 +{formatNumber(inQty)}</b><b className="red-text">出 -{formatNumber(outQty)}</b><b className="yellow-text">採購 ${formatMoney(purchased)}</b></div>
-    {loading ? <PageSkeleton /> : <MovementTable movements={filtered} products={products} onDelete={onDelete} />}
+    {loading ? <PageSkeleton /> : <MovementTable movements={filtered} products={products} readOnly={readOnly} onDelete={onDelete} />}
   </section>
 }
 
-function MovementTable({ movements, products, onDelete }: { movements: Movement[]; products: Product[]; onDelete: (movement: Movement) => void }) {
-  return <div className="table-card"><table className="data-table movement-table"><thead><tr><th>類型</th><th>日期</th><th>編號</th><th>品名</th><th className="number">數量</th><th className="number">單價</th><th className="number">金額</th><th>供應商</th><th>備註</th><th aria-label="操作" /></tr></thead><tbody>
-    {movements.length === 0 ? <EmptyRow colSpan={10} label="沒有符合條件的出入庫紀錄" /> : movements.map((m) => {
+function MovementTable({ movements, products, readOnly, onDelete }: { movements: Movement[]; products: Product[]; readOnly: boolean; onDelete: (movement: Movement) => void }) {
+  return <div className="table-card"><table className={`data-table movement-table ${readOnly ? 'guest-read-only-table' : ''}`}><thead><tr><th>類型</th><th>日期</th><th>編號</th><th>品名</th><th className="number">數量</th><th className="number">單價</th><th className="number">金額</th><th>供應商</th><th>備註</th>{!readOnly && <th aria-label="操作" />}</tr></thead><tbody>
+    {movements.length === 0 ? <EmptyRow colSpan={readOnly ? 9 : 10} label="沒有符合條件的出入庫紀錄" /> : movements.map((m) => {
       const p = m.product || products.find((item) => item.id === m.product_id)
-      return <tr key={m.id}><td><span className={`tag ${m.movement_type}`}>{m.movement_type === 'in' ? '入庫' : '出庫'}</span></td><td className="muted nowrap">{formatDate(m.movement_date)}</td><td className="code">{p?.code}</td><td className="product-name">{p?.name}</td><td className={`number ${m.movement_type === 'in' ? 'green-text' : 'red-text'}`}>{m.movement_type === 'in' ? '+' : '-'}{formatNumber(m.quantity)} <small>{p?.unit}</small></td><td className="number">{m.unit_price ? formatMoney(m.unit_price) : '—'}</td><td className="number muted">{m.unit_price ? formatMoney(m.quantity * m.unit_price) : '—'}</td><td>{m.supplier || '—'}</td><td className="muted note-cell">{m.notes || '—'}</td><td><div className="row-actions"><button className="danger-icon" onClick={() => onDelete(m)} aria-label={`刪除 ${formatDate(m.movement_date)} ${p?.name || ''} ${m.movement_type === 'in' ? '入庫' : '出庫'}紀錄`} title="刪除紀錄並重算庫存"><Trash2 /></button></div></td></tr>
+      return <tr key={m.id}><td><span className={`tag ${m.movement_type}`}>{m.movement_type === 'in' ? '入庫' : '出庫'}</span></td><td className="muted nowrap">{formatDate(m.movement_date)}</td><td className="code">{p?.code}</td><td className="product-name">{p?.name}</td><td className={`number ${m.movement_type === 'in' ? 'green-text' : 'red-text'}`}>{m.movement_type === 'in' ? '+' : '-'}{formatNumber(m.quantity)} <small>{p?.unit}</small></td><td className="number">{m.unit_price ? formatMoney(m.unit_price) : '—'}</td><td className="number muted">{m.unit_price ? formatMoney(m.quantity * m.unit_price) : '—'}</td><td>{m.supplier || '—'}</td><td className="muted note-cell">{m.notes || '—'}</td>{!readOnly && <td><div className="row-actions"><button className="danger-icon" onClick={() => onDelete(m)} aria-label={`刪除 ${formatDate(m.movement_date)} ${p?.name || ''} ${m.movement_type === 'in' ? '入庫' : '出庫'}紀錄`} title="刪除紀錄並重算庫存"><Trash2 /></button></div></td>}</tr>
     })}
   </tbody></table></div>
 }
@@ -883,7 +906,7 @@ function StocktakePage({ products, loading, add, onAdjust }: { products: Product
   </section>
 }
 
-function ProductsPage({ products, movements, loading, add, edit, openStock, viewHistory, onDelete }: { products: Product[]; movements: Movement[]; loading: boolean; add: () => void; edit: (p: Product) => void; openStock: (type: MovementType, productId: string) => void; viewHistory: (p: Product) => void; onDelete: (p: Product) => void }) {
+function ProductsPage({ products, movements, loading, add, edit, openStock, viewHistory, readOnly, onDelete }: { products: Product[]; movements: Movement[]; loading: boolean; add: () => void; edit: (p: Product) => void; openStock: (type: MovementType, productId: string) => void; viewHistory: (p: Product) => void; readOnly: boolean; onDelete: (p: Product) => void }) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('全部分類')
   const categories = ['全部分類', ...PRODUCT_CATEGORIES]
@@ -891,7 +914,7 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, view
     .filter((p) => `${p.code} ${p.name} ${p.brand} ${p.supplier}`.toLowerCase().includes(query.toLowerCase()) && (category === '全部分類' || p.category === category))
     .sort((a, b) => `${b.purchased_at || '0000-00-00'}-${b.updated_at}-${b.code}`.localeCompare(`${a.purchased_at || '0000-00-00'}-${a.updated_at}-${a.code}`))
   return <section className="page-content">
-    <PageTitle eyebrow="TOOLS" title="刀具資料" actions={<button className="button primary" onClick={add}><Plus />新增刀具</button>} />
+    <PageTitle eyebrow="TOOLS" title="刀具資料" actions={!readOnly ? <button className="button primary" onClick={add}><Plus />新增刀具</button> : undefined} />
     <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="搜尋編號、品名、廠牌、供應商"/><label className="select-wrap"><select value={category} onChange={(e) => setCategory(e.target.value)}>{categories.map((c) => <option key={c}>{c}</option>)}</select><ChevronDown /></label></div>
     {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table product-table"><thead><tr><th>編號</th><th>品名</th><th>廠牌</th><th>供應商</th><th>分類</th><th className="number">數量</th><th className="number">單價</th><th>購入日期</th><th aria-label="操作" /></tr></thead><tbody>
       {filtered.length === 0 ? <EmptyRow colSpan={9} label="沒有符合條件的刀具"/> : filtered.map((p) => {
@@ -899,7 +922,7 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, view
         const latest = prices[0]?.unit_price || p.unit_price
         const previous = prices[1]?.unit_price
         const percent = previous ? Math.round(((latest - previous) / previous) * 100) : null
-        return <tr key={p.id}><td className="code">{p.code}</td><td className="product-name">{p.name}</td><td><strong>{p.brand || '—'}</strong></td><td className="muted">{p.supplier || '—'}</td><td><span className="tag neutral">{p.category}</span></td><td className="number quantity">{formatNumber(p.stock_quantity)} <small>{p.unit}</small></td><td className="number price-cell"><span>{formatMoney(p.unit_price)}</span>{percent !== null && percent !== 0 && <small className={percent > 0 ? 'price-up' : 'price-down'}>{percent > 0 ? '▲' : '▼'}{Math.abs(percent)}%</small>}</td><td className="muted nowrap">{p.purchased_at ? formatDate(p.purchased_at) : '—'}</td><td><div className="row-actions product-actions"><button className="in-icon" onClick={() => openStock('in', p.id)} aria-label={`${p.name} 入庫`} title="入庫"><ArrowDownToLine /></button><button className="out-icon" onClick={() => openStock('out', p.id)} aria-label={`${p.name} 出庫`} title="出庫"><ArrowUpFromLine /></button><button className="history-icon" onClick={() => viewHistory(p)} aria-label={`${p.name} 歷史價格`} title="歷史價格"><History /></button><button onClick={() => edit(p)} aria-label={`編輯 ${p.name}`} title="編輯"><Pencil /></button><button className="danger-icon" onClick={() => onDelete(p)} aria-label={`刪除 ${p.name}`} title="刪除"><Trash2 /></button></div></td></tr>
+        return <tr key={p.id}><td className="code">{p.code}</td><td className="product-name">{p.name}</td><td><strong>{p.brand || '—'}</strong></td><td className="muted">{p.supplier || '—'}</td><td><span className="tag neutral">{p.category}</span></td><td className="number quantity">{formatNumber(p.stock_quantity)} <small>{p.unit}</small></td><td className="number price-cell"><span>{formatMoney(p.unit_price)}</span>{percent !== null && percent !== 0 && <small className={percent > 0 ? 'price-up' : 'price-down'}>{percent > 0 ? '▲' : '▼'}{Math.abs(percent)}%</small>}</td><td className="muted nowrap">{p.purchased_at ? formatDate(p.purchased_at) : '—'}</td><td><div className={`row-actions product-actions ${readOnly ? 'guest-view-actions' : ''}`}>{!readOnly && <><button className="in-icon" onClick={() => openStock('in', p.id)} aria-label={`${p.name} 入庫`} title="入庫"><ArrowDownToLine /></button><button className="out-icon" onClick={() => openStock('out', p.id)} aria-label={`${p.name} 出庫`} title="出庫"><ArrowUpFromLine /></button></>}<button className="history-icon" onClick={() => viewHistory(p)} aria-label={`${p.name} 歷史價格`} title="歷史價格"><History /></button>{!readOnly && <><button onClick={() => edit(p)} aria-label={`編輯 ${p.name}`} title="編輯"><Pencil /></button><button className="danger-icon" onClick={() => onDelete(p)} aria-label={`刪除 ${p.name}`} title="刪除"><Trash2 /></button></>}</div></td></tr>
       })}
     </tbody></table></div>}
   </section>

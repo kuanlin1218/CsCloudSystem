@@ -2,7 +2,7 @@
 
 單人使用的 CNC 雲端工具入口。首頁提供「加工數量登記、加工數量查詢、庫存管理系統」三個功能；加工時間計算已整合到加工數量登記頁，不再使用獨立入口。
 
-前端使用 React、TypeScript 與 Vite，雲端資料使用 Supabase Free，可由 GitHub Pages 自動部署。雲端模式僅允許指定的 Supabase 帳號登入；刪除、完整備份與還原會再要求一次帳號密碼。專案不含 Lovable 套件、執行環境或任何平台綁定。
+前端使用 React、TypeScript 與 Vite，雲端資料使用 Supabase Free，可由 GitHub Pages 自動部署。管理員使用指定的 Supabase 帳號登入；訪客可免登入唯讀查看資料，但無法新增、修改、刪除、盤點、匯出或還原。刪除、完整備份與還原會再要求一次管理員帳號密碼。專案不含 Lovable 套件、執行環境或任何平台綁定。
 
 ## 已完成功能
 
@@ -38,7 +38,8 @@
 - 出入庫歷史：全文搜尋、類型與日期區間篩選
 - 入庫與出庫彈窗、負庫存提示、重複送出防護
 - 自訂登入名稱 `kuanlin`，實際身分由 Supabase Auth Email／密碼安全驗證
-- RLS 與安全交易 RPC 固定綁定單一 Supabase UID，匿名訪客無法讀取或修改資料
+- 登入畫面提供「訪客查看」；訪客可讀取正式雲端資料，但所有寫入功能與資料匯出均停用
+- RLS 與安全交易 RPC 固定綁定單一 Supabase UID；匿名訪客只有四張業務資料表的 SELECT 權限
 - 登入狀態只保留在目前瀏覽器分頁；重新整理不會中斷，關閉分頁或瀏覽器後需要重新登入
 - 原子化 PostgreSQL RPC：鎖定刀具資料列，同一交易更新庫存與歷史
 - 首頁可由管理員將完整 Supabase 資料匯出為 Excel，整理後經格式檢查再整批還原
@@ -106,9 +107,22 @@ npm run preview
 1. 先從舊網站下載一份完整 Excel 備份。
 2. 確認 Supabase Authentication → Users 中已存在 `kuanlin@chyuansheu.com`，UID 為 `5568706d-caaa-459b-b842-13cdbc3929fc`。
 3. 在 SQL Editor 建立 **New query**，完整貼上 [`supabase/secure_single_user.sql`](supabase/secure_single_user.sql) 後按 **Run**。
-4. 成功畫面會顯示 `Success. No rows returned`。此檔會核對 UID 與 Email、把既有共用資料歸戶、關閉匿名權限並重建安全 RPC。
+4. 成功畫面會顯示 `Success. No rows returned`。此檔會核對 UID 與 Email、把既有共用資料歸戶、關閉匿名寫入權限並重建安全 RPC。
 
 安全升級完成後，不要再執行 `schema.sql`、`admin_data.sql` 或舊的 `set_admin_password` 指令。
+
+### 3.1 啟用訪客唯讀資料
+
+在 SQL Editor 建立 **New query**，完整貼上 [`supabase/enable-guest-readonly.sql`](supabase/enable-guest-readonly.sql) 後按 **Run**。
+
+這份 SQL 只授予 `anon` 角色以下權限：
+
+- 讀取 `products`
+- 讀取 `stock_movements`
+- 讀取 `production_records`
+- 讀取 `production_options`
+
+訪客沒有 INSERT、UPDATE、DELETE 或 RPC 執行權限。由於訪客不需要身分驗證，任何取得網站網址或 Supabase 公開端點的人都可能讀到這四張資料表；請勿存放不適合公開查看的個人或機密內容。
 
 ### 4. 填入前端環境變數
 
@@ -131,7 +145,7 @@ VITE_SUPABASE_URL=https://你的專案.supabase.co
 VITE_SUPABASE_ANON_KEY=你的_anon_key
 ```
 
-重新執行 `npm run dev`。雲端模式會先顯示登入畫面；登入名稱為 `kuanlin`。
+重新執行 `npm run dev`。雲端模式會先顯示登入畫面；管理員登入名稱為 `kuanlin`，訪客可直接按「訪客查看」。
 
 > `anon`／publishable key 本來就是供瀏覽器使用；絕對不要把 `service_role` key 放進 Vite、GitHub Pages 或任何 `VITE_` 變數。真正的資料保護由 Supabase Auth、RLS 與安全 RPC 負責。
 
@@ -169,7 +183,7 @@ Vite 已使用相對資源路徑，因此同時支援 `帳號.github.io` 與 `�
 
 ## 資料與安全設計
 
-- 匿名角色沒有任何資料表或業務 RPC 權限。
+- 匿名角色只能 SELECT 四張業務資料表，沒有 INSERT、UPDATE、DELETE 或業務 RPC 權限。
 - 每筆資料的 `user_id` 都必須等於指定 UID；RLS 同時檢查登入 JWT 與資料擁有者。
 - 加工紀錄新增與查詢只開放給指定帳號；刪除前由 Supabase Auth 再次驗證帳號密碼。
 - 前端可編輯刀具說明欄位，但沒有直接修改 `stock_quantity`、`unit_price` 或歷史資料的權限。
@@ -195,6 +209,7 @@ blade-inventory/
 ├─ supabase/schema.sql           # Schema、RLS、日常功能 RPC
 ├─ supabase/admin_data.sql       # 管理員 Excel 備份／還原 RPC
 ├─ supabase/secure_single_user.sql # 單一帳號歸戶、RLS 與安全 RPC 升級
+├─ supabase/enable-guest-readonly.sql # 免登入訪客唯讀 RLS 與資料表權限
 ├─ .env.example
 └─ vite.config.ts
 ```

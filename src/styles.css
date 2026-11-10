@@ -201,11 +201,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .button.outbound { color: #25100a; background: var(--red); }
 
 
-/* 「整個網站」的「頁面頂端」的「示範模式提示」相關格式：本行可修改外距、內距、排列方式、垂直對齊、水平對齊、元件間距、border-bottom、背景、文字或圖示顏色、字體大小。 */
-.demo-banner, .error-banner { margin: 0; padding: 10px 22px; display: flex; align-items: center; justify-content: center; gap: 9px; border-bottom: 1px solid rgba(255,194,58,.25); background: rgba(255,194,58,.07); color: #dfc583; font-size: 13px; }
+/* 「整個網站」的「頁面頂端」的「示範模式、訪客唯讀與錯誤提示」相關格式：本行可修改外距、內距、排列方式、垂直對齊、水平對齊、元件間距、border-bottom、背景、文字或圖示顏色、字體大小。 */
+.demo-banner, .guest-banner, .error-banner { margin: 0; padding: 10px 22px; display: flex; align-items: center; justify-content: center; gap: 9px; border-bottom: 1px solid rgba(255,194,58,.25); background: rgba(255,194,58,.07); color: #dfc583; font-size: 13px; }
 
 /* 「整個網站」的「頁面頂端」的「示範模式提示」相關格式：本行可修改寬度。 */
-.demo-banner svg { width: 17px; }
+.demo-banner svg, .guest-banner svg { width: 17px; }
+
+/* 「訪客模式」的「僅供查看提示橫幅」相關格式：本行可修改邊框、背景與文字顏色。 */
+.guest-banner { border-color: rgba(61,204,179,.3); background: rgba(61,204,179,.08); color: #8ee3d3; }
 
 /* 「整個網站」的「頁面頂端」的「錯誤訊息與重試按鈕」相關格式：本行可修改文字或圖示顏色、背景、邊框顏色。 */
 .error-banner { color: #ffb5a5; background: rgba(255,121,92,.1); border-color: rgba(255,121,92,.25); }
@@ -342,6 +345,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* 「加工數量登記與加工數量查詢」的「頁面頂端」的「雲端資料／示範資料狀態」相關格式：本行可修改邊框顏色、背景、文字或圖示顏色。 */
 .production-mode.demo { border-color: rgba(255,194,58,.27); background: rgba(255,194,58,.08); color: var(--yellow); }
+
+/* 「加工數量查詢」的「訪客唯讀狀態標籤」相關格式：本行可修改邊框、背景與文字顏色。 */
+.production-mode.guest { border-color: rgba(61,204,179,.3); background: rgba(61,204,179,.08); color: #8ee3d3; }
 
 /* 「加工數量登記」的「登記表單」的「整張表單卡片」相關格式：本行可修改內距、邊框、圓角、背景、陰影。 */
 .production-card { padding: 24px; border: 1px solid var(--line); border-radius: 10px; background: rgba(18,24,28,.97); box-shadow: 0 15px 45px rgba(0,0,0,.18); }
@@ -908,6 +914,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「刀具資料」的「最右側操作」的「操作欄寬度」相關格式：本行可修改最小寬度。 */
 .product-actions { min-width: 176px; }
 
+/* 「訪客模式－刀具資料」的「只保留歷史價格按鈕」相關格式：本行可修改操作欄最小寬度。 */
+.product-actions.guest-view-actions { min-width: 42px; }
+
 /* 「刀具資料與出入庫歷史」的「最右側操作」的「操作按鈕排列」相關格式：本行可修改寬度。 */
 .row-actions svg { width: 17px; }
 
@@ -1232,6 +1241,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改上方外距、下方外距、寬度。 */
 .auth-card .field.wide { margin-top: 0; margin-bottom: 16px; }.auth-submit { width: 100%; margin-top: 4px; }
 
+/* 「登入畫面」的「訪客查看按鈕」相關格式：本行可修改寬度、上方外距、邊框、背景與文字顏色。 */
+.auth-guest-button { width: 100%; margin-top: 12px; border-color: rgba(61,204,179,.38); background: rgba(61,204,179,.08); color: #8ee3d3; }
+
+/* 「登入畫面」的「訪客權限說明」相關格式：本行可修改外距、文字顏色、字體大小與文字對齊。 */
+.auth-guest-note { margin: 9px 0 0; color: #7f929b; font-size: 12px; line-height: 1.5; text-align: center; }
+
 /* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改寬度、上方外距、邊框、背景、文字或圖示顏色、text-decoration、cursor。 */
 .auth-switch { width: 100%; margin-top: 18px; border: 0; background: transparent; color: #a8b5bc; text-decoration: underline; cursor: pointer; }
 
@@ -1313,7 +1328,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   input, select, textarea { font-size: 20px; touch-action: manipulation; }
 
   /* 「手機版」的「整個網站－頁面頂端」的「示範模式提示」相關格式：本行可修改垂直對齊、水平對齊、字體大小、內距。 */
-  .demo-banner { align-items: flex-start; justify-content: flex-start; font-size: 12px; padding: 9px 14px; }
+  .demo-banner, .guest-banner { align-items: flex-start; justify-content: flex-start; font-size: 12px; padding: 9px 14px; }
 
   /* 「手機版」的「庫存管理系統－一般內容頁」的「內容最大寬度與四周留白」相關格式：本行可修改內距。 */
   .page-content { padding: 22px 14px 42px; }
@@ -1502,7 +1517,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   input, select, textarea { font-size: 20px; }
 
   /* 「手機版」的「整個網站」的「雲端資料、錯誤提示橫幅」字體大小。 */
-  .demo-banner, .error-banner { font-size: 12px; }
+  .demo-banner, .guest-banner, .error-banner { font-size: 12px; }
 
   /* 「手機版」的「整個網站」的「操作成功通知與載入提示」字體大小。 */
   .toast, .loading-screen { font-size: 16px; }
