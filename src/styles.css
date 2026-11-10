@@ -158,8 +158,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「系統首頁」的「首頁外框」的「寬度、對齊與背景」相關格式：本行可修改左側外距。 */
 .wide-panel { margin-left: 0; }
 
-/* 「系統首頁」的「首頁外框」的「寬度、對齊與背景」相關格式：本行可修改左側外距、最小高度、排列方式、垂直對齊。 */
-.portal-panel { margin-left: 0; min-height: 100vh; display: flex; align-items: center; }
+/* 「系統首頁」的「首頁外框」的「訪客提示列與首頁內容上下排列」相關格式：第一列放提示，第二列放完整首頁，避免兩者在手機版左右並排。 */
+.portal-panel { margin-left: 0; min-height: 100vh; display: grid; grid-template-rows: auto minmax(0, 1fr); align-items: stretch; }
+
+/* 「系統首頁」的「首頁主內容」相關格式：本行讓主視覺與功能卡在剩餘高度置中並維持完整寬度。 */
+.portal-panel > .home-page { grid-row: 2; align-self: center; justify-self: center; }
+
+/* 「系統首頁－訪客模式」的「頂端唯讀提示列」相關格式：本行讓提示橫幅獨占整行，並替右上角返回登入按鈕保留空間。 */
+.portal-panel > .guest-banner { grid-row: 1; width: 100%; min-width: 0; padding-right: 130px; }
 
 /* 「系統首頁」的「首頁外框」的「寬度、對齊與背景」相關格式：本行可修改背景。 */
 .portal-shell { background: radial-gradient(circle at 50% 15%, rgba(61,204,179,.06), transparent 36%), var(--bg); }
@@ -1279,7 +1285,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .main-panel { margin-left: 0; }
 
   /* 「平板與手機版」的「系統首頁－首頁外框」的「寬度、對齊與背景」相關格式：本行可修改垂直對齊。 */
-  .portal-panel { align-items: flex-start; }
+  .portal-panel { align-items: stretch; }
 
   /* 「平板與手機版」的「庫存管理系統－手機版頂端列」的「選單、標題與狀態點」相關格式：本行可修改定位方式、上方位置、顯示層級、高度、排列方式、垂直對齊、水平對齊、內距、border-bottom、背景、backdrop-filter。 */
   .mobile-header { position: sticky; top: 0; z-index: 30; height: 58px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: 1px solid var(--line); background: rgba(8,12,14,.94); backdrop-filter: blur(12px); }
@@ -1329,6 +1335,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
   /* 「手機版」的「整個網站－頁面頂端」的「示範模式提示」相關格式：本行可修改垂直對齊、水平對齊、字體大小、內距。 */
   .demo-banner, .guest-banner { align-items: flex-start; justify-content: flex-start; font-size: 12px; padding: 9px 14px; }
+
+  /* 「手機版－訪客首頁」的「頂端提示列」相關格式：右側保留返回登入按鈕寬度，避免文字與按鈕重疊。 */
+  .portal-panel > .guest-banner { min-height: 52px; padding-right: 104px; }
+
+  /* 「手機版－訪客首頁」的「返回登入按鈕」相關格式：縮小按鈕並固定在提示列右上方。 */
+  .portal-shell .portal-logout { top: 8px; right: 10px; min-height: 35px; padding: 0 10px; font-size: 12px; }
+
+  /* 「手機版－系統首頁」的「主內容完整寬度」相關格式：避免首頁主視覺與功能卡被壓縮成窄欄。 */
+  .portal-panel > .home-page { width: 100%; min-width: 0; align-self: start; justify-self: stretch; }
 
   /* 「手機版」的「庫存管理系統－一般內容頁」的「內容最大寬度與四周留白」相關格式：本行可修改內距。 */
   .page-content { padding: 22px 14px 42px; }

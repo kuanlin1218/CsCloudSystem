@@ -1,0 +1,483 @@
+詮栩 CNC 雲端系統－專案修改紀錄
+================================
+
+最後整理日期：2026-11-10
+專案位置：C:\Users\s1303\Documents\Codex\詮栩CNC雲端系統_測試版
+技術架構：React + TypeScript + Vite + Supabase + GitHub Pages
+
+
+【重要說明】
+
+1. 目前這個「測試版」資料夾內沒有 .git 資料夾，因此沒有可供程式自動讀取的完整 Git 提交歷史。
+2. 本文件是依照目前專案程式碼、程式中的繁體中文註解、README 與先前修改需求重建的紀錄。
+3. 下方行號是「2026-11-10 目前版本」的行號。日後新增或刪除程式碼後，行號可能往前或往後移動。
+4. 找不到行號時，請在 VS Code 按 Ctrl+F，搜尋本文件列出的「搜尋關鍵字」或畫面上的繁體中文名稱。
+5. 本文件不記錄 .env.local、Supabase 金鑰、登入密碼或其他機密資料。
+6. 從現在開始，每次修改網站時，應在本文件最上方的「後續修改紀錄」追加日期、檔案、行號與修改內容。
+
+
+======================================================================
+一、從初版到目前的主要修改時間軸（依功能重建）
+======================================================================
+
+01. 建立 React／Vite 專案與深色格線介面
+    修改檔案：
+    - src/main.tsx：第 1～8 行，載入 React、App 與全站 CSS。
+    - src/App.tsx：第 53～1184 行，建立整個網站的頁面與互動元件。
+    - src/styles.css：第 1～2653 行，全站桌面版、手機版與彈出視窗樣式。
+    - index.html：第 1～20 行，網站 HTML 入口、標題與圖示。
+    - package.json：第 1～26 行，套件與執行指令。
+    - vite.config.ts：第 1～7 行，Vite 與 GitHub Pages 相對路徑設定。
+
+02. 建立刀具資料與四種分類表單
+    修改檔案：
+    - src/types.ts：第 3～25、41～55 行，刀片、鑽銑刀、刀柄、其他分類與欄位型別。
+    - src/App.tsx：第 886～907、972～1043 行，刀具列表、新增／編輯刀具、可輸入下拉選單。
+    - src/lib/format.ts：第 12～24 行，依分類組合刀具品名。
+    - src/lib/repository.ts：第 187～228 行，新增、修改與刪除刀具資料。
+    - supabase/schema.sql：第 7～31、119～194、260～351 行，products 資料表、品名同步與建立刀具 RPC。
+    搜尋關鍵字：ProductModal、EditableCombo、composeProductName、create_product_with_initial_stock
+
+03. 建立出入庫、安全庫存交易與歷史價格
+    修改檔案：
+    - src/App.tsx：第 726～729、784～824、914～971、1044～1065 行。
+    - src/lib/repository.ts：第 229～309 行。
+    - src/types.ts：第 26～73 行。
+    - supabase/schema.sql：第 32～47、352～511 行。
+    功能內容：入庫、出庫、動態搜尋刀具、採購總價、供應商帶入、負庫存保護、
+              防止重複送出、安全刪除出入庫、重算庫存與歷史價格。
+    搜尋關鍵字：StockModal、ProductPicker、TotalPreview、registerMovement、deleteMovement
+
+04. 建立庫存總覽與圖表
+    修改檔案：
+    - src/App.tsx：第 730～783 行。
+    - src/styles.css：第 702～760 行附近。
+    功能內容：庫存總數、估算價值、本月入庫、本月出庫、近 14 天出入庫圖表。
+    搜尋關鍵字：Dashboard、StatCard、MovementChart
+
+05. 新增庫存盤點功能
+    修改檔案：
+    - src/App.tsx：第 825～885 行。
+    - src/lib/repository.ts：第 249～278 行。
+    - src/types.ts：第 67～73 行。
+    - supabase/schema.sql：第 512～585 行。
+    - src/styles.css：第 761～770、840、855～870、2642～2653 行附近。
+    功能內容：直接輸入實際數量、計算差異、保留原單價、盤點備註、更新庫存。
+    搜尋關鍵字：StocktakePage、setStocktakeQuantity、set_stocktake_quantity
+
+06. 建立加工數量登記、產品編號與機台管理
+    修改檔案：
+    - src/App.tsx：第 421～480、686～717 行。
+    - src/types.ts：第 74～104 行。
+    - src/lib/repository.ts：第 87～167 行。
+    - supabase/schema.sql：第 48～78、229～258 行。
+    功能內容：日期、產品編號、機台、加工時間、數量、備註、手動新增／刪除選項。
+    搜尋關鍵字：ProductionEntryPage、ProductionOptionModal、createProductionRecord
+
+07. 加工時間計算整合到加工數量登記
+    修改檔案：
+    - src/App.tsx：第 628～654 行。
+    - src/App.tsx：第 421～480 行內的「加工時間計算」按鈕與結果套用。
+    功能內容：以時數與分鐘相減，例如 11 小時 5 分減去 3 小時 10 分。
+    搜尋關鍵字：ProductionTimeCalculatorModal
+
+08. 建立加工數量查詢、統計、編輯、刪除與 Excel
+    修改檔案：
+    - src/App.tsx：第 481～627 行。
+    - src/lib/repository.ts：第 142～186 行。
+    - src/lib/exportProductionXlsx.ts：第 1～149 行。
+    - supabase/enable-production-record-edit.sql：第 1～24 行。
+    功能內容：查詢最後一筆、查詢全部、日期查詢、逐筆編輯、逐筆刪除、
+              永久刪除產品加工資料、統計總天數／總數量／總時間、下載 Excel。
+    搜尋關鍵字：ProductionQueryPage、ProductionRecordEditModal、exportProductionXlsx
+
+09. 新增訂單完工預估
+    修改檔案：
+    - src/App.tsx：第 655～685 行。
+    - src/styles.css：第 530～575 行與手機版對應區段。
+    功能內容：依產品歷史平均產量估算已完成、剩餘數量、剩餘天數與完工日期。
+    搜尋關鍵字：OrderForecastModal、forecast-grid、order-quantity-input
+
+10. 建立完整 Excel 備份與覆蓋還原
+    修改檔案：
+    - src/App.tsx：第 1088～1162 行。
+    - src/lib/adminData.ts：第 1～92 行。
+    - src/lib/adminDataWorkbook.ts：第 1～154 行。
+    - supabase/admin_data.sql：第 1～424 行（舊版管理員密碼流程，安全升級後不要重跑）。
+    - supabase/secure_single_user.sql：第 405～610 行（目前單一帳號安全版匯出／匯入）。
+    功能內容：匯出所有 Supabase 資料成 Excel、檔案檢查、筆數預覽、整批覆蓋還原。
+    搜尋關鍵字：AdminDataModal、exportAllAdminData、parseAdminWorkbook、admin_export_all
+
+11. 加入單一帳號登入、RLS 與刪除密碼驗證
+    修改檔案：
+    - src/App.tsx：第 53～386、1066～1087 行。
+    - src/lib/auth.ts：第 1～27 行。
+    - src/lib/supabase.ts：第 1～23 行。
+    - supabase/secure_single_user.sql：第 1～616 行。
+    功能內容：自訂登入名稱、Supabase Email／密碼驗證、指定 UID、RLS、
+              刪除前重新驗證、密碼至少 4 位數字、關閉分頁後重新登入。
+    搜尋關鍵字：LoginScreen、PasswordSetupScreen、AdminDeleteModal、verifyOwnerPassword
+
+12. 加入手機與電腦即時同步
+    修改檔案：
+    - src/App.tsx：第 203～271 行，重新載入、Realtime 訂閱、分頁恢復與頁面切換更新。
+    - supabase/enable-realtime.sql：第 1～34 行，四個資料表加入 Supabase Realtime publication。
+    功能內容：手機新增或修改後，電腦自動更新；電腦修改後，手機也自動更新。
+    搜尋關鍵字：postgres_changes、queueRealtimeRefresh、visibilitychange、supabase_realtime
+
+13. 調整手機版表格、資料卡與避免左右捲動
+    修改檔案：
+    - src/styles.css：第 1249～1483、1491～1932、1937～2641 行。
+    功能內容：手機版刀具、出入庫、庫存盤點、加工查詢改為卡片式換行排列，
+              統一字體、保留原本黃／綠／紅等狀態顏色。
+    搜尋關鍵字：手機版、mobile、production-table、movement-table、stocktake-table、product-table
+
+14. 調整電腦版刀具、出入庫與盤點表格
+    修改檔案：
+    - src/styles.css：第 761～921、2151～2407 行附近。
+    功能內容：縮減欄位寬度、統一刀具資料表格風格、編號黃色、減少左右捲動。
+    搜尋關鍵字：data-table、movement-table、stocktake-table、product-table
+
+15. 加入有表格頁面的快速回頂端／底端按鈕
+    修改檔案：
+    - src/App.tsx：第 1165～1173 行，以及各表格頁插入 TableScrollControls 的位置。
+    - src/styles.css：第 1189～1199 行與手機版對應區段。
+    功能內容：只顯示中性圖示，不顯示「頂端／底端」文字。
+    搜尋關鍵字：TableScrollControls、table-scroll-controls
+
+16. 加工數量登記日期改為前一天
+    修改檔案：
+    - src/App.tsx：第 22～30 行，previousLocalDate 計算裝置本地前一天。
+    - src/App.tsx：第 422 行，work_date 預設使用 previousLocalDate()。
+    搜尋關鍵字：previousLocalDate
+
+17. 放大產品編號與機台文字
+    修改檔案：
+    - src/styles.css：第 365 行，電腦版產品編號／機台選單為 22px。
+    - src/styles.css：第 1373、1592 行，手機版產品編號／機台選單為 20px。
+    搜尋關鍵字：產品編號與機台下拉選單
+
+
+======================================================================
+二、目前主要檔案與行號索引
+======================================================================
+
+【src/App.tsx，共 1184 行】
+
+第 1～52 行
+    套件匯入、空白刀具資料、前一天日期、頁面網址、禁止 Enter 誤送表單。
+
+第 53～88 行
+    App 主入口、Supabase 登入狀態、密碼重設連結處理。
+
+第 89～141 行
+    LoadingScreen、LoginScreen：載入畫面與登入畫面。
+
+第 142～184 行
+    PasswordSetupScreen：郵件連結回來後設定新密碼。
+
+第 185～386 行
+    AuthenticatedApp：全站資料狀態、Supabase 載入、Realtime、頁面切換、
+    新增／修改／刪除流程、管理員驗證、各種彈出視窗。
+
+第 387～390 行
+    NavItem：庫存系統側邊欄按鈕。
+
+第 391～412 行
+    HomePage：詮栩 CNC 雲端系統首頁與三個功能入口。
+
+第 413～420 行
+    ProductionHeader：加工登記／加工查詢頁首。
+
+第 421～480 行
+    ProductionEntryPage：加工數量登記、前一天日期、產品編號、機台、工時、數量、備註。
+
+第 481～583 行
+    ProductionQueryPage：最後一筆、全部、日期查詢、Excel、預估、編輯、刪除與統計。
+
+第 584～627 行
+    ProductionRecordEditModal：編輯單筆加工紀錄。
+
+第 628～654 行
+    ProductionTimeCalculatorModal：加工時間相減。
+
+第 655～685 行
+    OrderForecastModal：訂單完工預估。
+
+第 686～717 行
+    ProductionOptionModal：新增／刪除產品編號與機台。
+
+第 718～729 行
+    首頁功能卡、頁面標題、入庫／出庫快捷按鈕。
+
+第 730～783 行
+    Dashboard、StatCard、MovementChart：庫存總覽與圖表。
+
+第 784～824 行
+    MovementsPage、MovementTable：出入庫歷史與表格。
+
+第 825～885 行
+    StocktakePage：庫存盤點。
+
+第 886～913 行
+    ProductsPage、SearchField、EmptyRow：刀具資料列表與搜尋。
+
+第 914～971 行
+    StockModal、ProductPicker、TotalPreview：出入庫彈窗、刀具動態選單、採購總價。
+
+第 972～1043 行
+    ProductModal、EditableCombo：新增／編輯刀具與可輸入下拉選單。
+
+第 1044～1065 行
+    PriceHistoryModal：歷史價格。
+
+第 1066～1087 行
+    AdminDeleteModal：刪除前重新輸入登入密碼。
+
+第 1088～1162 行
+    AdminDataModal：完整 Excel 備份與還原。
+
+第 1163～1184 行
+    Field、TableScrollControls、Modal、PageSkeleton：共用元件。
+
+
+【src/styles.css，共 2653 行】
+
+第 1～89 行
+    全站字型、顏色變數、尺寸計算、iPhone 輸入框防放大、背景。
+
+第 90～154 行
+    庫存系統側邊欄、功能選單、雲端狀態、登出按鈕。
+
+第 155～217 行
+    主要內容區、標題、通用按鈕與頁面留白。
+
+第 218～310 行
+    系統首頁、公司 Logo、功能卡片與功能顏色。
+
+第 311～508 行
+    加工數量登記的頁首、表單、產品編號／機台、實際工時、基礎資料與按鈕。
+
+第 509～701 行
+    加工數量查詢、六個查詢按鈕、完工預估、管理選項、結果表格與統計。
+
+第 702～760 行
+    庫存總覽統計卡與圖表。
+
+第 761～921 行
+    搜尋篩選、刀具／出入庫／盤點表格、欄位文字、盤點輸入框與操作按鈕。
+
+第 922～1089 行
+    所有彈出視窗、新增刀具、出入庫、可輸入下拉選單與價格預覽。
+
+第 1090～1185 行
+    管理員備份／還原、刪除驗證、歷史價格。
+
+第 1186～1248 行
+    成功通知、快速回頂端／底端、載入動畫、登入畫面與公司 Logo。
+
+第 1249～1486 行
+    900px 與 620px 以下的第一組響應式版面。
+
+第 1491～1932 行
+    手機版各畫面的獨立字體大小與欄位尺寸設定。
+
+第 1937～2641 行
+    手機版加工查詢、刀具、出入庫、盤點資料卡，以及電腦版表格緊湊化修正。
+
+第 2642～2653 行
+    庫存盤點單價格式與出入庫單價一致。
+
+常用精確位置：
+    第 74 行：iPhone Chrome／Safari 點擊輸入框避免自動放大。
+    第 231 行：首頁公司 Logo。
+    第 365 行：電腦版加工產品編號與機台字體大小。
+    第 539 行：訂單完工預估「訂單總數量」輸入框。
+    第 819 行：全站資料表格共用格式。
+    第 922 行：彈出視窗遮罩。
+    第 925 行：彈出視窗本體寬度、高度與捲動。
+    第 1190 行：回最頂端與最底端按鈕位置。
+    第 1224 行：登入畫面公司 Logo。
+    第 1373、1592 行：手機版加工產品編號與機台字體大小。
+
+
+【src/types.ts，共 104 行】
+
+第 1～4 行：頁面、出入庫、刀具分類常數。
+第 6～25 行：Product 刀具資料型別。
+第 26～40 行：Movement 出入庫型別。
+第 41～55 行：ProductInput 刀具表單型別。
+第 56～73 行：MovementInput 與 StocktakeInput。
+第 74～104 行：ProductionRecord、ProductionInput、產品編號／機台選項型別。
+
+
+【src/lib/repository.ts，共 309 行】
+
+第 1～71 行：示範資料、localStorage、Supabase 與管理員刪除共用方法。
+第 72～86 行：載入刀具與出入庫。
+第 87～100 行：載入加工紀錄與管理選項。
+第 101～126 行：新增／刪除產品編號與機台。
+第 127～167 行：新增／編輯加工紀錄。
+第 168～186 行：刪除單筆加工紀錄與永久刪除產品加工資料。
+第 187～228 行：新增、編輯、刪除刀具。
+第 229～278 行：入庫、出庫與庫存盤點。
+第 279～309 行：刪除出入庫紀錄並同步庫存。
+
+
+【src/lib/auth.ts，共 27 行】
+
+第 1～5 行：指定的單一使用者 UID、登入名稱與 Email。
+第 7～17 行：檢查登入者與取得目前 Supabase 使用者。
+第 18～27 行：刪除／備份／還原前重新驗證登入密碼。
+
+
+【src/lib/supabase.ts，共 23 行】
+
+第 1～6 行：讀取 Vite 環境變數與判斷示範模式。
+第 8～23 行：使用 sessionStorage 保存登入、清除舊 localStorage 登入資料、建立 Supabase client。
+
+
+【src/lib/format.ts，共 24 行】
+
+第 1～5 行：今天本地日期。
+第 7～9 行：日期、金額、數量格式化。
+第 10～24 行：依刀具分類自動組合品名。
+
+
+【src/lib/exportProductionXlsx.ts，共 149 行】
+
+第 1～102 行：不依賴 Excel 應用程式建立 ZIP／XML 活頁簿的底層工具。
+第 103～132 行：建立加工查詢 Excel 工作表、欄位與統計列。
+第 133～149 行：產生與下載加工查詢 Excel。
+
+
+【src/lib/adminData.ts，共 92 行】
+
+第 1～70 行：完整備份／還原資料結構與驗證。
+第 71～84 行：檢查雲端模式與匯出所有資料。
+第 85～92 行：整批匯入所有資料。
+
+
+【src/lib/adminDataWorkbook.ts，共 154 行】
+
+第 1～45 行：工作表名稱、欄位與共用工具。
+第 46～92 行：下載完整備份 Excel。
+第 93～154 行：讀取、檢查與預覽整理後的 Excel。
+
+
+【Supabase SQL】
+
+supabase/schema.sql，共 660 行
+    第 7～78 行：products、stock_movements、production_records、production_options 資料表。
+    第 80～151 行：舊資料庫升級欄位與索引。
+    第 152～194 行：updated_at 與自動組合品名 trigger。
+    第 195～258 行：基礎 RLS policies。
+    第 260～351 行：安全建立刀具與初始庫存。
+    第 352～430 行：安全刪除出入庫與重算庫存。
+    第 431～511 行：安全入庫／出庫交易。
+    第 512～585 行：庫存盤點交易。
+    第 586～629 行：永久刪除產品加工資料。
+    第 630～660 行：函式與資料表說明、執行權限。
+
+supabase/admin_data.sql，共 424 行
+    舊版管理員密碼、完整 Excel 匯出／匯入與刪除 RPC。
+    注意：完成 secure_single_user.sql 安全升級後，不要再次執行此檔案。
+
+supabase/secure_single_user.sql，共 616 行
+    第 1～56 行：確認指定 UID／Email 並把既有資料歸戶。
+    第 57～124 行：登入者檢查、關閉匿名權限、建立單一帳號 RLS。
+    第 125～329 行：建立刀具、出入庫、盤點與安全刪除 RPC。
+    第 330～404 行：加工資料與各類管理員刪除 RPC。
+    第 405～610 行：完整備份與覆蓋匯入 RPC。
+    第 611～616 行：資料表說明。
+
+supabase/enable-production-record-edit.sql，共 24 行
+    啟用加工數量查詢的單筆編輯 RLS 與欄位權限。
+
+supabase/enable-realtime.sql，共 34 行
+    將 products、stock_movements、production_records、production_options 加入即時同步。
+
+
+【設定與說明檔】
+
+src/main.tsx，第 1～8 行
+    React 入口，載入 App 與 styles.css。
+
+vite.config.ts，第 1～7 行
+    Vite React 外掛與 GitHub Pages 相對 base 路徑。
+
+package.json，第 1～26 行
+    npm 指令與 React、Supabase、Lucide、SheetJS 等套件。
+
+.github/workflows/deploy.yml，第 1～46 行
+    GitHub Actions 自動建置與部署 Pages。
+
+index.html，第 1～20 行
+    網站入口、頁面標題、favicon 與 root 節點。
+
+.env.example，第 1～2 行
+    Supabase URL 與 publishable／anon key 的名稱範例，不包含正式值。
+
+README.md，第 1～222 行
+    系統功能、Supabase 設定、安全升級、GitHub Pages 部署與常見問題。
+
+public/company-logo.png
+    首頁與登入畫面使用的公司 Logo 圖片。
+
+public/favicon.ico、public/favicon.svg
+    瀏覽器分頁圖示。
+
+
+======================================================================
+三、後續修改紀錄（從現在開始逐次追加）
+======================================================================
+
+2026-11-10
+修改內容：建立完整專案修改紀錄與目前程式行號索引。
+修改檔案：專案修改紀錄.txt（新增）
+SQL：不需要執行。
+
+2026-11-10
+修改內容：新增免登入訪客唯讀功能；訪客可查看加工查詢與庫存資料，但不能新增、修改、刪除、盤點、匯出或還原。
+修改檔案：
+- src/App.tsx：第 42～431、592、836 行附近，訪客狀態、登入入口、唯讀導覽與操作限制。
+- src/styles.css：第 211～217、356、1251 行附近，訪客提示、狀態標籤與登入按鈕。
+- supabase/enable-guest-readonly.sql：第 1～64 行，anon SELECT RLS 與唯讀資料表權限。
+- README.md：第 5、41～42、114～125、148、212 行附近，訪客安全與設定說明。
+SQL：需要執行 supabase/enable-guest-readonly.sql。
+GitHub Summary：新增訪客唯讀查看功能。
+
+2026-11-10
+修改內容：修正手機版訪客首頁被橫向壓縮、標題逐字換行、提示列與返回登入按鈕重疊。
+修改檔案：
+- src/styles.css：第 161～168、1339～1346 行附近，首頁改為上下兩列、恢復完整寬度並保留按鈕空間。
+- 專案修改紀錄.txt：追加本次紀錄。
+SQL：不需要執行。
+GitHub Summary：修正手機版訪客首頁排版。
+
+
+【之後每次追加格式】
+
+YYYY-MM-DD
+修改內容：簡短說明這次改了什麼。
+修改檔案：
+- 檔案名稱：第 X～Y 行，修改內容。
+- 檔案名稱：第 X 行，修改內容。
+SQL：不需要／需要執行哪一個 SQL 檔案。
+GitHub Summary：繁體中文提交摘要。
+
+
+======================================================================
+四、GitHub 上傳原則
+======================================================================
+
+需要上傳：
+- 每次實際有修改的 src、supabase、public、設定檔或說明檔。
+- 本文件「專案修改紀錄.txt」。
+
+不要上傳：
+- node_modules
+- dist
+- .env.local
+- 任何密碼、service_role key 或私密金鑰
+
