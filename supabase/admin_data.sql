@@ -100,7 +100,7 @@ begin
     'data', jsonb_build_object(
       'products', coalesce((
         select jsonb_agg(jsonb_build_object(
-          'code', p.code, 'category', p.category, 'specification', p.specification,
+          'code', p.code, 'barcode', p.barcode, 'category', p.category, 'specification', p.specification,
           'size', p.size, 'chipbreaker', p.chipbreaker, 'material', p.material,
           'name', p.name, 'brand', p.brand, 'supplier', p.supplier, 'unit', p.unit,
           'stock_quantity', p.stock_quantity, 'unit_price', p.unit_price,
@@ -194,10 +194,10 @@ begin
     if v_target < 0 then raise exception '刀具 % 的庫存不可小於 0', v_code; end if;
 
     insert into public.products (
-      code, category, specification, size, chipbreaker, material, brand, supplier,
+      code, barcode, category, specification, size, chipbreaker, material, brand, supplier,
       unit, stock_quantity, unit_price, purchased_at, notes
     ) values (
-      v_code, v_item->>'category', btrim(coalesce(v_item->>'specification', '')),
+      v_code, btrim(coalesce(v_item->>'barcode', '')), v_item->>'category', btrim(coalesce(v_item->>'specification', '')),
       btrim(coalesce(v_item->>'size', '')), btrim(coalesce(v_item->>'chipbreaker', '')),
       btrim(coalesce(v_item->>'material', '')), btrim(coalesce(v_item->>'brand', '')),
       btrim(coalesce(v_item->>'supplier', '')), coalesce(nullif(btrim(v_item->>'unit'), ''), '個'),

@@ -8,6 +8,7 @@ create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade,
   code text not null,
+  barcode text not null default '',
   name text not null,
   specification text not null,
   size text not null default '',
@@ -70,6 +71,7 @@ create table if not exists public.production_options (
 
 create index if not exists products_user_id_idx on public.products(user_id);
 create index if not exists products_user_name_idx on public.products(user_id, name);
+create unique index if not exists products_barcode_unique on public.products(lower(barcode)) where btrim(barcode) <> '';
 create index if not exists stock_movements_user_date_idx on public.stock_movements(user_id, movement_date desc, created_at desc);
 create index if not exists stock_movements_product_idx on public.stock_movements(product_id);
 create index if not exists production_records_product_date_idx on public.production_records(product_code, work_date desc, created_at desc);

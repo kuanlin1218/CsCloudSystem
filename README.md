@@ -23,6 +23,7 @@
 - 庫存盤點：直接輸入每項刀具的現場實際數量，不要求單價；系統保留原單價並以差異建立盤點調整紀錄
 - 盤點頁可新增沒有價格的新刀具，也能搜尋、分類篩選並逐項更新數量
 - 刀具資料：搜尋、四種分類篩選、新增、編輯、刪除
+- 手機條碼掃描：使用 iPhone 相機辨識一維／二維條碼，可建立新刀具、綁定現有刀具，並直接進入入庫、出庫或盤點
 - 新增商品先選「刀片、鑽銑刀、刀柄、其他」，表單依分類顯示需要的欄位
 - 規格、尺寸、斷屑槽、材質、廠牌、供應商與單位都是可輸入的下拉欄位；選項由現有刀具資料自動整理與去重
 - 刀片品名依「規格－尺寸－斷屑槽－材質」組合；鑽銑刀依「規格－尺寸－材質」組合；刀柄與其他直接使用規格
@@ -124,6 +125,12 @@ npm run preview
 
 訪客沒有 INSERT、UPDATE、DELETE 或 RPC 執行權限。由於訪客不需要身分驗證，任何取得網站網址或 Supabase 公開端點的人都可能讀到這四張資料表；請勿存放不適合公開查看的個人或機密內容。
 
+### 啟用刀具條碼掃描資料欄位
+
+在 SQL Editor 建立 **New query**，完整貼上 [`supabase/enable-product-barcodes.sql`](supabase/enable-product-barcodes.sql) 後按 **Run**。
+
+這份 SQL 會新增刀具條碼欄位、避免同一條碼重複綁定，並把條碼加入完整 Excel 備份與還原。網站部署後，在庫存總覽、出入庫、庫存盤點或刀具資料頁按「掃描條碼」即可使用。iPhone 必須從正式 HTTPS 網址開啟，並允許 Chrome 使用相機。
+
 ### 4. 填入前端環境變數
 
 從 Supabase 專案設定的 API 頁面取得 Project URL 與 anon/public key。複製範例檔：
@@ -210,6 +217,7 @@ blade-inventory/
 ├─ supabase/admin_data.sql       # 管理員 Excel 備份／還原 RPC
 ├─ supabase/secure_single_user.sql # 單一帳號歸戶、RLS 與安全 RPC 升級
 ├─ supabase/enable-guest-readonly.sql # 免登入訪客唯讀 RLS 與資料表權限
+├─ supabase/enable-product-barcodes.sql # 刀具條碼欄位、唯一性與 Excel 備份升級
 ├─ .env.example
 └─ vite.config.ts
 ```
@@ -231,6 +239,10 @@ blade-inventory/
 ### GitHub Pages 打開後空白
 
 在 Actions 查看 build 是否成功，並確認 Pages 的 Source 是 GitHub Actions。若 workflow 沒有讀到兩個 secrets，網站仍應顯示示範模式，不會因此完全空白。
+
+### iPhone 按「開啟相機掃描」後沒有畫面
+
+確認使用的是 `https://` 正式網址，並到 iPhone 的 Chrome／網站相機權限允許使用相機。若相機暫時無法使用，可先在掃描視窗的「電腦測試／相機無法辨識時」欄位手動輸入條碼，測試查詢、建立與綁定流程。
 
 ## 授權與備份
 

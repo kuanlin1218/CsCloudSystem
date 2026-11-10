@@ -4,6 +4,10 @@
 
 begin;
 
+alter table public.products add column if not exists barcode text not null default '';
+create unique index if not exists products_barcode_unique
+  on public.products(lower(barcode)) where btrim(barcode) <> '';
+
 -- 固定授權帳號：kuanlin / kuanlin@chyuansheu.com
 do $$
 declare
@@ -115,7 +119,7 @@ revoke all on table public.stock_movements from anon, authenticated;
 revoke all on table public.production_records from anon, authenticated;
 revoke all on table public.production_options from anon, authenticated;
 grant select on table public.products to authenticated;
-grant update (specification, size, chipbreaker, material, name, brand, supplier, category, unit, notes) on table public.products to authenticated;
+grant update (barcode, specification, size, chipbreaker, material, name, brand, supplier, category, unit, notes) on table public.products to authenticated;
 grant select on table public.stock_movements to authenticated;
 grant select, insert on table public.production_records to authenticated;
 grant update (work_date, product_code, machine, hours, minutes, quantity, notes) on table public.production_records to authenticated;
@@ -414,7 +418,7 @@ begin
     'ok', true, 'exported_at', now(),
     'data', jsonb_build_object(
       'products', coalesce((select jsonb_agg(jsonb_build_object(
-        'code', p.code, 'category', p.category, 'specification', p.specification,
+        'code', p.code, 'barcode', p.barcode, 'category', p.category, 'specification', p.specification,
         'size', p.size, 'chipbreaker', p.chipbreaker, 'material', p.material,
         'name', p.name, 'brand', p.brand, 'supplier', p.supplier, 'unit', p.unit,
         'stock_quantity', p.stock_quantity, 'unit_price', p.unit_price,
@@ -484,10 +488,10 @@ begin
     v_target := coalesce((v_item->>'stock_quantity')::integer, 0);
     if v_target < 0 then raise exception '刀具 % 的庫存不可小於 0', v_code; end if;
     insert into public.products (
-      user_id, code, category, specification, size, chipbreaker, material, brand,
+      user_id, code, barcode, category, specification, size, chipbreaker, material, brand,
       supplier, unit, stock_quantity, unit_price, purchased_at, notes, name
     ) values (
-      v_user_id, v_code, v_item->>'category', btrim(coalesce(v_item->>'specification', '')),
+      v_user_id, v_code, btrim(coalesce(v_item->>'barcode', '')), v_item->>'category', btrim(coalesce(v_item->>'specification', '')),
       btrim(coalesce(v_item->>'size', '')), btrim(coalesce(v_item->>'chipbreaker', '')),
       btrim(coalesce(v_item->>'material', '')), btrim(coalesce(v_item->>'brand', '')),
       btrim(coalesce(v_item->>'supplier', '')), coalesce(nullif(btrim(v_item->>'unit'), ''), '個'),

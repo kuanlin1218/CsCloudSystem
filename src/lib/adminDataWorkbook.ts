@@ -60,11 +60,11 @@ export function downloadAdminWorkbook(payload: AdminDataPayload, exportedAt: str
   utils.book_append_sheet(workbook, guide, SHEETS.guide)
 
   addSheet(workbook, SHEETS.products, payload.products.map((p) => ({
-    '刀具編號': p.code, '分類': p.category, '規格': p.specification, '尺寸': p.size,
+    '刀具編號': p.code, '條碼': p.barcode || '', '分類': p.category, '規格': p.specification, '尺寸': p.size,
     '斷屑槽': p.chipbreaker, '材質': p.material, '品名（自動組合）': p.name || '',
     '廠牌': p.brand, '供應商': p.supplier, '單位': p.unit, '目前庫存': p.stock_quantity,
     '最新單價': p.unit_price, '最近購入日期': p.purchased_at || '', '備註': p.notes,
-  })), [14, 10, 18, 14, 12, 14, 34, 16, 16, 9, 12, 12, 14, 30])
+  })), [14, 20, 10, 18, 14, 12, 14, 34, 16, 16, 9, 12, 12, 14, 30])
 
   addSheet(workbook, SHEETS.movements, payload.movements.map((m, index) => ({
     '紀錄順序': m.sequence || index + 1, '刀具編號': m.product_code,
@@ -106,10 +106,12 @@ export async function parseAdminWorkbook(file: File): Promise<WorkbookPreview> {
       const stock = number(r['目前庫存'], '刀具資料「目前庫存」', row, true)
       const price = number(r['最新單價'], '刀具資料「最新單價」', row)
       if (stock < 0 || price < 0) throw new Error(`刀具資料第 ${row} 列的庫存或單價不可小於 0`)
-      return { code, category, specification: text(r['規格']), size: text(r['尺寸']), chipbreaker: text(r['斷屑槽']), material: text(r['材質']), brand: text(r['廠牌']), supplier: text(r['供應商']), unit: text(r['單位']) || '個', stock_quantity: stock, unit_price: price, purchased_at: localDate(r['最近購入日期'], '刀具資料「最近購入日期」', row, true), notes: text(r['備註']) }
+      return { code, barcode: text(r['條碼']), category, specification: text(r['規格']), size: text(r['尺寸']), chipbreaker: text(r['斷屑槽']), material: text(r['材質']), brand: text(r['廠牌']), supplier: text(r['供應商']), unit: text(r['單位']) || '個', stock_quantity: stock, unit_price: price, purchased_at: localDate(r['最近購入日期'], '刀具資料「最近購入日期」', row, true), notes: text(r['備註']) }
     })
     const duplicate = products.find((p, index) => products.findIndex((q) => q.code === p.code) !== index)
     if (duplicate) throw new Error(`刀具編號「${duplicate.code}」重複`)
+    const duplicateBarcode = products.find((p, index) => p.barcode && products.findIndex((q) => q.barcode.toLowerCase() === p.barcode.toLowerCase()) !== index)
+    if (duplicateBarcode) throw new Error(`條碼「${duplicateBarcode.barcode}」重複`)
   } catch (error) { errors.push(error instanceof Error ? error.message : '刀具資料格式錯誤') }
 
   try {

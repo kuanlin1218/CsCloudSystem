@@ -11,10 +11,10 @@ const previousDay = (() => { const date = new Date(`${today()}T12:00:00`); date.
 const codePrefix = (category: ProductCategory) => ({ '刀片': 'T', '鑽銑刀': 'M', '刀柄': 'H', '其他': 'O' }[category])
 
 const seedProducts: Product[] = [
-  { id: 'demo-p1', code: 'T0001', name: 'WNMG-080408-MS-PR1535', specification: 'WNMG', size: '080408', chipbreaker: 'MS', material: 'PR1535', brand: '京瓷', supplier: '福燕', category: '刀片', unit: '片', stock_quantity: 190, unit_price: 200, purchased_at: today(), notes: '鋼件・通用加工', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'demo-p2', code: 'T0002', name: 'TNMG-160404-無-VP15TF', specification: 'TNMG', size: '160404', chipbreaker: '無', material: 'VP15TF', brand: '三菱', supplier: '怡立', category: '刀片', unit: '片', stock_quantity: 100, unit_price: 100, purchased_at: today(), notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'demo-p3', code: 'T0003', name: 'VNMG-160404-GU-AC8025P', specification: 'VNMG', size: '160404', chipbreaker: 'GU', material: 'AC8025P', brand: '住友', supplier: '益詮', category: '刀片', unit: '片', stock_quantity: 100, unit_price: 165, purchased_at: today(), notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 'demo-p4', code: 'M0001', name: 'EMM4100-10-鎢鋼', specification: 'EMM4100', size: '10', chipbreaker: '', material: '鎢鋼', brand: '益詮', supplier: '益詮', category: '鑽銑刀', unit: '支', stock_quantity: 5, unit_price: 800, purchased_at: today(), notes: '立銑刀', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'demo-p1', code: 'T0001', barcode: '4710000000011', name: 'WNMG-080408-MS-PR1535', specification: 'WNMG', size: '080408', chipbreaker: 'MS', material: 'PR1535', brand: '京瓷', supplier: '福燕', category: '刀片', unit: '片', stock_quantity: 190, unit_price: 200, purchased_at: today(), notes: '鋼件・通用加工', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'demo-p2', code: 'T0002', barcode: '', name: 'TNMG-160404-無-VP15TF', specification: 'TNMG', size: '160404', chipbreaker: '無', material: 'VP15TF', brand: '三菱', supplier: '怡立', category: '刀片', unit: '片', stock_quantity: 100, unit_price: 100, purchased_at: today(), notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'demo-p3', code: 'T0003', barcode: '', name: 'VNMG-160404-GU-AC8025P', specification: 'VNMG', size: '160404', chipbreaker: 'GU', material: 'AC8025P', brand: '住友', supplier: '益詮', category: '刀片', unit: '片', stock_quantity: 100, unit_price: 165, purchased_at: today(), notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'demo-p4', code: 'M0001', barcode: '', name: 'EMM4100-10-鎢鋼', specification: 'EMM4100', size: '10', chipbreaker: '', material: '鎢鋼', brand: '益詮', supplier: '益詮', category: '鑽銑刀', unit: '支', stock_quantity: 5, unit_price: 800, purchased_at: today(), notes: '立銑刀', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ]
 
 const seedMovements: Movement[] = [
@@ -71,7 +71,7 @@ async function runAdminDelete(functionName: string, values: Record<string, unkno
 
 export async function loadInventory(): Promise<{ products: Product[]; movements: Movement[] }> {
   if (isDemoMode) {
-    const products = readLocal(PRODUCT_KEY, seedProducts).map((product) => ({ ...product, category: normalizeCategory(product.category) }))
+    const products = readLocal(PRODUCT_KEY, seedProducts).map((product) => ({ ...product, barcode: product.barcode || '', category: normalizeCategory(product.category) }))
     writeLocal(PRODUCT_KEY, products)
     return { products, movements: readLocal(MOVEMENT_KEY, seedMovements) }
   }
@@ -81,7 +81,7 @@ export async function loadInventory(): Promise<{ products: Product[]; movements:
   ])
   if (productsResult.error) throw productsResult.error
   if (movementsResult.error) throw movementsResult.error
-  return { products: productsResult.data as Product[], movements: movementsResult.data as unknown as Movement[] }
+  return { products: (productsResult.data as Product[]).map((product) => ({ ...product, barcode: product.barcode || '' })), movements: movementsResult.data as unknown as Movement[] }
 }
 
 export async function loadProductionRecords(): Promise<ProductionRecord[]> {
@@ -191,14 +191,20 @@ export async function createProduct(input: ProductInput): Promise<void> {
     const now = new Date().toISOString()
     const prefix = codePrefix(input.category)
     const nextNumber = products.filter((item) => item.category === input.category).reduce((max, item) => Math.max(max, Number(item.code.slice(1)) || 0), 0) + 1
-    const product: Product = { id: id(), code: `${prefix}${String(nextNumber).padStart(4, '0')}`, name: composeProductName(input.category, input.specification, input.size, input.chipbreaker, input.material), ...input, stock_quantity: input.initial_quantity || 0, unit_price: input.initial_unit_price || 0, purchased_at: input.purchased_at || null, created_at: now, updated_at: now }
+    const product: Product = { id: id(), code: `${prefix}${String(nextNumber).padStart(4, '0')}`, name: composeProductName(input.category, input.specification, input.size, input.chipbreaker, input.material), ...input, barcode: input.barcode.trim(), stock_quantity: input.initial_quantity || 0, unit_price: input.initial_unit_price || 0, purchased_at: input.purchased_at || null, created_at: now, updated_at: now }
     const { initial_quantity, initial_unit_price, ...stored } = product as Product & { initial_quantity?: number; initial_unit_price?: number }
     writeLocal(PRODUCT_KEY, [...products, stored])
     if (input.initial_quantity > 0) movements.unshift({ id: id(), product_id: product.id, movement_type: 'in', quantity: input.initial_quantity, movement_date: input.purchased_at, unit_price: input.initial_unit_price, supplier: input.supplier, notes: '建立商品時的期初庫存', stock_after: input.initial_quantity, request_key: id(), created_at: now, product: { code: product.code, name: product.name, unit: product.unit, brand: product.brand } })
     writeLocal(MOVEMENT_KEY, movements)
     return
   }
-  const { error } = await supabase!.rpc('create_product_with_initial_stock', {
+  const barcode = input.barcode.trim()
+  if (barcode) {
+    const { data: existingBarcode, error: barcodeLookupError } = await supabase!.from('products').select('id').ilike('barcode', barcode).maybeSingle()
+    if (barcodeLookupError) throw barcodeLookupError
+    if (existingBarcode) throw new Error('這個條碼已綁定其他刀具')
+  }
+  const { data: productId, error } = await supabase!.rpc('create_product_with_initial_stock', {
     p_specification: input.specification, p_size: input.size, p_chipbreaker: input.chipbreaker || null,
     p_material: input.material || null, p_brand: input.brand || null, p_supplier: input.supplier || null,
     p_category: input.category, p_unit: input.unit, p_notes: input.notes || null,
@@ -206,16 +212,35 @@ export async function createProduct(input: ProductInput): Promise<void> {
     p_purchased_at: input.purchased_at || today(), p_request_key: id(),
   })
   if (error) throw error
+  if (barcode && productId) {
+    const { error: barcodeError } = await supabase!.from('products').update({ barcode }).eq('id', productId)
+    if (barcodeError) throw barcodeError.code === '23505' ? new Error('這個條碼已綁定其他刀具') : barcodeError
+  }
 }
 
 export async function updateProduct(productId: string, input: ProductInput): Promise<void> {
-  const changes = { specification: input.specification, size: input.size, chipbreaker: input.chipbreaker, material: input.material, name: composeProductName(input.category, input.specification, input.size, input.chipbreaker, input.material), brand: input.brand, supplier: input.supplier, category: input.category, unit: input.unit, notes: input.notes }
+  const changes = { barcode: input.barcode.trim(), specification: input.specification, size: input.size, chipbreaker: input.chipbreaker, material: input.material, name: composeProductName(input.category, input.specification, input.size, input.chipbreaker, input.material), brand: input.brand, supplier: input.supplier, category: input.category, unit: input.unit, notes: input.notes }
   if (isDemoMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts).map((p) => p.id === productId ? { ...p, ...changes, updated_at: new Date().toISOString() } : p)
     writeLocal(PRODUCT_KEY, products); return
   }
   const { error } = await supabase!.from('products').update(changes).eq('id', productId)
-  if (error) throw error
+  if (error) throw error.code === '23505' ? new Error('這個條碼已綁定其他刀具') : error
+}
+
+export async function updateProductBarcode(productId: string, rawBarcode: string): Promise<void> {
+  const barcode = rawBarcode.trim()
+  if (!barcode) throw new Error('條碼不能空白')
+  if (isDemoMode) {
+    const products = readLocal(PRODUCT_KEY, seedProducts)
+    if (products.some((product) => product.id !== productId && product.barcode?.toLowerCase() === barcode.toLowerCase())) throw new Error('這個條碼已綁定其他刀具')
+    writeLocal(PRODUCT_KEY, products.map((product) => product.id === productId ? { ...product, barcode, updated_at: new Date().toISOString() } : product))
+    return
+  }
+  const userId = await requireAuthenticatedUserId()
+  const { data, error } = await supabase!.from('products').update({ barcode }).eq('id', productId).eq('user_id', userId).select('id').maybeSingle()
+  if (error) throw error.code === '23505' ? new Error('這個條碼已綁定其他刀具') : error
+  if (!data) throw new Error('找不到刀具資料或沒有修改權限')
 }
 
 export async function deleteProduct(productId: string): Promise<void> {

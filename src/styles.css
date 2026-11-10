@@ -2681,3 +2681,114 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .table-scroll-controls button { width: 40px; height: 40px; border-radius: 7px; }
   .table-scroll-controls svg { width: 18px; }
 }
+
+/* 「庫存管理系統」的「掃描條碼按鈕」相關格式。 */
+.scan-button {
+  border-color: rgba(61, 204, 179, .48);
+  background: rgba(61, 204, 179, .09);
+  color: var(--green);
+}
+.scan-button:hover:not(:disabled) { border-color: var(--green); background: rgba(61, 204, 179, .16); }
+
+/* 「刀具資料表格」的「已綁定條碼文字」相關格式。 */
+.product-barcode {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  color: #7f929b;
+  font: 650 11px ui-monospace, "Cascadia Code", monospace;
+  letter-spacing: .03em;
+}
+.product-barcode svg { width: 13px; height: 13px; flex: 0 0 auto; color: var(--green); }
+
+/* 「新增／編輯刀具」的「條碼輸入框」相關格式。 */
+.barcode-input { position: relative; display: flex; align-items: center; }
+.barcode-input > svg { position: absolute; left: 14px; z-index: 1; width: 20px; color: var(--green); pointer-events: none; }
+.barcode-input > input { width: 100%; padding-left: 45px !important; font-family: ui-monospace, "Cascadia Code", monospace; }
+
+/* 「掃描刀具條碼」的「彈出視窗整體寬度與說明」相關格式。 */
+.modal.barcode-scanner-modal { width: min(720px, 100%); }
+.barcode-scanner-intro { margin: -6px 0 15px; color: #91a1a9; line-height: 1.6; }
+
+/* 「掃描刀具條碼」的「相機預覽畫面」相關格式。 */
+.barcode-camera {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid #344248;
+  border-radius: 8px;
+  background: #05090b;
+}
+.barcode-camera video { width: 100%; height: 100%; display: block; object-fit: cover; }
+.barcode-camera:not(.is-active) video { visibility: hidden; }
+.barcode-camera-placeholder { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; color: #758991; }
+.barcode-camera-placeholder svg { width: 48px; height: 48px; color: #47636c; }
+.barcode-target { position: absolute; z-index: 2; left: 9%; right: 9%; top: 35%; height: 30%; border: 2px solid var(--yellow); border-radius: 7px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .22); pointer-events: none; }
+.barcode-target::after { content: ""; position: absolute; left: 5%; right: 5%; top: 50%; height: 1px; background: rgba(255, 194, 58, .78); box-shadow: 0 0 8px rgba(255, 194, 58, .75); }
+.barcode-camera-button { width: 100%; margin-top: 10px; }
+
+/* 「掃描刀具條碼」的「手動輸入測試區」相關格式。 */
+.barcode-manual-test { margin-top: 17px; padding: 14px; border: 1px solid var(--line); border-radius: 7px; background: #0e1417; }
+.barcode-manual-test > span { display: block; margin-bottom: 8px; color: #82929a; font-size: 13px; }
+.barcode-manual-test > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.barcode-manual-test input { min-width: 0; height: 44px; padding: 0 12px; border: 1px solid #354149; border-radius: 6px; background: #090e11; color: var(--text); font: 700 16px ui-monospace, "Cascadia Code", monospace; outline: 0; }
+.barcode-manual-test input:focus { border-color: var(--green); }
+.barcode-manual-test button { min-width: 92px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(61, 204, 179, .4); border-radius: 6px; background: rgba(61, 204, 179, .08); color: var(--green); font-weight: 800; cursor: pointer; }
+.barcode-manual-test button svg { width: 17px; }
+.barcode-scanner-error { margin-top: 12px; }
+
+/* 「掃描刀具條碼」的「掃描結果與已找到刀具資料卡」相關格式。 */
+.barcode-result { margin-top: 15px; padding: 16px; border: 1px solid #344149; border-radius: 8px; background: #0b1114; }
+.barcode-result.matched { border-color: rgba(61, 204, 179, .38); }
+.barcode-result.unmatched { border-color: rgba(255, 194, 58, .38); }
+.barcode-result-code { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #283238; }
+.barcode-result-code span { color: #83949c; font-size: 13px; }
+.barcode-result-code strong { color: var(--yellow); font: 850 18px ui-monospace, "Cascadia Code", monospace; overflow-wrap: anywhere; text-align: right; }
+.barcode-product-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 0; }
+.barcode-product-card > div { min-width: 0; display: grid; gap: 4px; }
+.barcode-product-card span { color: var(--yellow); font: 800 14px ui-monospace, monospace; }
+.barcode-product-card strong { color: #f2f6f7; font-size: 19px; overflow-wrap: anywhere; }
+.barcode-product-card small { color: #8da0a8; }
+.barcode-product-card p { flex: 0 0 auto; margin: 0; color: #8ea0a8; }
+.barcode-product-card b { display: block; margin-top: 4px; color: var(--green); font: 850 22px ui-monospace, monospace; }
+.barcode-result-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.barcode-result-actions .button { min-width: 0; padding: 0 8px; font-size: 14px; }
+.stocktake-barcode-action { border-color: rgba(255, 194, 58, .45); background: rgba(255, 194, 58, .07); color: var(--yellow); }
+.edit-barcode-action { border-color: #45545c; background: #151d21; color: #dce6e9; }
+
+/* 「掃描刀具條碼」的「未綁定提示、建立刀具與綁定現有刀具」相關格式。 */
+.barcode-unmatched-message { display: flex; align-items: flex-start; gap: 12px; padding: 15px 0; }
+.barcode-unmatched-message > svg { width: 25px; flex: 0 0 auto; color: var(--yellow); }
+.barcode-unmatched-message > div { display: grid; gap: 4px; }
+.barcode-unmatched-message strong { color: #edf2f4; }
+.barcode-unmatched-message span { color: #8fa0a8; line-height: 1.5; }
+.barcode-create-product { width: 100%; }
+.barcode-link-existing { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #293238; }
+.barcode-link-existing .field { margin: 0; }
+.barcode-link-existing > .button { min-width: 160px; }
+
+@media (max-width: 620px) {
+  /* 「手機版－庫存頁面標題」的「掃描條碼按鈕」：維持緊湊並避免擠壓標題。 */
+  .title-actions .scan-button { min-width: 46px; padding: 0 11px; font-size: 0 !important; }
+  .title-actions .scan-button svg { width: 21px; height: 21px; }
+
+  /* 「手機版－掃描刀具條碼」的「相機與結果」相關格式。 */
+  .modal.barcode-scanner-modal { max-height: 96vh; }
+  .barcode-scanner-intro { font-size: 14px; }
+  .barcode-camera { aspect-ratio: 4 / 3; }
+  .barcode-target { left: 6%; right: 6%; top: 34%; height: 32%; }
+  .barcode-manual-test { padding: 11px; }
+  .barcode-result { padding: 13px; }
+  .barcode-result-code { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .barcode-result-code strong { font-size: 17px; text-align: left; }
+  .barcode-product-card { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .barcode-product-card p { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .barcode-product-card b { display: inline; margin: 0; font-size: 20px; }
+  .barcode-result-actions { grid-template-columns: 1fr 1fr; }
+  .barcode-result-actions .button { min-height: 43px; font-size: 15px; }
+  .barcode-link-existing { grid-template-columns: 1fr; }
+  .barcode-link-existing > .button { width: 100%; }
+  .product-barcode { font-size: 12px; }
+}

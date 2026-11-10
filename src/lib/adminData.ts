@@ -2,6 +2,7 @@ import { isDemoMode, supabase } from './supabase'
 
 export interface AdminProductRow {
   code: string
+  barcode: string
   category: string
   specification: string
   size: string

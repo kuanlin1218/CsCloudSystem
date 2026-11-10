@@ -455,6 +455,21 @@ GitHub Summary：新增訪客唯讀查看功能。
 SQL：不需要執行。
 GitHub Summary：修正手機版訪客首頁排版。
 
+2026-11-10
+修改內容：新增手機相機條碼掃描測試功能；可掃描或手動輸入條碼、查找已綁定刀具、建立新刀具、綁定現有刀具，並直接開啟入庫、出庫、盤點或編輯；條碼同步納入 Excel 完整備份與還原。
+修改檔案：
+- src/App.tsx：第 18～21、218～220、391～409、768～940、1018～1190 行附近，掃描入口、掃描彈窗、相機權限、查詢結果與刀具操作。
+- src/styles.css：第 2685～2795 行附近，掃描按鈕、相機預覽、結果卡片與手機版排版。
+- src/types.ts：第 9、43 行，新增刀具條碼型別。
+- src/lib/repository.ts：第 14～17、74、84、187～244 行附近，讀取、建立、修改與綁定條碼。
+- src/lib/adminData.ts、src/lib/adminDataWorkbook.ts：完整備份 Excel 加入條碼欄位、匯入與重複檢查。
+- supabase/enable-product-barcodes.sql：新增，現有 Supabase 專案的條碼欄位、唯一性、欄位權限與備份／還原升級。
+- supabase/schema.sql、supabase/secure_single_user.sql、supabase/admin_data.sql：新建資料庫與安全／備份 SQL 同步支援條碼。
+- package.json、package-lock.json：新增 @zxing/browser 與相容的 @zxing/library 套件。
+- README.md：新增條碼功能、SQL 執行方式與 iPhone 相機疑難排解。
+SQL：需要執行 supabase/enable-product-barcodes.sql。
+GitHub Summary：新增手機條碼掃描與刀具綁定功能。
+
 
 【之後每次追加格式】
 

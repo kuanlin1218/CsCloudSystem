@@ -6,6 +6,7 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = ['刀片', '鑽銑刀', '�
 export interface Product {
   id: string
   code: string
+  barcode: string
   name: string
   specification: string
   size: string
@@ -39,6 +40,7 @@ export interface Movement {
 }
 
 export interface ProductInput {
+  barcode: string
   specification: string
   size: string
   chipbreaker: string
