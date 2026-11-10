@@ -455,7 +455,7 @@ function ProductionEntryPage({ records, productCodes, machines, loading, goHome,
       <div className="production-field-row note-row"><label>備註</label><textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="選填" /></div>
       {formError && <div className="form-error production-error">{formError}</div>}
       <button className="production-action save-action" disabled={saving} type="submit"><Save />{saving ? '儲存中…' : '送出登記'}</button>
-      <button className="production-action delete-action" disabled={loading || !latest} type="button" onClick={() => latest && void onDeleteLast(latest)}><Trash2 />刪除最後一筆{latest ? `｜${latest.product_code}・${latest.machine}` : ''}</button>
+      <button className="production-action delete-action" disabled={loading || !latest} type="button" onClick={() => latest && void onDeleteLast(latest)}><Trash2 />刪除最後一筆</button>
       <button className="production-action time-tool-action" type="button" onClick={() => setShowTimeCalculator(true)}><Calculator />加工時間計算</button>
       <div className="production-data-tools entry-bottom-tools">
         <div><span>基礎資料設定</span><small>管理產品編號與機台，再從登記表單選擇</small></div>
@@ -557,10 +557,10 @@ function ProductionQueryPage({ records, productCodes, machines, loading, goHome,
         <div className="production-table-wrap"><table className="production-table"><thead><tr><th>日期</th><th>機台</th><th>時</th><th>分</th><th>數量</th><th>總時間</th><th>備註</th><th className="record-action-column" aria-label="操作" /></tr></thead><tbody>{results.map((record) => <tr key={record.id}><td>{formatDate(record.work_date)}</td><td>{record.machine}</td><td>{record.hours}</td><td>{record.minutes}</td><td>{formatNumber(record.quantity)}</td><td>{formatNumber(record.total_minutes)}</td><td>{record.notes || '—'}</td><td><div className="production-row-actions"><button className="production-row-edit" onClick={() => setEditingRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`編輯 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Pencil />編輯</button><button className="production-row-delete" onClick={() => void deleteOneRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`刪除 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Trash2 />{deletingRecordId === record.id ? '刪除中' : '刪除'}</button></div></td></tr>)}</tbody></table></div>
         <div className="production-totals">
           <div><span>總天數</span><strong>{formatNumber(totals.totalDays)}</strong></div>
-          <div><span>總數量</span><strong>{formatNumber(totals.totalQuantity)}</strong></div>
           <div><span>總時間</span><strong>{formatNumber(totals.totalMinutes)} <small>分</small></strong></div>
           <div><span>1天平均</span><strong>{formatNumber(totals.dailyAverage)} <small>顆</small></strong></div>
           <div><span>1顆平均</span><strong>{formatNumber(totals.pieceSeconds)} <small>秒</small></strong></div>
+          <div className="production-total-quantity"><span>總數量</span><strong>{formatNumber(totals.totalQuantity)}</strong></div>
         </div>
       </>}
     </div>}

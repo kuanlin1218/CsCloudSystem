@@ -587,7 +587,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .query-button:not(:disabled):hover { transform: translateY(-1px); background: #1b2429; }
 
 /* 「加工數量查詢」的「查詢操作」的「四種查詢與下載按鈕顏色」相關格式：本行可修改邊框顏色、文字或圖示顏色。 */
-.query-button.range { border-color: #496473; color: #a8d4ea; }.query-button.latest { border-color: #655885; color: #c8b7ee; }.query-button.all { border-color: #7c6429; color: var(--yellow); }.query-button.export { border-color: #356f62; color: var(--green); }.query-button.forecast { border-color: #74558c; color: #d4b5ed; }.query-button.danger { border-color: rgba(255,121,92,.48); color: var(--red); background: rgba(255,121,92,.045); }
+.query-button.range { border-color: #496473; color: #a8d4ea; }.query-button.latest { border-color: #39717a; color: #79d7e8; }.query-button.all { border-color: #7c6429; color: var(--yellow); }.query-button.export { border-color: #356f62; color: var(--green); }.query-button.forecast { border-color: #74558c; color: #d4b5ed; }.query-button.danger { border-color: rgba(255,121,92,.48); color: var(--red); background: rgba(255,121,92,.045); }
 
 /* 「加工數量查詢」的「永久刪除資料按鈕下方說明」相關格式。 */
 .query-delete-note { margin: 11px 2px 0; color: #876f6a; font-size: 12px; line-height: 1.55; }
@@ -686,13 +686,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .production-empty { min-height: 180px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 13px; color: #7e8c95; }.production-empty svg { width: 30px; }
 
 /* 「加工數量查詢」的「查詢全部統計」的「五張統計卡片排列」相關格式：本行可修改排列方式、欄位數量與寬度、背景。 */
-.production-totals { display: grid; grid-template-columns: repeat(5, 1fr); background: rgba(255,221,53,.10); }
+.production-totals { display: grid; grid-template-columns: repeat(4, 1fr); background: rgba(255,221,53,.10); }
 
 /* 「加工數量查詢」的「查詢全部統計」的「總天數、總數量、總時間、一天平均、一顆平均卡片」相關格式：本行可修改最小高度、排列方式、place-content、justify-items、內距、border-right。 */
 .production-totals > div { min-height: 94px; display: grid; place-content: center; justify-items: center; padding: 12px; border-right: 1px solid rgba(255,221,53,.13); }
 
 /* 「加工數量查詢」的「查詢全部統計」的「總天數、總數量、總時間、一天平均、一顆平均卡片」相關格式：本行可修改border-right、文字或圖示顏色、字體大小、上方外距、字型／粗細／大小。 */
 .production-totals > div:last-child { border-right: 0; }.production-totals span { color: #d4bd65; font-size: 13px; }.production-totals strong { margin-top: 7px; color: var(--yellow); font: 800 23px ui-monospace, monospace; }.production-totals small { font-size: 12px; color: #baa755; }
+
+/* 「加工數量查詢結果」的「最下方總數量」：獨立整列並放大顯示。 */
+.production-totals > div:nth-child(4) { border-right: 0; }.production-totals .production-total-quantity { grid-column: 1 / -1; min-height: 112px; border-top: 1px solid rgba(255,221,53,.18); }.production-totals .production-total-quantity span { font-size: 15px; }.production-totals .production-total-quantity strong { margin-top: 9px; font-size: 34px; }
 
 
 /* 「庫存管理系統」的「庫存總覽」的「四張統計卡片排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距。 */
