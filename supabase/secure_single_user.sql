@@ -102,6 +102,9 @@ create policy production_records_owner_select on public.production_records for s
   using ((select auth.uid()) = user_id and user_id = '5568706d-caaa-459b-b842-13cdbc3929fc'::uuid);
 create policy production_records_owner_insert on public.production_records for insert to authenticated
   with check ((select auth.uid()) = user_id and user_id = '5568706d-caaa-459b-b842-13cdbc3929fc'::uuid);
+create policy production_records_owner_update on public.production_records for update to authenticated
+  using ((select auth.uid()) = user_id and user_id = '5568706d-caaa-459b-b842-13cdbc3929fc'::uuid)
+  with check ((select auth.uid()) = user_id and user_id = '5568706d-caaa-459b-b842-13cdbc3929fc'::uuid);
 create policy production_options_owner_select on public.production_options for select to authenticated
   using ((select auth.uid()) = user_id and user_id = '5568706d-caaa-459b-b842-13cdbc3929fc'::uuid);
 create policy production_options_owner_insert on public.production_options for insert to authenticated
@@ -115,6 +118,7 @@ grant select on table public.products to authenticated;
 grant update (specification, size, chipbreaker, material, name, brand, supplier, category, unit, notes) on table public.products to authenticated;
 grant select on table public.stock_movements to authenticated;
 grant select, insert on table public.production_records to authenticated;
+grant update (work_date, product_code, machine, hours, minutes, quantity, notes) on table public.production_records to authenticated;
 grant select, insert on table public.production_options to authenticated;
 
 -- 安全建立刀具與期初入庫。

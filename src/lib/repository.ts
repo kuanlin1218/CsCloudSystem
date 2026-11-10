@@ -139,6 +139,32 @@ export async function createProductionRecord(input: ProductionInput): Promise<vo
   if (error) throw error
 }
 
+export async function updateProductionRecord(recordId: string, input: ProductionInput): Promise<void> {
+  const values = {
+    ...input,
+    product_code: input.product_code.trim().toUpperCase(),
+    machine: input.machine.trim().toUpperCase(),
+    notes: input.notes.trim(),
+  }
+  if (isDemoMode) {
+    const records = readLocal(PRODUCTION_KEY, seedProductionRecords)
+    writeLocal(PRODUCTION_KEY, records.map((record) => record.id === recordId
+      ? { ...record, ...values, total_minutes: values.hours * 60 + values.minutes }
+      : record))
+    return
+  }
+  const userId = await requireAuthenticatedUserId()
+  const { data, error } = await supabase!
+    .from('production_records')
+    .update(values)
+    .eq('id', recordId)
+    .eq('user_id', userId)
+    .select('id')
+    .maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('找不到這筆加工紀錄或沒有修改權限')
+}
+
 export async function deleteProductionRecord(recordId: string): Promise<void> {
   if (isDemoMode) {
     writeLocal(PRODUCTION_KEY, readLocal(PRODUCTION_KEY, seedProductionRecords).filter((record) => record.id !== recordId))

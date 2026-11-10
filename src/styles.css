@@ -500,6 +500,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「加工數量登記」的「表單底部」的「刪除最後一筆按鈕」相關格式：本行可修改邊框、文字或圖示顏色、背景、邊框顏色。 */
 .delete-action { border: 1px solid rgba(255,121,92,.45); color: var(--red); background: rgba(255,121,92,.06); }.delete-action:hover { border-color: var(--red); background: rgba(255,121,92,.11); }
 
+/* 「加工數量登記」的「刪除最後一筆下方－加工時間計算按鈕」相關格式。 */
+.time-tool-action { border: 1px solid rgba(255,194,58,.4); color: var(--yellow); background: rgba(255,194,58,.055); }.time-tool-action:hover { border-color: var(--yellow); background: rgba(255,194,58,.11); }
+
+/* 「加工數量登記」的「刪除最後一筆下方－基礎資料設定區塊」相關格式。 */
+.entry-bottom-tools { margin-top: 12px; }
+
 /* 「加工數量查詢」的「查詢條件」的「日期與產品編號查詢卡片」相關格式：本行可修改下方外距。 */
 .query-card { margin-bottom: 22px; }
 
@@ -582,7 +588,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .query-button:not(:disabled):hover { transform: translateY(-1px); background: #1b2429; }
 
 /* 「加工數量查詢」的「查詢操作」的「四種查詢與下載按鈕顏色」相關格式：本行可修改邊框顏色、文字或圖示顏色。 */
-.query-button.range { border-color: #496473; color: #a8d4ea; }.query-button.latest { border-color: #655885; color: #c8b7ee; }.query-button.all { border-color: #7c6429; color: var(--yellow); }.query-button.export { border-color: #356f62; color: var(--green); }
+.query-button.range { border-color: #496473; color: #a8d4ea; }.query-button.latest { border-color: #655885; color: #c8b7ee; }.query-button.all { border-color: #7c6429; color: var(--yellow); }.query-button.export { border-color: #356f62; color: var(--green); }.query-button.forecast { border-color: #74558c; color: #d4b5ed; }.query-button.danger { border-color: rgba(255,121,92,.48); color: var(--red); background: rgba(255,121,92,.045); }
+
+/* 「加工數量查詢」的「永久刪除資料按鈕下方說明」相關格式。 */
+.query-delete-note { margin: 11px 2px 0; color: #876f6a; font-size: 12px; line-height: 1.55; }
 
 /* 「加工數量查詢」的「永久刪除產品資料」的「整個警告區塊」相關格式：本行可修改排列方式、垂直對齊、水平對齊、元件間距、上方外距、內距、邊框、圓角、背景。 */
 .query-danger-zone { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 22px; padding: 14px; border: 1px solid rgba(255,121,92,.23); border-radius: 7px; background: rgba(255,121,92,.035); }
@@ -657,7 +666,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .production-table.compact { min-width: 600px; }.production-table tfoot td { background: rgba(255,221,53,.11); color: var(--yellow); font-weight: 850; }
 
 /* 「加工數量查詢」的「查詢結果」的「刪除操作欄」相關格式：本行可修改寬度。 */
-.production-table .record-action-column { width: 104px; }
+.production-table .record-action-column { width: 178px; }
 
 /* 「加工數量查詢－查詢最後一筆與其他結果」的「操作欄位標題」：強制隱藏標題文字，只保留資料列按鈕。 */
 .production-table th.record-action-column { color: transparent; font-size: 0 !important; }
@@ -667,6 +676,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* 「加工數量查詢」的「查詢結果」的「單筆刪除按鈕」相關格式：本行可修改邊框顏色、背景、透明度、cursor、寬度。 */
 .production-row-delete:hover:not(:disabled) { border-color: var(--red); background: rgba(255,121,92,.13); }.production-row-delete:disabled { opacity: .45; cursor: wait; }.production-row-delete svg { width: 16px; }
+
+/* 「加工數量查詢結果」的「單筆編輯與刪除按鈕排列」相關格式。 */
+.production-row-actions { display: flex; align-items: center; justify-content: center; gap: 7px; }
+
+/* 「加工數量查詢結果」的「單筆編輯按鈕」相關格式。 */
+.production-row-edit { min-height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; border: 1px solid rgba(255,194,58,.4); border-radius: 5px; background: rgba(255,194,58,.055); color: var(--yellow); font-weight: 800; cursor: pointer; white-space: nowrap; }.production-row-edit:hover:not(:disabled) { border-color: var(--yellow); background: rgba(255,194,58,.12); }.production-row-edit:disabled { opacity: .45; cursor: wait; }.production-row-edit svg { width: 16px; }
 
 /* 「加工數量查詢」的「查詢結果」的「沒有資料提示」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、flex-direction、元件間距、文字或圖示顏色、寬度。 */
 .production-empty { min-height: 180px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 13px; color: #7e8c95; }.production-empty svg { width: 30px; }
@@ -819,6 +834,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「刀具資料與出入庫歷史」的「資料表格」的「刀具編號」相關格式：本行可修改文字或圖示顏色、字型／粗細／大小。 */
 .data-table .code { color: var(--yellow); font: 700 16px ui-monospace, "Cascadia Code", monospace; }
 
+/* 「出入庫與庫存盤點」的「刀具編號」：固定比照刀具資料使用黃色。 */
+.movement-table .code, .stocktake-table .code { color: var(--yellow) !important; }
+
 /* 「刀具資料與出入庫歷史」的「資料表格」的「刀具品名」相關格式：本行可修改字體粗細、最大寬度、捲動方式、text-overflow。 */
 .data-table .product-name { font-weight: 700; max-width: 310px; overflow: hidden; text-overflow: ellipsis; }
 
@@ -906,6 +924,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* 「新增／編輯刀具與大型工具」的「彈出視窗」的「大型視窗寬度」相關格式：本行可修改寬度。 */
 .modal.large { width: min(780px, 100%); }
+
+/* 「加工數量查詢」的「編輯加工紀錄彈出視窗」相關格式。 */
+.modal.production-edit-modal { width: min(680px, 100%); }
+
+/* 「加工數量查詢」的「編輯加工紀錄－總加工時間預覽」相關格式。 */
+.production-edit-total { min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; padding: 10px 14px; border: 1px solid rgba(255,194,58,.24); border-radius: 6px; background: rgba(255,194,58,.055); }.production-edit-total span { color: #91a7b3; }.production-edit-total strong { color: var(--yellow); font: 800 20px ui-monospace, monospace; }
 
 /* 「整個網站」的「所有彈出視窗」的「標題列與關閉按鈕」相關格式：本行可修改排列方式、垂直對齊、水平對齊、下方外距。 */
 .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
@@ -2591,4 +2615,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版－庫存盤點」的「備註與更新按鈕分隔線」：依畫面排列順序讓最下方按鈕不顯示底線。 */
   .stocktake-table tbody td:nth-child(9) { border-bottom: 1px solid #252e33; }
   .stocktake-table tbody td:nth-child(8) { border-bottom: 0; }
+
+  /* 「手機版－加工數量查詢結果」的「單筆編輯與刪除按鈕」：兩個按鈕等寬並排。 */
+  .production-row-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .production-row-actions .production-row-edit,
+  .production-row-actions .production-row-delete { width: 100%; min-height: 36px; padding: 0 7px; font-size: 18px !important; }
+
+  /* 「手機版－加工數量查詢」的「永久刪除資料說明」：維持容易閱讀但不搶過操作按鈕。 */
+  .query-delete-note { font-size: 13px; }
 }
