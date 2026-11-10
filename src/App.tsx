@@ -1157,8 +1157,8 @@ function TableScrollControls() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
   const scrollToBottom = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
   return <nav className="table-scroll-controls" aria-label="表格快速捲動">
-    <button type="button" onClick={scrollToTop} aria-label="回到頁面最頂端" title="回到最頂端"><ChevronUp /><span>頂端</span></button>
-    <button type="button" onClick={scrollToBottom} aria-label="前往頁面最底端" title="前往最底端"><ChevronDown /><span>底端</span></button>
+    <button type="button" onClick={scrollToTop} aria-label="回到頁面最頂端" title="回到最頂端"><ChevronUp /></button>
+    <button type="button" onClick={scrollToBottom} aria-label="前往頁面最底端" title="前往最底端"><ChevronDown /></button>
   </nav>
 }
 
