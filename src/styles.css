@@ -2792,3 +2792,98 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .barcode-link-existing > .button { width: 100%; }
   .product-barcode { font-size: 12px; }
 }
+
+/* 「全站」的「開啟 iPhone 鍵盤顯示／隱藏 QR Code 浮動按鈕」相關格式：登入頁、加工頁與庫存頁都可使用。 */
+.ios-keyboard-toggle-fab {
+  position: fixed;
+  z-index: 70;
+  left: 22px;
+  bottom: 22px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid rgba(126, 181, 202, .48);
+  border-radius: 8px;
+  background: rgba(13, 21, 25, .96);
+  color: #9ed9ee;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .48);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+.ios-keyboard-toggle-fab:hover { border-color: #9ed9ee; background: #17242a; }
+.ios-keyboard-toggle-fab svg { width: 20px; height: 20px; }
+
+/* 「iPhone 鍵盤顯示／隱藏」的「QR Code 彈出視窗整體寬度」相關格式。 */
+.modal.ios-keyboard-toggle-modal { width: min(480px, 100%); }
+
+/* 「iPhone 鍵盤顯示／隱藏」的「操作說明、QR Code 與安全提示」相關格式。 */
+.ios-keyboard-toggle-content { display: grid; gap: 16px; }
+.ios-keyboard-toggle-intro {
+  margin: -4px 0 0;
+  color: #a7b5bc;
+  line-height: 1.7;
+}
+.ios-keyboard-toggle-figure {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid rgba(126, 181, 202, .34);
+  border-radius: 9px;
+  background: #0a1013;
+}
+.ios-keyboard-toggle-figure img {
+  width: min(300px, 100%);
+  aspect-ratio: 1;
+  display: block;
+  border: 10px solid #fff;
+  border-radius: 7px;
+  background: #fff;
+  image-rendering: pixelated;
+}
+.ios-keyboard-toggle-figure figcaption {
+  color: #dbe5e8;
+  font-weight: 750;
+  line-height: 1.55;
+  text-align: center;
+}
+.ios-keyboard-toggle-help {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0;
+  padding: 12px 13px;
+  border: 1px solid rgba(61, 204, 179, .28);
+  border-radius: 7px;
+  background: rgba(61, 204, 179, .06);
+  color: #91cfc4;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.ios-keyboard-toggle-help svg { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 2px; }
+
+@media (max-width: 620px) {
+  /* 「手機版－全站」的「iPhone 鍵盤 QR Code 浮動按鈕」相關格式：只顯示鍵盤圖示以免遮住頁面內容。 */
+  .ios-keyboard-toggle-fab {
+    left: 10px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    width: 44px;
+    min-height: 44px;
+    padding: 0;
+  }
+  .ios-keyboard-toggle-fab span { display: none; }
+
+  /* 「手機版－iPhone 鍵盤顯示／隱藏」的「QR Code 尺寸與說明文字」相關格式。 */
+  .modal.ios-keyboard-toggle-modal { max-height: 96vh; }
+  .ios-keyboard-toggle-intro { font-size: 15px; }
+  .ios-keyboard-toggle-figure { padding: 14px; }
+  .ios-keyboard-toggle-figure img { width: min(270px, 100%); border-width: 8px; }
+  .ios-keyboard-toggle-figure figcaption { font-size: 15px; }
+}

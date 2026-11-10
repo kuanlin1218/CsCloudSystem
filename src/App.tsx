@@ -3,7 +3,7 @@ import type { Session, User } from '@supabase/supabase-js'
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
   Calculator, Camera, ChevronLeft, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
-  FileSpreadsheet, FileUp, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, Wrench, X,
+  FileSpreadsheet, FileUp, Keyboard, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, Wrench, X,
   ScanBarcode,
 } from 'lucide-react'
 import { isDemoMode, supabase } from './lib/supabase'
@@ -95,14 +95,16 @@ export default function App() {
     setGuestMode(false)
   }
 
-  if (isDemoMode) return <AuthenticatedApp session={null} />
-  if (guestMode) return <AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />
-  if (!authReady) return <LoadingScreen label="正在確認安全登入狀態…" />
-  if (!session) return <LoginScreen initialMessage={authMessage} onGuest={enterGuestMode} />
+  const withIosKeyboardToggle = (screen: ReactNode) => <>{screen}<IosKeyboardToggle /></>
+
+  if (isDemoMode) return withIosKeyboardToggle(<AuthenticatedApp session={null} />)
+  if (guestMode) return withIosKeyboardToggle(<AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />)
+  if (!authReady) return withIosKeyboardToggle(<LoadingScreen label="正在確認安全登入狀態…" />)
+  if (!session) return withIosKeyboardToggle(<LoginScreen initialMessage={authMessage} onGuest={enterGuestMode} />)
   if (forcePasswordSetup || session.user.user_metadata?.password_configured !== true) {
-    return <PasswordSetupScreen session={session} complete={(user) => { setForcePasswordSetup(false); setSession({ ...session, user }) }} />
+    return withIosKeyboardToggle(<PasswordSetupScreen session={session} complete={(user) => { setForcePasswordSetup(false); setSession({ ...session, user }) }} />)
   }
-  return <AuthenticatedApp session={session} />
+  return withIosKeyboardToggle(<AuthenticatedApp session={session} />)
 }
 
 function LoadingScreen({ label }: { label: string }) {
@@ -767,6 +769,25 @@ function StockButtons({ openStock }: { openStock: (type: MovementType) => void }
 
 function ScanButton({ openScanner }: { openScanner: () => void }) {
   return <button className="button scan-button" type="button" onClick={openScanner}><ScanBarcode />掃描條碼</button>
+}
+
+function IosKeyboardToggle() {
+  const [open, setOpen] = useState(false)
+  return <>
+    <button className="ios-keyboard-toggle-fab" type="button" onClick={() => setOpen(true)} aria-label="開啟 iPhone 鍵盤顯示與隱藏 QR Code" title="iPhone 鍵盤切換碼">
+      <Keyboard/><span>iOS 鍵盤</span>
+    </button>
+    {open && <Modal title="iPhone 鍵盤顯示／隱藏" close={() => setOpen(false)} size="ios-keyboard-toggle-modal">
+      <div className="ios-keyboard-toggle-content">
+        <p className="ios-keyboard-toggle-intro">XB-6208-RB 與 iPhone 藍牙連線時，使用掃描器掃描下方 QR Code，即可切換手機鍵盤的顯示或隱藏。</p>
+        <figure className="ios-keyboard-toggle-figure">
+          <img src={`${import.meta.env.BASE_URL}ios-keyboard-toggle-qr.png`} alt="XB-6208-RB 的 iOS 鍵盤顯示與隱藏設定 QR Code"/>
+          <figcaption>鍵盤隱藏時掃描會顯示；鍵盤顯示時再次掃描會隱藏。</figcaption>
+        </figure>
+        <p className="ios-keyboard-toggle-help"><ShieldCheck/>這只是掃描器設定碼，不會新增、修改或刪除網站資料。掃描後若鍵盤沒有立刻出現，請重新點一下輸入框。</p>
+      </div>
+    </Modal>}
+  </>
 }
 
 function Dashboard({ products, movements, loading, openStock, openScanner, readOnly }: { products: Product[]; movements: Movement[]; loading: boolean; openStock: (t: MovementType) => void; openScanner: () => void; readOnly: boolean }) {

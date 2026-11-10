@@ -471,6 +471,18 @@ SQL：需要執行 supabase/enable-product-barcodes.sql。
 GitHub Summary：新增手機條碼掃描與刀具綁定功能。
 
 
+2026-11-10
+修改內容：將 XB-6208-RB 的 iOS 鍵盤顯示／隱藏 QR Code 放入網站；登入前與登入後全站左下角皆可開啟，手機版以鍵盤圖示顯示，掃描後可切換 iPhone 系統鍵盤，不必再找紙本說明書。
+修改檔案：
+- src/App.tsx：第 98～107、774～790 行附近，讓登入、載入、訪客及系統頁面共用 iOS 鍵盤切換入口，並新增 QR Code 操作視窗。
+- src/styles.css：第 2796～2889 行附近，新增全站浮動鍵盤按鈕、QR Code 視窗及手機版尺寸樣式，保留深色格線網站風格。
+- public/ios-keyboard-toggle-qr.png：新增，從 XB-6208-RB 說明圖片裁切的 iOS 鍵盤顯示／隱藏設定碼。
+- README.md：功能清單、專案結構與 iPhone 鍵盤疑難排解加入網站內設定碼說明。
+- 專案修改紀錄.txt：新增本次修改紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：新增 iOS 鍵盤切換 QR Code。
+
+
 【之後每次追加格式】
 
 YYYY-MM-DD
