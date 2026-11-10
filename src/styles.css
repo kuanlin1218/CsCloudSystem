@@ -2793,39 +2793,41 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .product-barcode { font-size: 12px; }
 }
 
-/* 「全站」的「開啟 iPhone 鍵盤顯示／隱藏 QR Code 浮動按鈕」相關格式：登入頁、加工頁與庫存頁都可使用。 */
-.ios-keyboard-toggle-fab {
-  position: fixed;
-  z-index: 70;
-  left: 22px;
-  bottom: 22px;
-  min-height: 44px;
-  display: inline-flex;
+/* 「掃描刀具條碼」的「展開 iOS 鍵盤顯示／隱藏設定碼按鈕」相關格式。 */
+.ios-keyboard-toggle-inline {
+  width: 100%;
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 14px;
-  border: 1px solid rgba(126, 181, 202, .48);
-  border-radius: 8px;
-  background: rgba(13, 21, 25, .96);
+  gap: 9px;
+  margin: 0 0 14px;
+  padding: 0 13px;
+  border: 1px solid rgba(126, 181, 202, .4);
+  border-radius: 7px;
+  background: rgba(126, 181, 202, .07);
   color: #9ed9ee;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .48);
   font: inherit;
   font-size: 14px;
   font-weight: 800;
+  text-align: left;
   cursor: pointer;
-  backdrop-filter: blur(10px);
 }
-.ios-keyboard-toggle-fab:hover { border-color: #9ed9ee; background: #17242a; }
-.ios-keyboard-toggle-fab svg { width: 20px; height: 20px; }
+.ios-keyboard-toggle-inline:hover { border-color: #9ed9ee; background: rgba(126, 181, 202, .12); }
+.ios-keyboard-toggle-inline svg { width: 19px; height: 19px; }
 
-/* 「iPhone 鍵盤顯示／隱藏」的「QR Code 彈出視窗整體寬度」相關格式。 */
-.modal.ios-keyboard-toggle-modal { width: min(480px, 100%); }
-
-/* 「iPhone 鍵盤顯示／隱藏」的「操作說明、QR Code 與安全提示」相關格式。 */
-.ios-keyboard-toggle-content { display: grid; gap: 16px; }
+/* 「掃描刀具條碼」的「iOS 鍵盤設定碼展開區塊」相關格式。 */
+.ios-keyboard-toggle-panel {
+  display: grid;
+  gap: 13px;
+  margin: 0 0 16px;
+  padding: 14px;
+  border: 1px solid rgba(126, 181, 202, .3);
+  border-radius: 8px;
+  background: #0a1013;
+}
 .ios-keyboard-toggle-intro {
-  margin: -4px 0 0;
+  margin: 0;
   color: #a7b5bc;
   line-height: 1.7;
 }
@@ -2834,13 +2836,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   justify-items: center;
   gap: 12px;
   margin: 0;
-  padding: 18px;
+  padding: 14px;
   border: 1px solid rgba(126, 181, 202, .34);
   border-radius: 9px;
   background: #0a1013;
 }
 .ios-keyboard-toggle-figure img {
-  width: min(300px, 100%);
+  width: min(280px, 100%);
   aspect-ratio: 1;
   display: block;
   border: 10px solid #fff;
@@ -2870,20 +2872,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .ios-keyboard-toggle-help svg { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 2px; }
 
 @media (max-width: 620px) {
-  /* 「手機版－全站」的「iPhone 鍵盤 QR Code 浮動按鈕」相關格式：只顯示鍵盤圖示以免遮住頁面內容。 */
-  .ios-keyboard-toggle-fab {
-    left: 10px;
-    bottom: calc(12px + env(safe-area-inset-bottom));
-    width: 44px;
-    min-height: 44px;
-    padding: 0;
-  }
-  .ios-keyboard-toggle-fab span { display: none; }
-
-  /* 「手機版－iPhone 鍵盤顯示／隱藏」的「QR Code 尺寸與說明文字」相關格式。 */
-  .modal.ios-keyboard-toggle-modal { max-height: 96vh; }
+  /* 「手機版－掃描刀具條碼」的「iOS 鍵盤設定碼按鈕與展開內容」相關格式。 */
+  .ios-keyboard-toggle-inline { min-height: 44px; padding: 0 11px; font-size: 14px; }
+  .ios-keyboard-toggle-panel { padding: 12px; }
   .ios-keyboard-toggle-intro { font-size: 15px; }
-  .ios-keyboard-toggle-figure { padding: 14px; }
-  .ios-keyboard-toggle-figure img { width: min(270px, 100%); border-width: 8px; }
+  .ios-keyboard-toggle-figure { padding: 12px; }
+  .ios-keyboard-toggle-figure img { width: min(260px, 100%); border-width: 8px; }
   .ios-keyboard-toggle-figure figcaption { font-size: 15px; }
 }

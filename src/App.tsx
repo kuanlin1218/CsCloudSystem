@@ -95,16 +95,14 @@ export default function App() {
     setGuestMode(false)
   }
 
-  const withIosKeyboardToggle = (screen: ReactNode) => <>{screen}<IosKeyboardToggle /></>
-
-  if (isDemoMode) return withIosKeyboardToggle(<AuthenticatedApp session={null} />)
-  if (guestMode) return withIosKeyboardToggle(<AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />)
-  if (!authReady) return withIosKeyboardToggle(<LoadingScreen label="正在確認安全登入狀態…" />)
-  if (!session) return withIosKeyboardToggle(<LoginScreen initialMessage={authMessage} onGuest={enterGuestMode} />)
+  if (isDemoMode) return <AuthenticatedApp session={null} />
+  if (guestMode) return <AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />
+  if (!authReady) return <LoadingScreen label="正在確認安全登入狀態…" />
+  if (!session) return <LoginScreen initialMessage={authMessage} onGuest={enterGuestMode} />
   if (forcePasswordSetup || session.user.user_metadata?.password_configured !== true) {
-    return withIosKeyboardToggle(<PasswordSetupScreen session={session} complete={(user) => { setForcePasswordSetup(false); setSession({ ...session, user }) }} />)
+    return <PasswordSetupScreen session={session} complete={(user) => { setForcePasswordSetup(false); setSession({ ...session, user }) }} />
   }
-  return withIosKeyboardToggle(<AuthenticatedApp session={session} />)
+  return <AuthenticatedApp session={session} />
 }
 
 function LoadingScreen({ label }: { label: string }) {
@@ -771,25 +769,6 @@ function ScanButton({ openScanner }: { openScanner: () => void }) {
   return <button className="button scan-button" type="button" onClick={openScanner}><ScanBarcode />掃描條碼</button>
 }
 
-function IosKeyboardToggle() {
-  const [open, setOpen] = useState(false)
-  return <>
-    <button className="ios-keyboard-toggle-fab" type="button" onClick={() => setOpen(true)} aria-label="開啟 iPhone 鍵盤顯示與隱藏 QR Code" title="iPhone 鍵盤切換碼">
-      <Keyboard/><span>iOS 鍵盤</span>
-    </button>
-    {open && <Modal title="iPhone 鍵盤顯示／隱藏" close={() => setOpen(false)} size="ios-keyboard-toggle-modal">
-      <div className="ios-keyboard-toggle-content">
-        <p className="ios-keyboard-toggle-intro">XB-6208-RB 與 iPhone 藍牙連線時，使用掃描器掃描下方 QR Code，即可切換手機鍵盤的顯示或隱藏。</p>
-        <figure className="ios-keyboard-toggle-figure">
-          <img src={`${import.meta.env.BASE_URL}ios-keyboard-toggle-qr.png`} alt="XB-6208-RB 的 iOS 鍵盤顯示與隱藏設定 QR Code"/>
-          <figcaption>鍵盤隱藏時掃描會顯示；鍵盤顯示時再次掃描會隱藏。</figcaption>
-        </figure>
-        <p className="ios-keyboard-toggle-help"><ShieldCheck/>這只是掃描器設定碼，不會新增、修改或刪除網站資料。掃描後若鍵盤沒有立刻出現，請重新點一下輸入框。</p>
-      </div>
-    </Modal>}
-  </>
-}
-
 function Dashboard({ products, movements, loading, openStock, openScanner, readOnly }: { products: Product[]; movements: Movement[]; loading: boolean; openStock: (t: MovementType) => void; openScanner: () => void; readOnly: boolean }) {
   const month = today().slice(0, 7)
   const inbound = movements.filter((m) => m.movement_type === 'in' && m.movement_date.startsWith(month))
@@ -1053,6 +1032,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
   const [selectedProductId, setSelectedProductId] = useState('')
   const [error, setError] = useState('')
   const [linking, setLinking] = useState(false)
+  const [keyboardQrOpen, setKeyboardQrOpen] = useState(false)
   const normalizedBarcode = barcode.trim().toLowerCase()
   const matchedProduct = products.find((product) => product.barcode?.trim().toLowerCase() === normalizedBarcode)
     || products.find((product) => product.code.toLowerCase() === normalizedBarcode)
@@ -1124,6 +1104,17 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
 
   return <Modal title="掃描刀具條碼" close={() => { stopCamera(); close() }} size="barcode-scanner-modal">
     <p className="barcode-scanner-intro">將條碼放在框線中央。第一次使用時，請允許網站使用 iPhone 相機。</p>
+    <button className="ios-keyboard-toggle-inline" type="button" onClick={() => setKeyboardQrOpen((current) => !current)} aria-expanded={keyboardQrOpen}>
+      <Keyboard/><span>XB-6208-RB：顯示／隱藏 iOS 鍵盤</span>{keyboardQrOpen ? <ChevronUp/> : <ChevronDown/>}
+    </button>
+    {keyboardQrOpen && <section className="ios-keyboard-toggle-panel">
+      <p className="ios-keyboard-toggle-intro">使用 XB-6208-RB 掃描下方設定碼，即可切換 iPhone 鍵盤。</p>
+      <figure className="ios-keyboard-toggle-figure">
+        <img src={`${import.meta.env.BASE_URL}ios-keyboard-toggle-qr.png`} alt="XB-6208-RB 的 iOS 鍵盤顯示與隱藏設定 QR Code"/>
+        <figcaption>鍵盤隱藏時掃描會顯示；鍵盤顯示時再次掃描會隱藏。</figcaption>
+      </figure>
+      <p className="ios-keyboard-toggle-help"><ShieldCheck/>這只是掃描器設定碼，不會新增、修改或刪除網站資料。掃描後若鍵盤沒有立刻出現，請重新點一下輸入框。</p>
+    </section>}
     <div className={`barcode-camera ${cameraActive ? 'is-active' : ''}`}>
       <video ref={videoRef} muted playsInline aria-label="條碼掃描相機畫面" />
       <span className="barcode-target" aria-hidden="true" />

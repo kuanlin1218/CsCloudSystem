@@ -483,6 +483,17 @@ SQL：不需要執行 SQL。
 GitHub Summary：新增 iOS 鍵盤切換 QR Code。
 
 
+2026-11-10
+修改內容：依操作流程移除全站左下角的 iOS 鍵盤切換按鈕，改將設定 QR Code 收納在「掃描刀具條碼」視窗內；需要時展開掃描，平常不占用其他頁面。
+修改檔案：
+- src/App.tsx：移除登入前後的全站鍵盤切換入口，並在 BarcodeScannerModal 加入可展開／收合的 iOS 鍵盤設定碼區塊。
+- src/styles.css：移除固定浮動按鈕樣式，改為掃描刀具視窗內按鈕與展開區塊的電腦／手機版格式。
+- README.md：將使用說明改為從「掃描刀具條碼」視窗開啟設定碼。
+- 專案修改紀錄.txt：新增本次調整紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：將 iOS 鍵盤切換碼移至掃描視窗。
+
+
 【之後每次追加格式】
 
 YYYY-MM-DD
