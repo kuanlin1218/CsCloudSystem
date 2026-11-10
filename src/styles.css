@@ -1373,7 +1373,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .production-field-row > select { padding-inline: 10px 30px; font-size: 20px; text-align: left; text-align-last: left; background-position: calc(100% - 16px) 51%, calc(100% - 10px) 51%; }
 
   /* 「手機版」的「加工數量登記與加工數量查詢－可輸入選單」的「輸入框」相關格式：本行可修改最小高度、左側內距、右側內距、文字對齊、字體大小。 */
-  .production-field-row .editable-combo input { min-height: 52px; padding-left: 10px; padding-right: 34px; text-align: left; font-size: 16px; }
+  .production-field-row .editable-combo input { min-height: 52px; padding-left: 10px; padding-right: 34px; text-align: left; font-size: 20px; }
 
   /* 「手機版」的「加工數量登記－基礎資料」的「管理產品編號與機台區塊」相關格式：本行可修改垂直對齊、flex-direction、排列方式、欄位數量與寬度、水平對齊。 */
   .production-data-tools { align-items: stretch; flex-direction: column; }.production-data-tools > div:last-child { display: grid; grid-template-columns: 1fr 1fr; }.production-data-tools button { justify-content: center; }
@@ -1592,7 +1592,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .production-field-row > select { font-size: 20px; }
 
   /* 「手機版」的「加工數量登記與加工數量查詢」的「可以輸入關鍵字的下拉選單」字體大小。 */
-  .production-field-row .editable-combo input { font-size: 16px; }
+  .production-field-row .editable-combo input { font-size: 20px; }
 
   /* 「手機版」的「加工數量登記」的「管理產品編號與機台標題」字體大小。 */
   .production-data-tools > div:first-child span { font-size: 16px; }
