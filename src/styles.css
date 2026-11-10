@@ -1186,6 +1186,24 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「整個網站」的「操作完成」的「右下角成功通知」相關格式：本行可修改定位方式、顯示層級、右側位置、下方位置、排列方式、垂直對齊、元件間距、最小高度、內距、邊框、圓角、背景、文字或圖示顏色、陰影。 */
 .toast { position: fixed; z-index: 200; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 18px; border: 1px solid rgba(61,204,179,.35); border-radius: 6px; background: #10211e; color: #89ead9; box-shadow: 0 10px 35px rgba(0,0,0,.5); }
 
+/* 「有表格的頁面」的「回最頂端與最底端」的「固定快速捲動按鈕外框」相關格式。 */
+.table-scroll-controls { position: fixed; z-index: 55; right: 20px; bottom: 22px; display: grid; gap: 8px; }
+
+/* 「有表格的頁面」的「回最頂端與最底端」的「兩個快速捲動按鈕」相關格式。 */
+.table-scroll-controls button { width: 54px; min-height: 50px; display: grid; place-content: center; justify-items: center; gap: 2px; padding: 4px; border: 1px solid #3b464c; border-radius: 8px; background: rgba(13,19,22,.94); color: #dbe4e8; box-shadow: 0 10px 28px rgba(0,0,0,.45); cursor: pointer; backdrop-filter: blur(10px); }
+
+/* 「有表格的頁面」的「回最頂端與最底端」的「圖示與文字」相關格式。 */
+.table-scroll-controls svg { width: 20px; }.table-scroll-controls span { font-size: 11px; font-weight: 800; }
+
+/* 「有表格的頁面」的「回最頂端」的「黃色提示樣式」相關格式。 */
+.table-scroll-controls button:first-child { border-color: rgba(255,194,58,.45); color: var(--yellow); }
+
+/* 「有表格的頁面」的「到最底端」的「綠色提示樣式」相關格式。 */
+.table-scroll-controls button:last-child { border-color: rgba(61,204,179,.42); color: var(--green); }
+
+/* 「有表格的頁面」的「回最頂端與最底端」的「滑鼠移入效果」相關格式。 */
+.table-scroll-controls button:hover { transform: translateY(-1px); background: #1a2226; }
+
 /* 「整個網站」的「操作完成」的「右下角成功通知」相關格式：本行可修改寬度。 */
 .toast svg { width: 19px; }
 
@@ -2631,4 +2649,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .stocktake-table td.number .known-price {
   color: inherit !important;
   font: inherit !important;
+}
+
+@media (max-width: 620px) {
+  /* 「手機版－有表格的頁面」的「回最頂端與最底端」：縮小尺寸並貼近右下角。 */
+  .table-scroll-controls { right: 10px; bottom: calc(12px + env(safe-area-inset-bottom)); gap: 6px; }
+  .table-scroll-controls button { width: 46px; min-height: 44px; border-radius: 7px; }
+  .table-scroll-controls svg { width: 18px; }
+  .table-scroll-controls span { font-size: 10px; }
 }

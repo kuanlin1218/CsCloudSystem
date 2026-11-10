@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import {
-  ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown,
+  ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
   Calculator, ChevronLeft, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
   FileSpreadsheet, FileUp, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, Wrench, X,
 } from 'lucide-react'
@@ -265,6 +265,7 @@ function AuthenticatedApp({ session }: { session: Session | null }) {
   })
   const isHome = page === 'home'
   const isInventory = page === 'dashboard' || page === 'movements' || page === 'stocktake' || page === 'products'
+  const showTableScrollControls = page === 'production-query' || page === 'movements' || page === 'stocktake' || page === 'products'
   const productionEntryProductCodes = useMemo(() => productionOptions.filter((option) => option.option_type === 'product').map((option) => option.value).sort(), [productionOptions])
   const productionQueryProductCodes = useMemo(() => [...new Set([
     ...productionEntryProductCodes,
@@ -345,6 +346,8 @@ function AuthenticatedApp({ session }: { session: Session | null }) {
           if (deleted) await afterSave('商品已刪除')
         }} />}
       </main>
+
+      {showTableScrollControls && <TableScrollControls />}
 
       {stockModal && <StockModal type={stockModal.type} initialProductId={stockModal.productId} products={products} close={() => setStockModal(null)} switchType={(type) => setStockModal((current) => current ? { ...current, type } : null)} save={async (input) => {
         await registerMovement(input); setStockModal(null); await afterSave(input.movement_type === 'in' ? '入庫完成' : '出庫完成')
@@ -1149,6 +1152,15 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
 }
 
 function Field({ label, wide, children }: { label: string; wide?: boolean; children: ReactNode }) { return <label className={`field ${wide ? 'wide' : ''}`}><span>{label}</span>{children}</label> }
+
+function TableScrollControls() {
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+  const scrollToBottom = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
+  return <nav className="table-scroll-controls" aria-label="表格快速捲動">
+    <button type="button" onClick={scrollToTop} aria-label="回到頁面最頂端" title="回到最頂端"><ChevronUp /><span>頂端</span></button>
+    <button type="button" onClick={scrollToBottom} aria-label="前往頁面最底端" title="前往最底端"><ChevronDown /><span>底端</span></button>
+  </nav>
+}
 
 function Modal({ title, close, size = '', children }: { title: string; close: () => void; size?: string; children: ReactNode }) {
   useEffect(() => { const fn = (e: KeyboardEvent) => e.key === 'Escape' && close(); window.addEventListener('keydown', fn); return () => window.removeEventListener('keydown', fn) }, [close])
