@@ -19,6 +19,15 @@ const blankProduct = (): ProductInput => ({
   category: '刀片', unit: '片', notes: '', initial_quantity: 0, initial_unit_price: 0, purchased_at: today(),
 })
 
+const previousLocalDate = () => {
+  const date = new Date()
+  date.setDate(date.getDate() - 1)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const PAGE_VALUES: Page[] = ['home', 'production-entry', 'production-query', 'dashboard', 'movements', 'stocktake', 'products']
 const preventInputEnterSubmit = (event: ReactKeyboardEvent<HTMLFormElement>) => {
   if (event.key !== 'Enter' || event.nativeEvent.isComposing || !(event.target instanceof HTMLInputElement)) return
@@ -410,7 +419,7 @@ function ProductionHeader({ title, eyebrow, icon, goHome }: { title: string; eye
 }
 
 function ProductionEntryPage({ records, productCodes, machines, loading, goHome, addOption, onSave, onDeleteLast }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; goHome: () => void; addOption: (type: ProductionOptionType) => void; onSave: (input: ProductionInput) => Promise<void>; onDeleteLast: (record: ProductionRecord) => Promise<void> }) {
-  const [form, setForm] = useState<ProductionInput>({ work_date: today(), product_code: '', machine: '', hours: 0, minutes: 0, quantity: 0, notes: '' })
+  const [form, setForm] = useState<ProductionInput>({ work_date: previousLocalDate(), product_code: '', machine: '', hours: 0, minutes: 0, quantity: 0, notes: '' })
   const [showTimeCalculator, setShowTimeCalculator] = useState(false)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
