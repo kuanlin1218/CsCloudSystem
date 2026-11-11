@@ -159,7 +159,7 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
       </div>
       <form onSubmit={submit}>
         <Field label="登入名稱" wide><input autoFocus autoCapitalize="none" autoCorrect="off" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入登入名稱" disabled={busy}/></Field>
-        <Field label="密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 4 位數字" disabled={busy}/></Field>
+        <Field label="密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={busy}/></Field>
         {message && <p className={success ? 'admin-success' : 'form-error'}>{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
@@ -204,7 +204,7 @@ function PasswordSetupScreen({ session, complete }: { session: Session; complete
         <p className="auth-copy">登入名稱固定為 <b>{OWNER_USERNAME}</b>。請設定至少 4 位數字的新密碼。</p>
       </div>
       <form onSubmit={submit}>
-        <Field label="新密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 4 位數字" disabled={busy}/></Field>
+        <Field label="新密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={busy}/></Field>
         <Field label="再次輸入新密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value.replace(/\D/g, ''))} placeholder="再次輸入相同數字密碼" disabled={busy}/></Field>
         {message && <p className="form-error">{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在安全儲存…' : '儲存密碼並進入系統'}</button>
@@ -751,7 +751,7 @@ function ProductionOptionModal({ type, values, close, save, remove }: { type: Pr
   }
   return <Modal title={`管理${label}`} close={close}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
-      <Field label={label} wide><input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder={type === 'product' ? '例如 OAS-025<SP263735>' : '例如 MT04'} /></Field>
+      <Field label={label} wide><input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder={type === 'product' ? '產品編號<訂單編號>' : '例如 MT04'} /></Field>
       <p className="option-help">新增後會出現在加工登記選單；刪除不會影響過去的加工紀錄。</p>
       {error && <div className="form-error">{error}</div>}
       <button className="button primary option-add-button" disabled={saving || !!removing} type="submit"><Plus />{saving ? '新增中…' : `新增${label}`}</button>
@@ -919,7 +919,7 @@ function StocktakePage({ products, loading, add, openScanner, focusProductId, on
     </div>
     <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="搜尋編號、品名、廠牌、供應商"/><label className="select-wrap"><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((value) => <option key={value}>{value}</option>)}</select><ChevronDown /></label></div>
     {pageError && <div className="form-error stocktake-error">{pageError}</div>}
-    {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table stocktake-table"><thead><tr><th>編號</th><th>品名</th><th>分類</th><th>單價</th><th className="number">庫存</th><th>實際盤點數量</th><th className="number">差異</th><th aria-label="更新" /><th>盤點備註</th></tr></thead><tbody>
+    {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table stocktake-table"><thead><tr><th>編號</th><th>品名</th><th>分類</th><th>單價</th><th className="number">庫存</th><th className="number">實際數量</th><th className="number">差異</th><th aria-label="更新" /><th>盤點備註</th></tr></thead><tbody>
       {filtered.length === 0 ? <EmptyRow colSpan={9} label="沒有符合條件的刀具"/> : filtered.map((product) => {
         const difference = differenceFor(product)
         const invalid = difference === null
@@ -930,9 +930,9 @@ function StocktakePage({ products, loading, add, openScanner, focusProductId, on
           <td className="number">{product.unit_price > 0 ? <span className="known-price">{formatMoney(product.unit_price)}</span> : <span className="unknown-price">未設定價格</span>}</td>
           <td className="number quantity">{formatNumber(product.stock_quantity)} <small>{product.unit}</small></td>
           <td><label className={`stocktake-quantity ${invalid ? 'invalid' : ''}`}><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={actualFor(product)} onFocus={(event) => event.currentTarget.select()} onChange={(event) => { setDrafts((current) => ({ ...current, [product.id]: event.target.value })); setPageError('') }} aria-label={`${product.name} 實際盤點數量`}/><span>{product.unit}</span></label></td>
-          <td className={`number stocktake-difference ${difference === null ? 'invalid' : difference > 0 ? 'positive' : difference < 0 ? 'negative' : ''}`}>{difference === null ? '格式錯誤' : difference === 0 ? '一致' : `${difference > 0 ? '+' : ''}${formatNumber(difference)}`}</td>
-          <td><button className="stocktake-save" onClick={() => void save(product)} disabled={savingId !== '' || invalid || difference === 0}><Save />{savingId === product.id ? '儲存中' : '更新數量'}</button></td>
-          <td><input className="stocktake-note" value={notes[product.id] || ''} onChange={(event) => setNotes((current) => ({ ...current, [product.id]: event.target.value }))} placeholder="選填，例如盤點位置" /></td>
+          <td className={`number stocktake-difference ${difference === null ? 'invalid' : difference > 0 ? 'positive' : difference < 0 ? 'negative' : ''}`}>{difference === null ? '格式錯誤' : difference === 0 ? '0' : `${difference > 0 ? '+' : ''}${formatNumber(difference)}`}</td>
+          <td><button className="stocktake-save" onClick={() => void save(product)} disabled={savingId !== '' || invalid || difference === 0}><Save />{savingId === product.id ? '儲存中' : '更新'}</button></td>
+          <td><input className="stocktake-note" value={notes[product.id] || ''} onChange={(event) => setNotes((current) => ({ ...current, [product.id]: event.target.value }))} placeholder="選填" /></td>
         </tr>
       })}
     </tbody></table></div>}
@@ -994,9 +994,9 @@ function StockModal({ type, initialProductId, products, close, switchType, save 
       <Field label="刀具" wide><ProductPicker products={products} value={productId} onChange={setProductId}/></Field>
       {selected && <div className="stock-hint">目前庫存 <strong>{formatNumber(selected.stock_quantity)} {selected.unit}</strong></div>}
       <div className="form-grid"><Field label="數量"><input required min="1" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={type === 'in' ? '購入日期' : '出庫日期'}><input required type="date" value={date} onChange={(e) => setDate(e.target.value)}/></Field>
-      {type === 'in' && <><Field label="單價"><input required min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={price} onChange={(e) => setPrice(e.target.value)}/></Field><Field label="供應商"><EditableCombo options={supplierOptions} value={supplier} onChange={setSupplier} placeholder="選擇既有供應商或輸入新資料"/></Field></>}</div>
+      {type === 'in' && <><Field label="單價"><input required min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={price} onChange={(e) => setPrice(e.target.value)}/></Field><Field label="供應商"><EditableCombo options={supplierOptions} value={supplier} onChange={setSupplier} placeholder="選擇或輸入新供應商"/></Field></>}</div>
       {type === 'in' && <TotalPreview quantity={Number(quantity || 0)} unitPrice={Number(price || 0)} total={totalPrice}/>} 
-      <Field label="備註" wide><textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={type === 'in' ? '例如：發票號碼' : '例如：機台編號、工單號碼'}/></Field>
+      <Field label="備註" wide><textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={type === 'in' ? '選填' : '選填'}/></Field>
       {formError && <p className="form-error">{formError}</p>}
       <button disabled={busy || products.length === 0} className={`button modal-submit ${type === 'in' ? 'inbound' : 'outbound'}`}>{busy ? '處理中…' : `確認${type === 'in' ? '入庫' : '出庫'}`}</button>
     </form>
@@ -1315,18 +1315,18 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
       </Field>
       <Field label="品名（自動組合）" wide><input className="composed-name" disabled value={name || (data.category === '刀片' ? '規格-尺寸-斷屑槽-材質' : data.category === '鑽銑刀' ? '規格-尺寸-材質' : '規格')} /></Field>
       <div className="form-grid dynamic-fields">
-        <Field label="規格 *"><EditableCombo options={specificationOptions} required value={data.specification} onChange={(value) => set('specification', value.toUpperCase())} placeholder={data.category === '刀片' ? 'WNMG' : data.category === '鑽銑刀' ? 'EMM4100' : '選擇既有資料或輸入新規格'}/></Field>
-        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="尺寸 *"><EditableCombo options={sizeOptions} required value={data.size} onChange={(value) => set('size', value.toUpperCase())} placeholder={data.category === '刀片' ? '080408' : '例如 10'}/></Field>}
-        {data.category === '刀片' && <Field label="斷屑槽（無則留空）"><EditableCombo options={chipbreakerOptions} value={data.chipbreaker} onChange={(value) => set('chipbreaker', value.toUpperCase())} placeholder="選擇既有資料或輸入新值"/></Field>}
-        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="材質 *"><EditableCombo options={materialOptions} required value={data.material} onChange={(value) => set('material', value.toUpperCase())} placeholder={data.category === '刀片' ? 'PR1535' : '例如 鎢鋼'}/></Field>}
+        <Field label="規格 *"><EditableCombo options={specificationOptions} required value={data.specification} onChange={(value) => set('specification', value.toUpperCase())} placeholder={data.category === '刀片' ? 'ex. VNMG' : data.category === '鑽銑刀' ? 'ex. EMM4100' : '選擇或輸入新規格'}/></Field>
+        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="尺寸 *"><EditableCombo options={sizeOptions} required value={data.size} onChange={(value) => set('size', value.toUpperCase())} placeholder={data.category === '刀片' ? 'ex. 160404' : '輸入切削直徑值'}/></Field>}
+        {data.category === '刀片' && <Field label="斷屑槽（無則留空）"><EditableCombo options={chipbreakerOptions} value={data.chipbreaker} onChange={(value) => set('chipbreaker', value.toUpperCase())} placeholder="ex. MS"/></Field>}
+        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="材質 *"><EditableCombo options={materialOptions} required value={data.material} onChange={(value) => set('material', value.toUpperCase())} placeholder={data.category === '刀片' ? 'ex. PR1535' : 'ex. 鎢鋼'}/></Field>}
       </div>
       <div className="form-grid common-fields">
-        <Field label="廠牌"><EditableCombo options={brandOptions} value={data.brand} onChange={(value) => set('brand', value)} placeholder="選擇既有廠牌或輸入新資料"/></Field>
-        <Field label="供應商"><EditableCombo options={supplierOptions} value={data.supplier} onChange={(value) => set('supplier', value)} placeholder="選擇既有供應商或輸入新資料"/></Field>
+        <Field label="廠牌"><EditableCombo options={brandOptions} value={data.brand} onChange={(value) => set('brand', value)} placeholder="選擇或輸入新廠牌"/></Field>
+        <Field label="供應商"><EditableCombo options={supplierOptions} value={data.supplier} onChange={(value) => set('supplier', value)} placeholder="選擇或輸入新供應商"/></Field>
         <Field label="單位"><EditableCombo options={unitOptions} required value={data.unit} onChange={(value) => set('unit', value)} placeholder="片"/></Field>
       </div>
-      {!product && <fieldset className="initial-stock"><legend>目前庫存（可只填數量，單價找不到時可留空）</legend><div className="form-grid three"><Field label="數量"><input min="0" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_quantity || ''} onChange={(e) => set('initial_quantity', Number(e.target.value))}/></Field><Field label="單價"><input min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_unit_price || ''} onChange={(e) => set('initial_unit_price', Number(e.target.value))} placeholder="沒有價格可留空"/></Field><Field label="購入日期"><input type="date" value={data.purchased_at} onChange={(e) => set('purchased_at', e.target.value)}/></Field></div><TotalPreview quantity={data.initial_quantity} unitPrice={data.initial_unit_price} total={initialTotalPrice}/></fieldset>}
-      <Field label="備註" wide><textarea value={data.notes} onChange={(e) => set('notes', e.target.value)} placeholder="材質、適用工件等"/></Field>
+      {!product && <fieldset className="initial-stock"><legend>目前庫存（可只填數量，單價找不到時可留空）</legend><div className="form-grid three"><Field label="數量"><input min="0" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_quantity || ''} onChange={(e) => set('initial_quantity', Number(e.target.value))}/></Field><Field label="單價"><input min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_unit_price || ''} onChange={(e) => set('initial_unit_price', Number(e.target.value))} placeholder="可留空"/></Field><Field label="購入日期"><input type="date" value={data.purchased_at} onChange={(e) => set('purchased_at', e.target.value)}/></Field></div><TotalPreview quantity={data.initial_quantity} unitPrice={data.initial_unit_price} total={initialTotalPrice}/></fieldset>}
+      <Field label="備註" wide><textarea value={data.notes} onChange={(e) => set('notes', e.target.value)} placeholder="選填"/></Field>
       {formError && <p className="form-error">{formError}</p>}
       <button disabled={busy} className="button modal-submit primary">{busy ? '儲存中…' : '儲存'}</button>
     </form>
@@ -1384,7 +1384,7 @@ function AdminDeleteModal({ request, close }: { request: AdminDeleteRequest; clo
   return <Modal title={request.title} close={() => !deleting && close(false)}>
     <div className="admin-delete-warning"><Trash2/><div><strong>此操作無法復原</strong><span>{request.description}</span></div></div>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
-      <Field label="登入密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 4 位數字" disabled={deleting}/></Field>
+      <Field label="登入密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={deleting}/></Field>
       {error && <div className="form-error">{error}</div>}
       <button className="button outbound admin-action" type="submit" disabled={deleting || password.length < 4}><Trash2/>{deleting ? '正在驗證並刪除…' : '驗證登入密碼並刪除'}</button>
     </form>
@@ -1445,7 +1445,7 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
 
   return <Modal title="資料備份／還原" close={() => !busy && close()} size="admin-data">
     <div className="admin-security-note"><LockKeyhole/><div><strong>帳號本人限定功能</strong><span>密碼由 Supabase Auth 重新驗證，不會儲存在瀏覽器或網站程式中。</span></div></div>
-    <Field label="登入密碼"><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 4 位數字" disabled={Boolean(busy)}/></Field>
+    <Field label="登入密碼"><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={Boolean(busy)}/></Field>
 
     <section className="admin-data-section">
       <div className="admin-data-heading"><Download/><div><strong>1. 匯出完整備份</strong><span>包含刀具、出入庫、加工數量與管理選項</span></div></div>
