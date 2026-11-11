@@ -503,6 +503,16 @@ SQL：不需要執行 SQL。
 GitHub Summary：查詢後自動清空條碼輸入框。
 
 
+2026-11-11
+修改內容：最佳化手機相機條碼辨識參數；預設後鏡頭、1080p、30fps 與 16:9 畫面，裝置支援時自動套用連續對焦及約 1.35 倍變焦，並增加 20～30 公分掃描距離提示。
+修改檔案：
+- src/App.tsx：BarcodeScannerModal 新增相機能力偵測與可選參數套用；更新 decodeFromConstraints 的解析度、幀率、比例與畫面說明。
+- README.md：新增相機參數與建議掃描距離說明。
+- 專案修改紀錄.txt：新增本次修改紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：最佳化手機條碼相機對焦參數。
+
+
 【之後每次追加格式】
 
 YYYY-MM-DD

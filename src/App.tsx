@@ -50,6 +50,15 @@ type AdminDeleteRequest = {
   resolve: (result: boolean) => void
 }
 
+type BarcodeCameraCapabilities = MediaTrackCapabilities & {
+  focusMode?: string[]
+  zoom?: { min: number; max: number; step: number }
+}
+type BarcodeCameraConstraintSet = MediaTrackConstraintSet & {
+  focusMode?: 'continuous'
+  zoom?: number
+}
+
 const messageFor = (error: unknown) => error instanceof Error ? error.message : (error as { message?: string })?.message || '發生未知錯誤'
 
 export default function App() {
@@ -1037,6 +1046,24 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
   const matchedProduct = products.find((product) => product.barcode?.trim().toLowerCase() === normalizedBarcode)
     || products.find((product) => product.code.toLowerCase() === normalizedBarcode)
 
+  // 「掃描刀具條碼」的「iPhone 後鏡頭連續對焦與適度變焦參數」：裝置不支援時會略過，不影響相機開啟。
+  const optimizeBarcodeCamera = async () => {
+    const stream = videoRef.current?.srcObject
+    if (!(stream instanceof MediaStream)) return
+    const track = stream.getVideoTracks()[0]
+    if (!track) return
+    const capabilities = track.getCapabilities() as BarcodeCameraCapabilities
+    const applyOptionalConstraint = async (constraint: BarcodeCameraConstraintSet) => {
+      try { await track.applyConstraints({ advanced: [constraint] }) }
+      catch { /* iPhone／瀏覽器未提供這項相機能力時維持預設設定。 */ }
+    }
+    if (capabilities.focusMode?.includes('continuous')) await applyOptionalConstraint({ focusMode: 'continuous' })
+    if (capabilities.zoom && Number.isFinite(capabilities.zoom.min) && Number.isFinite(capabilities.zoom.max)) {
+      const preferredZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.35))
+      await applyOptionalConstraint({ zoom: preferredZoom })
+    }
+  }
+
   const stopCamera = () => {
     controlsRef.current?.stop()
     controlsRef.current = null
@@ -1061,7 +1088,16 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
       const { BrowserMultiFormatReader } = await import('@zxing/browser')
       const reader = new BrowserMultiFormatReader()
       const controls = await reader.decodeFromConstraints(
-        { audio: false, video: { facingMode: { ideal: 'environment' } } },
+        {
+          audio: false,
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30, max: 30 },
+            aspectRatio: { ideal: 16 / 9 },
+          },
+        },
         videoRef.current || undefined,
         (result, _scanError, scannerControls) => {
           const value = result?.getText().trim()
@@ -1074,6 +1110,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
         },
       )
       controlsRef.current = controls
+      await optimizeBarcodeCamera()
       setCameraActive(true)
     } catch (cameraError) {
       stopCamera()
@@ -1103,7 +1140,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
   }
 
   return <Modal title="掃描刀具條碼" close={() => { stopCamera(); close() }} size="barcode-scanner-modal">
-    <p className="barcode-scanner-intro">將條碼放在框線中央。第一次使用時，請允許網站使用 iPhone 相機。</p>
+    <p className="barcode-scanner-intro">將條碼放在框線中央，建議先保持約 20～30 公分再慢慢靠近。第一次使用時，請允許網站使用 iPhone 相機。</p>
     <button className="ios-keyboard-toggle-inline" type="button" onClick={() => setKeyboardQrOpen((current) => !current)} aria-expanded={keyboardQrOpen}>
       <Keyboard/><span>XB-6208-RB：顯示／隱藏 iOS 鍵盤</span>{keyboardQrOpen ? <ChevronUp/> : <ChevronDown/>}
     </button>
