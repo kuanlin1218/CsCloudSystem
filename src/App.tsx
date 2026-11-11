@@ -503,7 +503,6 @@ function ProductionEntryPage({ records, productCodes, machines, loading, goHome,
       <div className="production-field-row"><label>機台</label><select value={form.machine} onChange={(e) => setForm({ ...form, machine: e.target.value })} required><option value="">請選擇機台</option>{machines.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
 
       <div className="time-entry-panel">
-        <div className="time-entry-head"><div><Clock3 /><span><strong>實際加工時間</strong><small>請直接輸入實際工時</small></span></div></div>
         <div className="duration-fields compact">
           <label className="actual-hours-field"><span>實際工時（時）</span><input className="actual-hours-input" type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={form.hours || ''} onChange={(e) => setForm({ ...form, hours: Math.max(0, Number(e.target.value)) })} aria-label="加工時數" /></label>
           <label className="actual-minutes-field"><span>實際工時（分）</span><input className="actual-minutes-input" type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="59" step="1" value={form.minutes || ''} onChange={(e) => setForm({ ...form, minutes: Math.max(0, Number(e.target.value)) })} aria-label="加工分鐘" /></label>

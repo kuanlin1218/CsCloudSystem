@@ -378,12 +378,6 @@
   --font-size-mobile-production-data-tools-div-first-child-small: 13px;
   /* 「手機版」的「加工數量登記」的「管理產品編號與管理機台按鈕」字體大小。｜選擇器：.production-data-tools button */
   --font-size-mobile-production-data-tools-button: 16px;
-  /* 「手機版」的「加工數量登記」的「實際加工時間標題」字體大小。｜選擇器：.time-entry-head strong */
-  --font-size-mobile-time-entry-head-strong: 13px;
-  /* 「手機版」的「加工數量登記」的「實際加工時間說明」字體大小。｜選擇器：.time-entry-head small */
-  --font-size-mobile-time-entry-head-small: 10px;
-  /* 「手機版」的「加工數量登記」的「加工時間計算按鈕」字體大小。｜選擇器：.time-entry-head > button */
-  --font-size-mobile-time-entry-head-button: 16px;
   /* 「手機版」的「加工數量登記」的「實際工時（時）欄位標題」字體大小。｜選擇器：.duration-fields label.actual-hours-field > span */
   --font-size-mobile-duration-fields-label-actual-hours-field-span: 13px;
   /* 「手機版」的「加工數量登記」的「實際工時（時）輸入框」字體大小。｜選擇器：.duration-fields input.actual-hours-input */
@@ -1229,23 +1223,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「加工數量登記」的「實際加工時間」的「整個輸入區塊」相關格式：本行可修改外距、內距、邊框、圓角、背景。 */
 .time-entry-panel { margin: 20px 0; padding: 17px; border: 1px solid #344148; border-radius: 8px; background: #0d1316; }
 
-/* 「加工數量登記」的「實際加工時間」的「標題列」相關格式：本行可修改排列方式、垂直對齊、水平對齊、元件間距。 */
-.time-entry-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+/* 「加工數量查詢」的「訂單完工預估按鈕」相關格式：本行可修改尺寸、排列、邊框、背景與文字顏色。 */
+.query-utility-bar > button { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; border: 1px solid #6b5521; border-radius: 6px; background: rgba(255,194,58,.055); color: var(--yellow); font-weight: 800; cursor: pointer; white-space: nowrap; }
 
-/* 「加工數量登記」的「實際加工時間」的「標題列」相關格式：本行可修改排列方式、垂直對齊、元件間距、寬度、文字或圖示顏色。 */
-.time-entry-head > div { display: flex; align-items: center; gap: 11px; }.time-entry-head > div > svg { width: 23px; color: var(--yellow); }
+/* 「加工數量查詢」的「訂單完工預估按鈕」滑過與圖示相關格式。 */
+.query-utility-bar > button:hover:not(:disabled) { border-color: var(--yellow); background: rgba(255,194,58,.1); }.query-utility-bar > button svg { width: 18px; }
 
-/* 「加工數量登記」的「實際加工時間」的「標題與說明文字」相關格式：本行可修改排列方式、文字或圖示顏色、上方外距。 */
-.time-entry-head strong { display: block; color: #e2e9ec; }.time-entry-head small { display: block; margin-top: 3px; color: #81919a; }
-
-/* 「加工數量登記」的「實際加工時間」的「加工時間計算按鈕」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、字體粗細、cursor、white-space。 */
-.time-entry-head > button, .query-utility-bar > button { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; border: 1px solid #6b5521; border-radius: 6px; background: rgba(255,194,58,.055); color: var(--yellow); font-weight: 800; cursor: pointer; white-space: nowrap; }
-
-/* 「加工數量登記」的「實際加工時間」的「加工時間計算按鈕」相關格式：本行可修改邊框顏色、背景、寬度。 */
-.time-entry-head > button:hover, .query-utility-bar > button:hover:not(:disabled) { border-color: var(--yellow); background: rgba(255,194,58,.1); }.time-entry-head > button svg, .query-utility-bar > button svg { width: 18px; }
-
-/* 「加工數量登記」的「實際加工時間」的「輸入欄位上方間距」相關格式：本行可修改上方外距。 */
-.duration-fields.compact { margin-top: 14px; }
+/* 「加工數量登記」的「實際工時輸入欄位」相關格式：移除小標題後直接從區塊頂端排列。 */
+.duration-fields.compact { margin-top: 0; }
 
 /* 「加工數量登記」的「表單底部」的「錯誤訊息」相關格式：本行可修改下方外距。 */
 .production-error { margin-bottom: 14px; }
@@ -2153,8 +2138,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版」的「加工數量登記－基礎資料」的「管理產品編號與機台區塊」相關格式：本行可修改垂直對齊、flex-direction、排列方式、欄位數量與寬度、水平對齊。 */
   .production-data-tools { align-items: stretch; flex-direction: column; }.production-data-tools > div:last-child { display: grid; grid-template-columns: 1fr 1fr; }.production-data-tools button { justify-content: center; }
 
-  /* 「手機版」的「加工數量登記－實際加工時間」的「標題列」相關格式：本行可修改垂直對齊、flex-direction、寬度、欄位數量與寬度、grid-column。 */
-  .time-entry-head, .query-utility-bar { align-items: stretch; flex-direction: column; }.time-entry-head > button, .query-utility-bar > button { width: 100%; }.duration-fields.compact { grid-template-columns: 1fr 1fr; }.duration-fields.compact > div { grid-column: 1 / -1; }
+  /* 「手機版」的「加工數量查詢工具與實際工時欄位」相關格式。 */
+  .query-utility-bar { align-items: stretch; flex-direction: column; }.query-utility-bar > button { width: 100%; }.duration-fields.compact { grid-template-columns: 1fr 1fr; }.duration-fields.compact > div { grid-column: 1 / -1; }
 
   /* 「手機版」的「加工時間計算－總工時與扣除工時」的「整列輸入區」相關格式：本行可修改欄位數量與寬度、元件間距、grid-column。 */
   .duration-row { grid-template-columns: 1fr 1fr; gap: 9px; }.duration-row > strong { grid-column: 1 / -1; }.duration-row label { grid-template-columns: 1fr auto; }
@@ -2380,17 +2365,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
   /* 「手機版」的「加工數量登記」的「管理產品編號與管理機台按鈕」字體大小。 */
   .production-data-tools button { font-size: var(--font-size-mobile-production-data-tools-button); }
-
-  /* ---------- 加工數量登記－實際加工時間 ---------- */
-
-  /* 「手機版」的「加工數量登記」的「實際加工時間標題」字體大小。 */
-  .time-entry-head strong { font-size: var(--font-size-mobile-time-entry-head-strong); }
-
-  /* 「手機版」的「加工數量登記」的「實際加工時間說明」字體大小。 */
-  .time-entry-head small { font-size: var(--font-size-mobile-time-entry-head-small); }
-
-  /* 「手機版」的「加工數量登記」的「加工時間計算按鈕」字體大小。 */
-  .time-entry-head > button { font-size: var(--font-size-mobile-time-entry-head-button); }
 
   /* 「手機版」的「加工數量登記」的「實際工時（時）欄位標題」字體大小。 */
   .duration-fields label.actual-hours-field > span { font-size: var(--font-size-mobile-duration-fields-label-actual-hours-field-span); }
