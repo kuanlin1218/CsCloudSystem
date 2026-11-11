@@ -161,9 +161,9 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
     <section className="auth-card" aria-label="登入系統">
       <div className="auth-brand">
         <img className="auth-logo" src={`${import.meta.env.BASE_URL}company-logo.png`} alt="詮栩公司 Logo"/>
-        <p className="auth-eyebrow">CHYUAN SHEU CNC CLOUD</p>
+        <p className="auth-copy">詮栩股份有限公司 Chyuan Sheu Co.,Ltd</p>
         <h1>登入雲端系統</h1>
-        <p className="auth-copy">管理員可完整操作；訪客不需登入，只能查看資料。</p>
+        <p className="auth-eyebrow">2026</p>
       </div>
       <form onSubmit={submit}>
         <Field label="登入名稱" wide><input autoFocus autoCapitalize="none" autoCorrect="off" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入登入名稱" disabled={busy}/></Field>
@@ -172,8 +172,9 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
       <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客查看</button>
-      <p className="auth-guest-note">訪客不能新增、修改、刪除、盤點或下載資料。</p>
+      <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
       <button className="auth-switch" type="button" onClick={() => void sendPasswordEmail()} disabled={busy}>忘記密碼或尚未設定密碼</button>
+      <p className="auth-guest-note">陳冠霖 版權所有</p>
     </section>
   </main>
 }
@@ -461,11 +462,11 @@ function HomePage({ navigate, openAdmin, guestMode }: { navigate: (page: Page) =
           src={`${import.meta.env.BASE_URL}company-logo.png`}
           alt="詮栩公司 Logo"
         />
-      <span className="home-eyebrow">CHYUAN SHEU CNC CLOUD</span>
-      <h1>詮栩 CNC 雲端系統</h1>
+      {/* <span className="home-eyebrow">CHYUAN SHEU CNC CLOUD</span> */}
+      <h1>詮 栩 雲 端 系 統</h1>
       <p>加工資訊與庫存管理整合平台</p>
     </div>
-    <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div><small>選擇要使用的系統</small></div>
+    <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div><small className="home-eyebrow"></small></div>
     <div className="function-grid portal-functions">
       <FunctionCard icon={<ListPlus/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
@@ -507,7 +508,7 @@ function ProductionQuantityChart({ productCode, days, total }: { productCode: st
   const chartWidth = Math.max(760, 82 + days.length * 92)
   const step = (chartWidth - 82) / Math.max(days.length, 1)
   const barWidth = Math.min(42, Math.max(20, step * .48))
-  const dateRange = days.length ? `日期範圍 ${formatProductionChartDate(days[0].date, true)} ～ ${formatProductionChartDate(days[days.length - 1].date, true)}` : '尚無加工日期'
+  const dateRange = days.length ? ` ${formatProductionChartDate(days[0].date, true)} ～ ${formatProductionChartDate(days[days.length - 1].date, true)}` : '尚無加工日期'
   return <article className="chart-card production-chart-card">
     <div className="chart-head production-chart-head"><span>{dateRange}</span><div><strong>{productCode}</strong><small className="production-chart-total"><span>總加工數量</span><b>{formatNumber(total)}</b></small></div></div>
     {days.length ? <div className="chart-wrap production-chart-wrap">

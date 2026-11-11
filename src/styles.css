@@ -151,7 +151,7 @@
   /* 「庫存管理系統」的「近 14 天出入庫圖表」的「長條圖區」相關格式：本行可修改fill、字型／粗細／大小。｜選擇器：.chart-wrap text｜原 font 縮寫 */
   --font-size-base-chart-wrap-text-font-shorthand: 11px;
   /* 「加工管理系統總覽」的「每個產品圖表」的「總加工數量標題」字體大小。｜選擇器：.production-chart-total span */
-  --font-size-base-production-chart-total-label: 13px;
+  --font-size-base-production-chart-total-label: 14px;
   /* 「加工管理系統總覽」的「每個產品圖表」的「總加工數量數字」字體大小。｜選擇器：.production-chart-total b */
   --font-size-base-production-chart-total-value: 26px;
   /* .stocktake-summary span｜選擇器：.stocktake-summary span */
@@ -467,9 +467,9 @@
   /* 「手機版」的「庫存總覽」的「圖表日期與數量文字」字體大小。｜選擇器：.chart-wrap text */
   --font-size-mobile-chart-wrap-text: 11px;
   /* 「手機版－加工管理系統總覽」的「每個產品圖表」的「總加工數量標題」字體大小。｜選擇器：.production-chart-total span */
-  --font-size-mobile-production-chart-total-label: 12px;
+  --font-size-mobile-production-chart-total-label: 14px;
   /* 「手機版－加工管理系統總覽」的「每個產品圖表」的「總加工數量數字」字體大小。｜選擇器：.production-chart-total b */
-  --font-size-mobile-production-chart-total-value: 23px;
+  --font-size-mobile-production-chart-total-value: 24px;
   /* 「手機版」的「出入庫歷史、庫存盤點與刀具資料」的「搜尋框、分類、類型與日期欄位」字體大小。｜選擇器：.search-field input, .select-wrap select, .date-wrap input */
   --font-size-mobile-search-field-input-select-wrap-select-date-wrap-input: 16px;
   /* 「手機版」的「出入庫歷史」的「入庫、出庫與採購金額摘要」字體大小。｜選擇器：.movement-summary */
@@ -1475,7 +1475,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* 「加工管理系統」的「加工數量長條圖」的「圖表標題與產品總數量」相關格式。 */
 .production-chart-head > div { display: flex; align-items: center; gap: 14px; }
-.production-chart-head strong { color: var(--yellow); overflow-wrap: anywhere; }
+.production-chart-head strong { color:  #6de0f4; overflow-wrap: anywhere;font-size: 18px; }
 .production-chart-head small { color: #9cacb4; }
 
 /* 「加工管理系統總覽」的「每個產品圖表」的「總加工數量醒目標示」相關格式：可修改背景、邊框與排列。 */
@@ -1971,7 +1971,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .auth-eyebrow { margin: 0 0 8px; color: #91aab8; font: var(--font-size-base-auth-eyebrow-font-shorthand) ui-monospace, monospace; letter-spacing: .22em; }
 
 /* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改外距、字體大小、文字或圖示顏色、行高。 */
-.auth-card h1 { margin: 0 0 10px; font-size: var(--font-size-base-auth-card-h1); }.auth-copy { margin: 0 0 26px; color: #8f9da6; line-height: 1.7; font-size: var(--font-size-base-auth-copy); }
+.auth-card h1 { margin: 0 0 10px; font-size: var(--font-size-base-auth-card-h1); }.auth-copy { margin: 0 0 0px; color: #8f9da6; line-height: 1.7; font-size: var(--font-size-base-auth-copy);letter-spacing: .16em; }
 
 /* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改上方外距、下方外距、寬度。 */
 .auth-card .field.wide { margin-top: 0; margin-bottom: 16px; }.auth-submit { width: 100%; margin-top: 4px; }
@@ -1980,7 +1980,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .auth-guest-button { width: 100%; margin-top: 12px; border-color: rgba(61,204,179,.38); background: rgba(61,204,179,.08); color: #8ee3d3; }
 
 /* 「登入畫面」的「訪客權限說明」相關格式：本行可修改外距、文字顏色、字體大小與文字對齊。 */
-.auth-guest-note { margin: 9px 0 0; color: #7f929b; font-size: var(--font-size-base-auth-guest-note); line-height: 1.5; text-align: center; }
+.auth-guest-note { margin: 9px 0 0; color: #7f929b; font-size: var(--font-size-base-auth-guest-note); line-height: 1.5; text-align: center; letter-spacing: .16em;}
 
 /* 「舊版登入畫面保留樣式」的「登入功能」的「保留元件」相關格式：本行可修改寬度、上方外距、邊框、背景、文字或圖示顏色、text-decoration、cursor。 */
 .auth-switch { width: 100%; margin-top: 18px; border: 0; background: transparent; color: #a8b5bc; text-decoration: underline; cursor: pointer; }
