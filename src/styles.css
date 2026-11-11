@@ -371,7 +371,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .production-field-row > input, .production-field-row > select, .production-field-row > textarea { padding: 13px 18px; }
 
 /* 「加工數量登記與加工數量查詢」的「日期與數量」的「輸入框文字與對齊」相關格式：本行可修改color-scheme、文字對齊、字體大小。 */
-.production-field-row > input { color-scheme: dark; text-align: center; font-size: 22px; }
+.production-field-row > input { color-scheme: dark; text-align: center; font-size: 24px; }
 
 /* 「加工數量登記與加工數量查詢」的「產品編號與機台」的「下拉選單」相關格式：本行可修改appearance、color-scheme、文字對齊、text-align-last、字體大小、cursor、背景圖案、background-position、background-size、background-repeat。 */
 .production-field-row > select { appearance: none; color-scheme: dark; text-align: center; text-align-last: center; font-size: 22px; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, #87959d 50%), linear-gradient(135deg, #87959d 50%, transparent 50%); background-position: calc(100% - 20px) 51%, calc(100% - 14px) 51%; background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; }
@@ -449,13 +449,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .duration-fields label.actual-hours-field > span { font-size: 13px; }
 
 /* 「加工數量登記」的「實際工時（時）」的「輸入框」相關格式：本行可修改字體大小。 */
-.duration-fields input.actual-hours-input { font-size: 22px; }
+.duration-fields input.actual-hours-input { font-size: 24px; }
 
 /* 「加工數量登記」的「實際工時（分）」的「欄位標題」相關格式：本行可修改字體大小。 */
 .duration-fields label.actual-minutes-field > span { font-size: 13px; }
 
 /* 「加工數量登記」的「實際工時（分）」的「輸入框」相關格式：本行可修改字體大小。 */
-.duration-fields input.actual-minutes-input { font-size: 22px; }
+.duration-fields input.actual-minutes-input { font-size: 24px; }
 
 /* 「加工時間計算」的「時間輸入」的「欄位排列」相關格式：本行可修改下方內距、文字或圖示顏色、字體粗細。 */
 .time-minus { padding-bottom: 12px; color: #7f8d95; font-weight: 800; }
@@ -473,7 +473,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .duration-fields > div { display: grid; align-content: center; justify-items: center; padding: 7px 12px; border: 1px solid rgba(255,194,58,.25); border-radius: 6px; background: rgba(255,194,58,.05); }
 
 /* 「加工數量登記」的「實際總時間」的「標題與分鐘數字」相關格式：本行可修改文字或圖示顏色、字體大小、上方外距、字型／粗細／大小。 */
-.duration-fields > div span { color: #899aa4; font-size: 12px; }.duration-fields > div strong { margin-top: 3px; color: var(--yellow); font: 800 22px ui-monospace, monospace; }
+.duration-fields > div span { color: #899aa4; font-size: 12px; }.duration-fields > div strong { margin-top: 3px; color: var(--yellow); font: 800 24px ui-monospace, monospace; }
 
 /* 「加工數量登記」的「實際加工時間」的「整個輸入區塊」相關格式：本行可修改外距、內距、邊框、圓角、背景。 */
 .time-entry-panel { margin: 20px 0; padding: 17px; border: 1px solid #344148; border-radius: 8px; background: #0d1316; }
@@ -1615,8 +1615,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版」的「加工數量登記與加工數量查詢」的「日期、產品編號、機台、數量、備註欄位標題」字體大小。 */
   .production-field-row > label:first-child { font-size: 15px; }
 
-  /* 「手機版」的「加工數量登記與加工數量查詢」的「一般輸入框與備註輸入框」字體大小。 */
-  .production-field-row > input, .production-field-row > textarea { font-size: 20px; }
+  /* 「手機版」的「加工數量登記與加工數量查詢」的「數量輸入框與備註輸入框」字體大小。 */
+  .production-field-row > input, .production-field-row > textarea { font-size: 24px; }
 
   /* 「手機版」的「加工數量登記與加工數量查詢」的「產品編號與機台下拉選單」字體大小。 */
   .production-field-row > select { font-size: 20px; }
@@ -1660,7 +1660,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .duration-fields > div span { font-size: 12px; }
 
   /* 「手機版」的「加工數量登記」的「實際總時間數字」字體大小。 */
-  .duration-fields > div strong { font-size: 22px; }
+  .duration-fields > div strong { font-size: 24px; }
 
   /* 「手機版」的「加工數量登記」的「送出與刪除最後一筆按鈕」字體大小。 */
   .production-action { font-size: 19px; }
