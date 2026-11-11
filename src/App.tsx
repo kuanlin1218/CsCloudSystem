@@ -174,7 +174,7 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
       <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客查看</button>
       <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
       <button className="auth-switch" type="button" onClick={() => void sendPasswordEmail()} disabled={busy}>忘記密碼或尚未設定密碼</button>
-      <p className="auth-guest-note">陳冠霖 版權所有</p>
+      <p className="auth-guest-note">© 2026 KUAN LIN CHEN. All rights reserved.</p>
     </section>
   </main>
 }
