@@ -124,6 +124,22 @@ export async function deleteProductionOption(optionType: ProductionOptionType, v
   await runAdminDelete('admin_delete_production_option', { p_option_type: optionType, p_value: value })
 }
 
+export async function renameProductionProductCode(currentValue: string, nextValue: string): Promise<void> {
+  const current = currentValue.trim().toUpperCase()
+  const next = nextValue.trim().toUpperCase()
+  if (!current || !next) throw new Error('產品編號不能空白')
+  if (current === next) return
+  if (isDemoMode) {
+    const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
+    if (options.some((option) => option.option_type === 'product' && option.value.toUpperCase() === next)) throw new Error('新的產品編號已經存在')
+    writeLocal(PRODUCTION_OPTION_KEY, options.map((option) => option.option_type === 'product' && option.value.toUpperCase() === current ? { ...option, value: next } : option))
+    writeLocal(PRODUCTION_KEY, readLocal(PRODUCTION_KEY, seedProductionRecords).map((record) => record.product_code.toUpperCase() === current ? { ...record, product_code: next } : record))
+    return
+  }
+  const { error } = await supabase!.rpc('rename_production_product_code', { p_current_value: current, p_new_value: next })
+  if (error) throw error
+}
+
 export async function createProductionRecord(input: ProductionInput): Promise<void> {
   const record: ProductionRecord = {
     id: id(), ...input, product_code: input.product_code.trim().toUpperCase(), machine: input.machine.trim().toUpperCase(),

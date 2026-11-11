@@ -13,7 +13,7 @@ import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
 import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
 import type { WorkbookPreview } from './lib/adminDataWorkbook'
-import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, loadInventory, loadProductionOptions, loadProductionRecords, registerMovement, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
+import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, loadInventory, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
 
 const blankProduct = (): ProductInput => ({
@@ -38,7 +38,7 @@ const formatProductionChartDate = (value: string, includeYear = false) => {
   return weekday ? `${dateLabel}（${weekday}）` : dateLabel
 }
 
-const PAGE_VALUES: Page[] = ['home', 'production-dashboard', 'production-entry', 'production-query', 'dashboard', 'movements', 'stocktake', 'products']
+const PAGE_VALUES: Page[] = ['home', 'production-dashboard', 'production-entry', 'production-query', 'production-forecast', 'production-settings', 'production-delete', 'dashboard', 'movements', 'stocktake', 'products']
 const preventInputEnterSubmit = (event: ReactKeyboardEvent<HTMLFormElement>) => {
   if (event.key !== 'Enter' || event.nativeEvent.isComposing || !(event.target instanceof HTMLInputElement)) return
   event.preventDefault()
@@ -306,7 +306,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   }, [toast])
 
   const nav = (next: Page) => {
-    if (guestMode && (next === 'production-entry' || next === 'stocktake')) return
+    if (guestMode && (next === 'production-entry' || next === 'production-settings' || next === 'production-delete' || next === 'stocktake')) return
     if (window.location.hash !== `#${next}`) window.history.pushState({ page: next }, '', pageUrl(next))
     setPage(next)
     setMobileNav(false)
@@ -316,10 +316,10 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   const requestAdminDelete = (title: string, description: string, execute: () => Promise<void>) => new Promise<boolean>((resolve) => {
     setAdminDelete({ title, description, execute, resolve })
   })
-  const activePage: Page = guestMode && page === 'production-entry' ? 'home' : guestMode && page === 'stocktake' ? 'dashboard' : page
+  const activePage: Page = guestMode && (page === 'production-entry' || page === 'production-settings' || page === 'production-delete') ? 'production-dashboard' : guestMode && page === 'stocktake' ? 'dashboard' : page
   const isHome = activePage === 'home'
   const isInventory = activePage === 'dashboard' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
-  const isProduction = activePage === 'production-dashboard' || activePage === 'production-entry' || activePage === 'production-query'
+  const isProduction = activePage === 'production-dashboard' || activePage === 'production-entry' || activePage === 'production-query' || activePage === 'production-forecast' || activePage === 'production-settings' || activePage === 'production-delete'
   const isSystem = isInventory || isProduction
   const showTableScrollControls = activePage === 'production-query' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
   const productionEntryProductCodes = useMemo(() => productionOptions.filter((option) => option.option_type === 'product').map((option) => option.value).sort(), [productionOptions])
@@ -344,6 +344,9 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
             <NavItem active={activePage === 'production-dashboard'} icon={<LayoutGrid />} onClick={() => nav('production-dashboard')}>總覽</NavItem>
             {!guestMode && <NavItem active={activePage === 'production-entry'} icon={<ListPlus />} onClick={() => nav('production-entry')}>加工數量登記</NavItem>}
             <NavItem active={activePage === 'production-query'} icon={<Search />} onClick={() => nav('production-query')}>加工數量查詢</NavItem>
+            <NavItem active={activePage === 'production-forecast'} icon={<Calculator />} onClick={() => nav('production-forecast')}>訂單完工預估</NavItem>
+            {!guestMode && <NavItem active={activePage === 'production-settings'} icon={<Wrench />} onClick={() => nav('production-settings')}>基礎資料設定</NavItem>}
+            {!guestMode && <NavItem active={activePage === 'production-delete'} icon={<Trash2 />} onClick={() => nav('production-delete')}>永久刪除資料</NavItem>}
           </> : <>
             <NavItem active={activePage === 'dashboard'} icon={<LayoutGrid />} onClick={() => nav('dashboard')}>總覽</NavItem>
             <NavItem active={activePage === 'movements'} icon={<ArrowLeftRight />} onClick={() => nav('movements')}>出入庫</NavItem>
@@ -372,7 +375,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
 
         {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} />}
         {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
-        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} addOption={setProductionOptionModal} onSave={async (input) => {
+        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} onSave={async (input) => {
           await createProductionRecord(input); await afterSave('加工數量已登記')
         }} onDeleteLast={async (record) => {
           const deleted = await requestAdminDelete('刪除最後一筆加工紀錄', `${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, () => deleteProductionRecord(record.id))
@@ -385,7 +388,10 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
           const deleted = await requestAdminDelete('刪除加工紀錄', `${formatDate(record.work_date)}・${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, () => deleteProductionRecord(record.id))
           if (deleted) await afterSave('所選加工紀錄已刪除')
           return deleted
-        }} onDeleteProductRecords={async (productCode, count) => {
+        }} />}
+        {activePage === 'production-forecast' && <ProductionForecastPage records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
+        {activePage === 'production-settings' && !guestMode && <ProductionSettingsPage openOption={setProductionOptionModal} />}
+        {activePage === 'production-delete' && !guestMode && <ProductionDeletePage records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} onDeleteProductRecords={async (productCode, count) => {
           const deleted = await requestAdminDelete('永久刪除產品加工資料', `將刪除產品編號「${productCode}」、管理清單選項與全部 ${count} 筆加工紀錄。`, () => deleteProductionProductData(productCode))
           if (deleted) await afterSave(`${productCode} 的產品編號與全部加工紀錄已永久刪除`)
           return deleted
@@ -438,7 +444,10 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         const label = productionOptionModal === 'product' ? '產品編號' : '機台'
         const deleted = await requestAdminDelete(`刪除${label}`, `確定刪除${label}「${value}」？過去已登記的加工紀錄會保留。`, () => deleteProductionOption(productionOptionModal, value))
         if (deleted) await afterSave(`${label}已刪除`)
-      }} />}
+      }} rename={productionOptionModal === 'product' ? async (currentValue, nextValue) => {
+        await renameProductionProductCode(currentValue, nextValue)
+        await afterSave(`產品編號已由 ${currentValue} 更新為 ${nextValue.trim().toUpperCase()}`)
+      } : undefined} />}
       {!guestMode && adminDataModal && <AdminDataModal close={() => setAdminDataModal(false)} afterImport={async () => {
         await refresh(); setToast('Excel 資料已完整匯入')
       }} />}
@@ -524,7 +533,7 @@ function ProductionQuantityChart({ productCode, days, total }: { productCode: st
   </article>
 }
 
-function ProductionEntryPage({ records, productCodes, machines, loading, addOption, onSave, onDeleteLast }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; addOption: (type: ProductionOptionType) => void; onSave: (input: ProductionInput) => Promise<void>; onDeleteLast: (record: ProductionRecord) => Promise<void> }) {
+function ProductionEntryPage({ records, productCodes, machines, loading, onSave, onDeleteLast }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; onSave: (input: ProductionInput) => Promise<void>; onDeleteLast: (record: ProductionRecord) => Promise<void> }) {
   const [form, setForm] = useState<ProductionInput>({ work_date: previousLocalDate(), product_code: '', machine: '', hours: 0, minutes: 0, quantity: 0, notes: '' })
   const [showTimeCalculator, setShowTimeCalculator] = useState(false)
   const [formError, setFormError] = useState('')
@@ -574,10 +583,6 @@ function ProductionEntryPage({ records, productCodes, machines, loading, addOpti
       <button className="production-action save-action" disabled={saving} type="submit"><Save />{saving ? '儲存中…' : '送出登記'}</button>
       <button className="production-action delete-action" disabled={loading || !latest} type="button" onClick={() => latest && void onDeleteLast(latest)}><Trash2 />刪除最後一筆</button>
       <button className="production-action time-tool-action" type="button" onClick={() => setShowTimeCalculator(true)}><Calculator />加工時間計算</button>
-      <div className="production-data-tools entry-bottom-tools">
-        <div><span>基礎資料設定</span><small>管理產品編號與機台，再從登記表單選擇</small></div>
-        <div><button type="button" onClick={() => addOption('product')}><Wrench />管理產品編號</button><button type="button" onClick={() => addOption('machine')}><Wrench />管理機台</button></div>
-      </div>
     </form>
     {showTimeCalculator && <ProductionTimeCalculatorModal initialHours={form.hours} initialMinutes={form.minutes} close={() => setShowTimeCalculator(false)} apply={(hours, minutes) => { setForm((current) => ({ ...current, hours, minutes })); setShowTimeCalculator(false) }} />}
   </section>
@@ -585,15 +590,13 @@ function ProductionEntryPage({ records, productCodes, machines, loading, addOpti
 
 type ProductionQueryMode = 'range' | 'latest' | 'all'
 
-function ProductionQueryPage({ records, productCodes, machines, loading, readOnly, onUpdateRecord, onDeleteRecord, onDeleteProductRecords }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; readOnly: boolean; onUpdateRecord: (record: ProductionRecord, input: ProductionInput) => Promise<void>; onDeleteRecord: (record: ProductionRecord) => Promise<boolean>; onDeleteProductRecords: (productCode: string, count: number) => Promise<boolean> }) {
+function ProductionQueryPage({ records, productCodes, machines, loading, readOnly, onUpdateRecord, onDeleteRecord }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; readOnly: boolean; onUpdateRecord: (record: ProductionRecord, input: ProductionInput) => Promise<void>; onDeleteRecord: (record: ProductionRecord) => Promise<boolean> }) {
   const [productCode, setProductCode] = useState('')
   const [from, setFrom] = useState(`${today().slice(0, 8)}01`)
   const [to, setTo] = useState(today())
   const [mode, setMode] = useState<ProductionQueryMode | null>(null)
-  const [showForecast, setShowForecast] = useState(false)
   const [editingRecord, setEditingRecord] = useState<ProductionRecord | null>(null)
   const [queryError, setQueryError] = useState('')
-  const [deleting, setDeleting] = useState(false)
   const [deletingRecordId, setDeletingRecordId] = useState('')
   const [exporting, setExporting] = useState(false)
   const selectedRecords = useMemo(() => records
@@ -634,14 +637,6 @@ function ProductionQueryPage({ records, productCodes, machines, loading, readOnl
     finally { setExporting(false) }
   }
 
-  const deleteAllRecords = async () => {
-    if (!productCode) return
-    setDeleting(true); setQueryError('')
-    const deleted = await onDeleteProductRecords(productCode, selectedRecords.length)
-    if (deleted) { setMode(null); setProductCode(''); setShowForecast(false) }
-    setDeleting(false)
-  }
-
   const deleteOneRecord = async (record: ProductionRecord) => {
     setDeletingRecordId(record.id); setQueryError('')
     await onDeleteRecord(record)
@@ -654,17 +649,14 @@ function ProductionQueryPage({ records, productCodes, machines, loading, readOnl
       <div className="query-fields">
         <div className="production-field-row"><label>開始日期</label><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
         <div className="production-field-row"><label>結束日期</label><input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
-        <div className="production-field-row"><label>產品編號</label><select value={productCode} onChange={(e) => { setProductCode(e.target.value); setMode(null); setShowForecast(false); setQueryError('') }}><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+        <div className="production-field-row"><label>產品編號</label><select value={productCode} onChange={(e) => { setProductCode(e.target.value); setMode(null); setQueryError('') }}><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
       </div>
       <div className="query-actions">
         <button className="query-button latest" onClick={() => runQuery('latest')}><Clock3 />查詢最後一筆</button>
         <button className="query-button all" onClick={() => runQuery('all')}><Search />查詢全部</button>
         <button className="query-button range" onClick={() => runQuery('range')}><CalendarDays />日期查詢</button>
         {!readOnly && <button className="query-button export" onClick={() => void downloadExcel()} disabled={mode !== 'all' || !results.length || exporting} title={mode === 'all' ? '下載全部查詢結果' : '請先按「查詢全部」'}><Download />{exporting ? '產生中…' : '下載 EXCEL'}</button>}
-        <button className="query-button forecast" onClick={() => setShowForecast(true)} disabled={!productCode}><Calculator />訂單完工預估</button>
-        {!readOnly && <button className="query-button danger" onClick={() => void deleteAllRecords()} disabled={!productCode || deleting}><Trash2 />{deleting ? '刪除中…' : `永久刪除資料（${selectedRecords.length} 筆）`}</button>}
       </div>
-      {!readOnly && <p className="query-delete-note">永久刪除資料會同時移除全部加工紀錄，以及「管理產品編號」中的產品編號，且無法復原。</p>}
       {queryError && <div className="form-error production-error">{queryError}</div>}
     </div>
 
@@ -681,8 +673,55 @@ function ProductionQueryPage({ records, productCodes, machines, loading, readOnl
         </div>
       </>}
     </div>}
-    {showForecast && productCode && <OrderForecastModal productCode={productCode} records={selectedRecords} close={() => setShowForecast(false)} />}
     {!readOnly && editingRecord && <ProductionRecordEditModal record={editingRecord} productCodes={productCodes} machines={machines} close={() => setEditingRecord(null)} save={async (input) => { await onUpdateRecord(editingRecord, input); setEditingRecord(null) }} />}
+  </section>
+}
+
+function ProductionSettingsPage({ openOption }: { openOption: (type: ProductionOptionType) => void }) {
+  return <section className="page-content production-system-page production-settings-page">
+    <PageTitle eyebrow="PRODUCTION SETTINGS" title="基礎資料設定" />
+    <div className="production-settings-grid">
+      <button className="production-setting-card product-setting" type="button" onClick={() => openOption('product')}>
+        <Wrench /><span><strong>管理產品編號</strong><small>新增、編輯或刪除加工產品編號</small></span><Pencil />
+      </button>
+      <button className="production-setting-card machine-setting" type="button" onClick={() => openOption('machine')}>
+        <Wrench /><span><strong>管理機台</strong><small>新增或刪除加工機台名稱</small></span><Pencil />
+      </button>
+    </div>
+  </section>
+}
+
+function ProductionForecastPage({ records, productCodes, loading }: { records: ProductionRecord[]; productCodes: string[]; loading: boolean }) {
+  const [productCode, setProductCode] = useState('')
+  const selectedRecords = useMemo(() => records.filter((record) => record.product_code.toLowerCase() === productCode.toLowerCase()), [records, productCode])
+  return <section className="page-content production-system-page production-forecast-page">
+    <PageTitle eyebrow="ORDER FORECAST" title="訂單完工預估" />
+    <div className="production-card production-tool-page-card">
+      <div className="production-field-row"><label>產品編號</label><select value={productCode} onChange={(event) => setProductCode(event.target.value)} disabled={loading}><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+      {loading ? <PageSkeleton /> : productCode ? <OrderForecastPanel productCode={productCode} records={selectedRecords} /> : <div className="production-tool-placeholder"><Calculator />請先選擇要估算的產品編號</div>}
+    </div>
+  </section>
+}
+
+function ProductionDeletePage({ records, productCodes, loading, onDeleteProductRecords }: { records: ProductionRecord[]; productCodes: string[]; loading: boolean; onDeleteProductRecords: (productCode: string, count: number) => Promise<boolean> }) {
+  const [productCode, setProductCode] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const recordCount = useMemo(() => records.filter((record) => record.product_code.toLowerCase() === productCode.toLowerCase()).length, [records, productCode])
+  const removeSelectedProduct = async () => {
+    if (!productCode) return
+    setDeleting(true)
+    try {
+      if (await onDeleteProductRecords(productCode, recordCount)) setProductCode('')
+    } finally { setDeleting(false) }
+  }
+  return <section className="page-content production-system-page production-delete-page">
+    <PageTitle eyebrow="PERMANENT DELETE" title="永久刪除資料" />
+    <div className="production-card production-tool-page-card production-delete-card">
+      <div className="production-field-row"><label>產品編號</label><select value={productCode} onChange={(event) => setProductCode(event.target.value)} disabled={loading || deleting}><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+      <div className="production-delete-warning"><Trash2 /><div><strong>產品編號與全部加工紀錄會永久移除</strong><span>選擇產品後會刪除「管理產品編號」中的項目，以及該產品全部加工紀錄；操作時仍需輸入登入密碼。</span></div></div>
+      <div className="production-delete-count"><span>目前加工紀錄</span><strong>{productCode ? formatNumber(recordCount) : '—'} <small>筆</small></strong></div>
+      <button className="query-button danger production-delete-submit" type="button" onClick={() => void removeSelectedProduct()} disabled={!productCode || loading || deleting}><Trash2 />{deleting ? '刪除中…' : `永久刪除所選產品${productCode ? `（${recordCount} 筆）` : ''}`}</button>
+    </div>
   </section>
 }
 
@@ -757,7 +796,7 @@ function ProductionTimeCalculatorModal({ initialHours, initialMinutes, close, ap
   </Modal>
 }
 
-function OrderForecastModal({ productCode, records, close }: { productCode: string; records: ProductionRecord[]; close: () => void }) {
+function OrderForecastPanel({ productCode, records }: { productCode: string; records: ProductionRecord[] }) {
   const [orderQuantity, setOrderQuantity] = useState(0)
   const forecast = useMemo(() => {
     const completedQuantity = records.reduce((sum, record) => sum + record.quantity, 0)
@@ -773,7 +812,7 @@ function OrderForecastModal({ productCode, records, close }: { productCode: stri
     }
     return { completedQuantity, historyDays, dailyAverage, remainingQuantity, estimatedDays, estimatedDate }
   }, [records, orderQuantity])
-  return <Modal title="訂單完工預估" close={close} size="large forecast-modal">
+  return <div className="order-forecast production-forecast-panel">
     <div className="forecast-modal-product"><span>產品編號</span><strong>{productCode}</strong></div>
     <div className="forecast-head modal-forecast-head"><div><Calculator /><span><strong>依全部歷史資料估算</strong><small>輸入訂單總數量後自動計算</small></span></div><label><span>訂單總數量</span><input className="order-quantity-input" autoFocus type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={orderQuantity || ''} onChange={(event) => setOrderQuantity(Math.max(0, Number(event.target.value)))} placeholder="輸入訂單數量" /></label></div>
     {orderQuantity <= 0 ? <p className="forecast-placeholder">輸入訂單總數量後，會顯示剩餘數量、天數與預估完工日期</p> : !forecast.historyDays ? <p className="forecast-placeholder warning">此產品尚無歷史加工資料，暫時無法估算完工時間</p> : <div className="forecast-grid">
@@ -784,15 +823,17 @@ function OrderForecastModal({ productCode, records, close }: { productCode: stri
       <div className="accent"><span>預估完工日期</span><strong>{formatDate(forecast.estimatedDate)}</strong></div>
     </div>}
     <p className="forecast-note">公式：歷史總產量 ÷ 實際加工天數＝每日平均；剩餘數量 ÷ 每日平均＝預估曆日天數。</p>
-    <div className="modal-tool-actions"><button className="button primary" type="button" onClick={close}>完成</button></div>
-  </Modal>
+  </div>
 }
 
-function ProductionOptionModal({ type, values, close, save, remove }: { type: ProductionOptionType; values: string[]; close: () => void; save: (value: string) => Promise<void>; remove: (value: string) => Promise<void> }) {
+function ProductionOptionModal({ type, values, close, save, remove, rename }: { type: ProductionOptionType; values: string[]; close: () => void; save: (value: string) => Promise<void>; remove: (value: string) => Promise<void>; rename?: (currentValue: string, nextValue: string) => Promise<void> }) {
   const [value, setValue] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [removing, setRemoving] = useState('')
+  const [editing, setEditing] = useState('')
+  const [editValue, setEditValue] = useState('')
+  const [updating, setUpdating] = useState(false)
   const label = type === 'product' ? '產品編號' : '機台'
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError('')
@@ -806,16 +847,35 @@ function ProductionOptionModal({ type, values, close, save, remove }: { type: Pr
     try { await remove(target) } catch (removeError) { setError(messageFor(removeError)) }
     finally { setRemoving('') }
   }
+  const updateValue = async () => {
+    if (!rename || !editing) return
+    const normalized = editValue.trim().toUpperCase()
+    setError('')
+    if (!normalized) { setError('產品編號不能空白'); return }
+    if (normalized === editing.trim().toUpperCase()) { setEditing(''); setEditValue(''); return }
+    setUpdating(true)
+    try { await rename(editing, normalized); setEditing(''); setEditValue('') }
+    catch (updateError) { setError(messageFor(updateError)) }
+    finally { setUpdating(false) }
+  }
   return <Modal title={`管理${label}`} close={close}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <Field label={label} wide><input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder={type === 'product' ? '產品編號<訂單編號>' : '例如 MT04'} /></Field>
-      <p className="option-help">新增後會出現在加工登記選單；刪除不會影響過去的加工紀錄。</p>
+      <p className="option-help">{type === 'product' ? '新增後會出現在加工登記選單；編輯會同步取代資料庫內全部既有加工紀錄的產品編號。' : '新增後會出現在加工登記選單；刪除不會影響過去的加工紀錄。'}</p>
       {error && <div className="form-error">{error}</div>}
-      <button className="button primary option-add-button" disabled={saving || !!removing} type="submit"><Plus />{saving ? '新增中…' : `新增${label}`}</button>
+      <button className="button primary option-add-button" disabled={saving || !!removing || updating} type="submit"><Plus />{saving ? '新增中…' : `新增${label}`}</button>
     </form>
     <div className="option-list-head"><span>目前的{label}</span><small>{values.length} 筆</small></div>
     <div className="option-list">
-      {values.length === 0 ? <div className="option-empty">尚未新增任何{label}</div> : values.map((item) => <div className="option-list-item" key={item}><span>{item}</span><button className="danger-icon" disabled={!!removing} onClick={() => void removeValue(item)} aria-label={`刪除${label} ${item}`} title={`刪除${label}`}>{removing === item ? '…' : <Trash2 />}</button></div>)}
+      {values.length === 0 ? <div className="option-empty">尚未新增任何{label}</div> : values.map((item) => <div className={`option-list-item ${editing === item ? 'is-editing' : ''}`} key={item}>
+        {editing === item
+          ? <input className="option-edit-input" autoFocus value={editValue} onChange={(event) => setEditValue(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void updateValue() } }} aria-label={`編輯產品編號 ${item}`} />
+          : <span>{item}</span>}
+        <div className="option-list-actions">
+          {type === 'product' && (editing === item ? <><button className="option-save-edit" disabled={updating} onClick={() => void updateValue()} aria-label={`儲存產品編號 ${item}`} title="儲存修改">{updating ? '…' : <Save />}</button><button disabled={updating} onClick={() => { setEditing(''); setEditValue(''); setError('') }} aria-label="取消編輯" title="取消編輯"><X /></button></> : <button className="option-start-edit" disabled={!!removing || updating || !!editing} onClick={() => { setEditing(item); setEditValue(item); setError('') }} aria-label={`編輯產品編號 ${item}`} title="編輯產品編號"><Pencil /></button>)}
+          <button className="danger-icon" disabled={!!removing || updating || !!editing} onClick={() => void removeValue(item)} aria-label={`刪除${label} ${item}`} title={`刪除${label}`}>{removing === item ? '…' : <Trash2 />}</button>
+        </div>
+      </div>)}
     </div>
   </Modal>
 }
