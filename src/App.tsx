@@ -9,6 +9,7 @@ import {
 import { isDemoMode, supabase } from './lib/supabase'
 import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, verifyOwnerPassword } from './lib/auth'
 import { composeProductName, formatDate, formatMoney, formatNumber, today } from './lib/format'
+import { hasTaiwanHolidayCalendar, isTaiwanPublicHoliday, TAIWAN_HOLIDAY_CALENDAR_YEARS } from './lib/taiwanHolidays'
 import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
 import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
@@ -36,6 +37,48 @@ const formatProductionChartDate = (value: string, includeYear = false) => {
   const weekday = year && month && day ? ['日', '一', '二', '三', '四', '五', '六'][new Date(year, month - 1, day).getDay()] : ''
   const dateLabel = includeYear ? formatDate(value) : formatDate(value).slice(5)
   return weekday ? `${dateLabel}（${weekday}）` : dateLabel
+}
+
+type ForecastScheduleMode = 'history' | 'monday-saturday' | 'weekdays'
+
+/* 「訂單完工預估」的「日期排程」：以台灣本地日期運算，避免 UTC 時差造成日期提前或延後。 */
+const parseLocalDate = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day, 12, 0, 0)
+}
+const localDateValue = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+const isForecastWorkDay = (date: Date, mode: ForecastScheduleMode, historyHasSaturday: boolean, historyHasSunday: boolean) => {
+  if (isTaiwanPublicHoliday(localDateValue(date))) return false
+  const weekday = date.getDay()
+  if (weekday >= 1 && weekday <= 5) return true
+  if (mode === 'weekdays') return false
+  if (mode === 'monday-saturday') return weekday === 6
+  return (weekday === 6 && historyHasSaturday) || (weekday === 0 && historyHasSunday)
+}
+const addForecastWorkDays = (start: string, workDays: number, isWorkDay: (date: Date) => boolean) => {
+  const date = parseLocalDate(start)
+  let remaining = Math.max(0, workDays)
+  while (remaining > 0) {
+    date.setDate(date.getDate() + 1)
+    if (isWorkDay(date)) remaining -= 1
+  }
+  return localDateValue(date)
+}
+const countForecastWorkDays = (start: string, end: string, isWorkDay: (date: Date) => boolean) => {
+  if (!end || end <= start) return 0
+  const date = parseLocalDate(start)
+  const lastDate = parseLocalDate(end)
+  let count = 0
+  while (date < lastDate) {
+    date.setDate(date.getDate() + 1)
+    if (date <= lastDate && isWorkDay(date)) count += 1
+  }
+  return count
 }
 
 const PAGE_VALUES: Page[] = ['home', 'production-dashboard', 'production-entry', 'production-query', 'production-forecast', 'production-settings', 'production-delete', 'dashboard', 'movements', 'stocktake', 'products']
@@ -819,31 +862,102 @@ function ProductionTimeCalculatorModal({ initialHours, initialMinutes, close, ap
 
 function OrderForecastPanel({ productCode, records }: { productCode: string; records: ProductionRecord[] }) {
   const [orderQuantity, setOrderQuantity] = useState(0)
-  const forecast = useMemo(() => {
+  const [dueDate, setDueDate] = useState('')
+  const [scheduleMode, setScheduleMode] = useState<ForecastScheduleMode>('history')
+  const history = useMemo(() => {
     const completedQuantity = records.reduce((sum, record) => sum + record.quantity, 0)
-    const historyDays = new Set(records.map((record) => record.work_date)).size
-    const dailyAverage = historyDays ? completedQuantity / historyDays : 0
-    const remainingQuantity = Math.max(orderQuantity - completedQuantity, 0)
-    const estimatedDays = dailyAverage > 0 ? Math.ceil(remainingQuantity / dailyAverage) : null
-    let estimatedDate = ''
-    if (estimatedDays !== null) {
-      const date = new Date(`${today()}T12:00:00`)
-      date.setDate(date.getDate() + estimatedDays)
-      estimatedDate = date.toISOString().slice(0, 10)
+    const workDates = [...new Set(records.map((record) => record.work_date))]
+    const historyDays = workDates.length
+    const totalMinutes = records.reduce((sum, record) => sum + record.total_minutes, 0)
+    const machineDays = new Map<string, Set<string>>()
+    for (const record of records) {
+      if (!machineDays.has(record.work_date)) machineDays.set(record.work_date, new Set())
+      machineDays.get(record.work_date)!.add(record.machine)
     }
-    return { completedQuantity, historyDays, dailyAverage, remainingQuantity, estimatedDays, estimatedDate }
-  }, [records, orderQuantity])
+    const totalMachineDays = [...machineDays.values()].reduce((sum, machines) => sum + machines.size, 0)
+    const totalMachineHours = totalMinutes / 60
+    const averageMachines = historyDays ? totalMachineDays / historyDays : 0
+    const averageHoursPerMachine = totalMachineDays ? totalMachineHours / totalMachineDays : 0
+    const quantityPerMachineHour = totalMachineHours ? completedQuantity / totalMachineHours : 0
+    const saturdayDays = workDates.filter((value) => parseLocalDate(value).getDay() === 6).length
+    const sundayDays = workDates.filter((value) => parseLocalDate(value).getDay() === 0).length
+    return {
+      completedQuantity,
+      historyDays,
+      averageMachines,
+      averageHoursPerMachine,
+      quantityPerMachineHour,
+      saturdayDays,
+      sundayDays,
+      defaultMachineCount: Math.max(1, Math.round(averageMachines || 1)),
+      defaultDailyHours: Math.max(0.5, Number((averageHoursPerMachine || 8).toFixed(1))),
+    }
+  }, [records])
+  const [machineCount, setMachineCount] = useState(history.defaultMachineCount)
+  const [dailyHours, setDailyHours] = useState(history.defaultDailyHours)
+
+  useEffect(() => {
+    setOrderQuantity(0)
+    setDueDate('')
+    setScheduleMode('history')
+    setMachineCount(history.defaultMachineCount)
+    setDailyHours(history.defaultDailyHours)
+  }, [productCode, history.defaultMachineCount, history.defaultDailyHours])
+
+  const forecast = useMemo(() => {
+    const remainingQuantity = Math.max(orderQuantity - history.completedQuantity, 0)
+    const dailyCapacity = history.quantityPerMachineHour * Math.max(machineCount, 0) * Math.max(dailyHours, 0)
+    const estimatedDays = dailyCapacity > 0 ? Math.ceil(remainingQuantity / dailyCapacity) : null
+    const workDayCheck = (date: Date) => isForecastWorkDay(date, scheduleMode, history.saturdayDays > 0, history.sundayDays > 0)
+    const estimatedDate = estimatedDays !== null ? addForecastWorkDays(today(), estimatedDays, workDayCheck) : ''
+    const availableDays = dueDate ? countForecastWorkDays(today(), dueDate, workDayCheck) : null
+    const canMeetDeadline = dueDate && estimatedDays !== null
+      ? remainingQuantity === 0 || (dueDate >= today() && availableDays! >= estimatedDays)
+      : null
+    const deadlineDifference = availableDays !== null && estimatedDays !== null ? availableDays - estimatedDays : null
+    return { remainingQuantity, dailyCapacity, estimatedDays, estimatedDate, availableDays, canMeetDeadline, deadlineDifference }
+  }, [orderQuantity, dueDate, scheduleMode, machineCount, dailyHours, history])
+  const autoScheduleText = history.saturdayDays && history.sundayDays
+    ? '週一至週日'
+    : history.saturdayDays
+      ? '週一至週六'
+      : history.sundayDays
+        ? '週一至週五及週日'
+        : '純平日（週一至週五）'
+  const deadlineMessage = forecast.deadlineDifference === null
+    ? ''
+    : forecast.deadlineDifference > 0
+      ? `預計可提前 ${forecast.deadlineDifference} 個工作天完成`
+      : forecast.deadlineDifference < 0
+        ? `預計延後 ${Math.abs(forecast.deadlineDifference)} 個工作天完成`
+        : '預計剛好於交期完成'
+  const holidayCalendarIncomplete = [dueDate, forecast.estimatedDate].some((value) => value && !hasTaiwanHolidayCalendar(value))
+  const holidayCalendarYears = `${TAIWAN_HOLIDAY_CALENDAR_YEARS[0]}～${TAIWAN_HOLIDAY_CALENDAR_YEARS[TAIWAN_HOLIDAY_CALENDAR_YEARS.length - 1]}`
   return <div className="order-forecast production-forecast-panel">
     <div className="forecast-modal-product"><span>產品編號</span><strong>{productCode}</strong></div>
-    <div className="forecast-head modal-forecast-head"><div><Calculator /><span><strong>依全部歷史資料估算</strong><small>輸入訂單總數量後自動計算</small></span></div><label><span>訂單總數量</span><input className="order-quantity-input" autoFocus type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={orderQuantity || ''} onChange={(event) => setOrderQuantity(Math.max(0, Number(event.target.value)))} placeholder="輸入訂單數量" /></label></div>
-    {orderQuantity <= 0 ? <p className="forecast-placeholder">輸入訂單總數量後，會顯示剩餘數量、天數與預估完工日期</p> : !forecast.historyDays ? <p className="forecast-placeholder warning">此產品尚無歷史加工資料，暫時無法估算完工時間</p> : <div className="forecast-grid">
-      <div><span>歷史完成量</span><strong>{formatNumber(forecast.completedQuantity)}</strong></div>
-      <div><span>平均每日產量</span><strong>{formatNumber(Math.round(forecast.dailyAverage))}</strong></div>
-      <div className="accent"><span>剩餘數量</span><strong>{formatNumber(forecast.remainingQuantity)}</strong></div>
-      <div><span>預估剩餘天數</span><strong>{formatNumber(forecast.estimatedDays || 0)} <small>天</small></strong></div>
-      <div className="accent"><span>預估完工日期</span><strong>{formatDate(forecast.estimatedDate)}</strong></div>
-    </div>}
-    <p className="forecast-note">公式：歷史總產量 ÷ 實際加工天數＝每日平均；剩餘數量 ÷ 每日平均＝預估曆日天數。</p>
+    <div className="forecast-head modal-forecast-head"><div><Calculator /><span><strong>依機台工時與歷史產能估算</strong><small>國定假日與補假一律排除；週末依選擇的排程計算</small></span></div><label><span>訂單總數量</span><input className="order-quantity-input" type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={orderQuantity || ''} onChange={(event) => setOrderQuantity(Math.max(0, Number(event.target.value)))} placeholder="輸入訂單數量" /></label></div>
+    <div className="forecast-history-basis">
+      <span>歷史判斷</span><strong>{history.historyDays} 個加工日</strong><strong>平均 {formatNumber(Number(history.averageMachines.toFixed(1)))} 台／日</strong><strong>每台 {formatNumber(Number(history.averageHoursPerMachine.toFixed(1)))} 小時／日</strong><small>週六 {history.saturdayDays} 天・週日 {history.sundayDays} 天；自動排程為 {autoScheduleText}</small>
+    </div>
+    <div className="forecast-config-grid">
+      <label className="forecast-setting"><span>訂單交期</span><input type="date" min={today()} value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label>
+      <label className="forecast-setting"><span>計算排程</span><select value={scheduleMode} onChange={(event) => setScheduleMode(event.target.value as ForecastScheduleMode)}><option value="history">依歷史自動判斷</option><option value="monday-saturday">週一至週六</option><option value="weekdays">純平日（週一至週五）</option></select></label>
+      <label className="forecast-setting"><span>預計使用機台數</span><input type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={machineCount || ''} onChange={(event) => setMachineCount(Math.max(0, Number(event.target.value)))} /></label>
+      <label className="forecast-setting"><span>每日工時（每台）</span><input type="number" inputMode="decimal" min="0.5" step="0.5" value={dailyHours || ''} onChange={(event) => setDailyHours(Math.max(0, Number(event.target.value)))} /></label>
+    </div>
+    {orderQuantity <= 0 ? <p className="forecast-placeholder">輸入訂單總數量後，會依機台數、每日工時與工作日排程計算完工日期</p> : !history.historyDays || !history.quantityPerMachineHour ? <p className="forecast-placeholder warning">此產品缺少有效的歷史工時或加工數量，暫時無法估算完工時間</p> : !machineCount || !dailyHours ? <p className="forecast-placeholder warning">預計使用機台數與每日工時必須大於 0</p> : <>
+      <div className="forecast-grid">
+        <div><span>歷史完成量</span><strong>{formatNumber(history.completedQuantity)}</strong></div>
+        <div><span>每機台每小時產量</span><strong>{formatNumber(Number(history.quantityPerMachineHour.toFixed(1)))}</strong></div>
+        <div><span>預估每日產量</span><strong>{formatNumber(Math.round(forecast.dailyCapacity))}</strong></div>
+        <div className="accent"><span>剩餘數量</span><strong>{formatNumber(forecast.remainingQuantity)}</strong></div>
+        <div><span>預估剩餘工作天</span><strong>{formatNumber(forecast.estimatedDays || 0)} <small>天</small></strong></div>
+        <div className="accent"><span>預估完工日期</span><strong>{formatDate(forecast.estimatedDate)}</strong></div>
+      </div>
+      {dueDate && <div className={`forecast-deadline-status ${forecast.canMeetDeadline ? 'can-meet' : 'will-be-late'}`}><ShieldCheck /><div><strong>{forecast.canMeetDeadline ? '可以在交期內完成' : '預估無法在交期內完成'}</strong><span>訂單交期 {formatDate(dueDate)}・交期前共有 {formatNumber(forecast.availableDays || 0)} 個可加工日・{deadlineMessage}</span></div></div>}
+      {holidayCalendarIncomplete && <p className="forecast-placeholder warning">交期或預估完工日超出目前載入的 {holidayCalendarYears} 官方行事曆，尚未公布年度的國定假日可能無法完整排除。</p>}
+    </>}
+    <p className="forecast-note">公式：歷史總產量 ÷ 總機台工時＝每機台每小時產量；再乘以預計機台數與每日工時得到每日產能。自動排程只用歷史紀錄判斷是否加入星期六、星期日；國定假日與補假依人事總處 {holidayCalendarYears} 官方行事曆排除，並從明天開始累計可加工日。</p>
   </div>
 }
 

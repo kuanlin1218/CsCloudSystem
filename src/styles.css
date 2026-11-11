@@ -102,6 +102,16 @@
   --font-size-base-forecast-head-strong: 17px;
   /* 「訂單完工預估」的「訂單總數量」的「欄位標題」相關格式：本行可修改排列方式、元件間距、文字或圖示顏色、字體大小。｜選擇器：.forecast-head > label */
   --font-size-base-forecast-head-label: 18px;
+  /* 「訂單完工預估」的「交期、排程、機台數、每日工時」的「欄位標題」字體大小。｜選擇器：.forecast-setting > span */
+  --font-size-base-forecast-setting-label: 14px;
+  /* 「訂單完工預估」的「交期、排程、機台數、每日工時」的「輸入框與選單」字體大小。｜選擇器：.forecast-setting input, .forecast-setting select */
+  --font-size-base-forecast-setting-control: 17px;
+  /* 「訂單完工預估」的「歷史加工日、平均機台與工時」的「歷史判斷摘要」字體大小。｜選擇器：.forecast-history-basis */
+  --font-size-base-forecast-history-basis: 13px;
+  /* 「訂單完工預估」的「能否在交期內完成」的「判斷結果標題」字體大小。｜選擇器：.forecast-deadline-status strong */
+  --font-size-base-forecast-deadline-strong: 18px;
+  /* 「訂單完工預估」的「交期、可加工日與提前延後天數」的「判斷結果說明」字體大小。｜選擇器：.forecast-deadline-status span */
+  --font-size-base-forecast-deadline-span: 13px;
   /* 「訂單完工預估」的「預估結果卡片」的「標題與數字」相關格式：本行可修改文字或圖示顏色、字體大小、上方外距、字型／粗細／大小。｜選擇器：.forecast-grid span */
   --font-size-base-forecast-grid-span: 12px;
   /* .forecast-grid strong｜選擇器：.forecast-grid strong｜原 font 縮寫 */
@@ -398,6 +408,16 @@
   --font-size-mobile-forecast-head-label: 18px;
   /* 「手機版」的「訂單完工預估」的「訂單總數量輸入框」字體大小。｜選擇器：.forecast-head input.order-quantity-input */
   --font-size-mobile-forecast-head-input-order-quantity-input: 20px;
+  /* 「手機版」的「訂單完工預估－交期與產能設定」的「欄位標題」字體大小。｜選擇器：.forecast-setting > span */
+  --font-size-mobile-forecast-setting-label: 16px;
+  /* 「手機版」的「訂單完工預估－交期與產能設定」的「輸入框與選單」字體大小。｜選擇器：.forecast-setting input, .forecast-setting select */
+  --font-size-mobile-forecast-setting-control: 18px;
+  /* 「手機版」的「訂單完工預估」的「歷史判斷摘要」字體大小。｜選擇器：.forecast-history-basis */
+  --font-size-mobile-forecast-history-basis: 13px;
+  /* 「手機版」的「訂單完工預估」的「交期判斷標題」字體大小。｜選擇器：.forecast-deadline-status strong */
+  --font-size-mobile-forecast-deadline-strong: 18px;
+  /* 「手機版」的「訂單完工預估」的「交期判斷說明」字體大小。｜選擇器：.forecast-deadline-status span */
+  --font-size-mobile-forecast-deadline-span: 14px;
   /* 「手機版」的「訂單完工預估」的「尚未輸入或沒有歷史資料提示」字體大小。｜選擇器：.forecast-placeholder */
   --font-size-mobile-forecast-placeholder: 16px;
   /* 「手機版」的「訂單完工預估」的「結果卡片標題」字體大小。｜選擇器：.forecast-grid span */
@@ -1190,17 +1210,43 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「訂單完工預估」的「訂單總數量」的「輸入框」相關格式：本行可修改寬度、高度、內距、邊框、圓角、背景、文字或圖示顏色、文字對齊、outline、邊框顏色、透明度。 */
 .forecast-head input.order-quantity-input { width: 210px; height: 44px; padding: 0 13px; border: 1px solid #3a464d; border-radius: 6px; background: #090e11; color: var(--text); text-align: right; outline: 0; }.forecast-head input.order-quantity-input:focus { border-color: var(--yellow); }.forecast-head input.order-quantity-input:disabled { opacity: .5; }
 
+/* 「訂單完工預估」的「歷史加工日、平均機台、平均工時與週末紀錄」的「歷史判斷摘要」相關格式。 */
+.forecast-history-basis { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 14px; margin-top: 13px; padding: 12px 14px; border: 1px solid #2f3a40; border-radius: 6px; background: #101619; color: #94a4ac; font-size: var(--font-size-base-forecast-history-basis); }
+.forecast-history-basis > span { color: var(--green); font-weight: 850; }
+.forecast-history-basis > strong { color: #dce6ea; }
+.forecast-history-basis > small { width: 100%; color: #7f9098; line-height: 1.5; }
+
+/* 「訂單完工預估」的「訂單交期、計算排程、預計機台數與每日工時」的「四欄設定區」相關格式。 */
+.forecast-config-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 13px; }
+.forecast-setting { min-width: 0; display: grid; gap: 7px; color: #93a3ab; }
+.forecast-setting > span { font-size: var(--font-size-base-forecast-setting-label); font-weight: 750; }
+.forecast-setting input,
+.forecast-setting select { width: 100%; min-width: 0; height: 46px; padding: 0 12px; border: 1px solid #39464d; border-radius: 6px; background-color: #090e11; color: var(--text); font-size: var(--font-size-base-forecast-setting-control); outline: 0; }
+.forecast-setting select { padding-right: 34px; }
+.forecast-setting input:focus,
+.forecast-setting select:focus { border-color: var(--yellow); }
+
 /* 「訂單完工預估」的「尚未輸入或沒有歷史資料」的「提示框」相關格式：本行可修改外距、內距、邊框、圓角、文字或圖示顏色、文字對齊。 */
 .forecast-placeholder { margin: 15px 0 0; padding: 14px; border: 1px dashed #303a40; border-radius: 6px; color: #76858e; text-align: center; }.forecast-placeholder.warning { color: #d5b45f; }
 
-/* 「訂單完工預估」的「預估結果」的「五張結果卡片排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、上方外距。 */
-.forecast-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 16px; }
+/* 「訂單完工預估」的「歷史完成量、每機台每小時產量、每日產量、剩餘量、工作天與完工日」的「六張結果卡片排列」相關格式。 */
+.forecast-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
 
-/* 「訂單完工預估」的「已完成數量、平均每日產量、剩餘數量、預估剩餘天數、預估完工日期」的「每一張結果卡片」相關格式：本行可修改最小高度、排列方式、place-content、justify-items、內距、邊框、圓角、背景、文字對齊、邊框顏色。 */
+/* 「訂單完工預估」的「歷史量、每機台每小時產量、每日產量、剩餘量、工作天與完工日」的「每一張結果卡片」相關格式。 */
 .forecast-grid > div { min-height: 82px; display: grid; place-content: center; justify-items: center; padding: 10px; border: 1px solid #2e393f; border-radius: 6px; background: #12191c; text-align: center; }.forecast-grid > div.accent { border-color: rgba(255,194,58,.27); background: rgba(255,194,58,.045); }
 
 /* 「訂單完工預估」的「預估結果卡片」的「標題與數字」相關格式：本行可修改文字或圖示顏色、字體大小、上方外距、字型／粗細／大小。 */
 .forecast-grid span { color: #84949c; font-size: var(--font-size-base-forecast-grid-span); }.forecast-grid strong { margin-top: 7px; color: #e4ecef; font: 800 var(--font-size-base-forecast-grid-strong-font-shorthand) ui-monospace, monospace; }.forecast-grid .accent strong { color: var(--yellow); }.forecast-grid small { color: #82919a; font-size: var(--font-size-base-forecast-grid-small); }
+
+/* 「訂單完工預估」的「能否在訂單交期內完成」的「判斷結果提示」相關格式。 */
+.forecast-deadline-status { display: flex; align-items: flex-start; gap: 13px; margin-top: 10px; padding: 14px 16px; border: 1px solid; border-radius: 7px; }
+.forecast-deadline-status > svg { width: 24px; flex: 0 0 auto; }
+.forecast-deadline-status strong { display: block; font-size: var(--font-size-base-forecast-deadline-strong); }
+.forecast-deadline-status span { display: block; margin-top: 4px; font-size: var(--font-size-base-forecast-deadline-span); line-height: 1.55; }
+.forecast-deadline-status.can-meet { border-color: rgba(61,204,179,.38); background: rgba(61,204,179,.07); color: var(--green); }
+.forecast-deadline-status.can-meet span { color: #8bbab1; }
+.forecast-deadline-status.will-be-late { border-color: rgba(255,121,92,.42); background: rgba(255,121,92,.065); color: var(--red); }
+.forecast-deadline-status.will-be-late span { color: #c29085; }
 
 /* 「訂單完工預估」的「預估結果」的「計算公式說明」相關格式：本行可修改外距、文字或圖示顏色、字體大小、行高。 */
 .forecast-note { margin: 12px 0 0; color: #65747c; font-size: var(--font-size-base-forecast-note); line-height: 1.6; }
@@ -2037,10 +2083,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「平板與手機版」的「加工數量查詢－查詢全部統計」的「五張統計卡片排列」相關格式：本行可修改欄位數量與寬度。 */
   .production-totals { grid-template-columns: repeat(3, 1fr); }
 
-  /* 「平板與手機版」的「訂單完工預估－預估結果」的「五張結果卡片排列」相關格式：本行可修改欄位數量與寬度。 */
+  /* 「平板與手機版」的「訂單完工預估－預估結果」的「六張結果卡片排列」相關格式：本行可修改欄位數量與寬度。 */
   .forecast-grid { grid-template-columns: repeat(3, 1fr); }
 
-/* 「平板與手機版」的「訂單完工預估－預估結果」的「五張結果卡片排列」相關格式。 */
+/* 「平板與手機版」的「訂單完工預估－預估結果」的「六張結果卡片排列」相關格式。 */
 }
 
 
@@ -2122,8 +2168,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版」的「加工數量查詢－查詢操作」的「查詢最後一筆、查詢全部、日期查詢按鈕排列」相關格式：本行可修改欄位數量與寬度、元件間距、最小高度、字體大小。 */
   .query-actions { grid-template-columns: 1fr; gap: 9px; }.query-button { min-height: 48px; }
 
-  /* 「手機版」的「訂單完工預估－標題與訂單總數量」的「排列區」相關格式：本行可修改垂直對齊、flex-direction、寬度、文字對齊、欄位數量與寬度、grid-column。 */
-  .forecast-head { align-items: stretch; flex-direction: column; }.forecast-head input.order-quantity-input { width: 100%; text-align: left; }.forecast-grid { grid-template-columns: 1fr 1fr; }.forecast-grid > div:last-child { grid-column: 1 / -1; }
+  /* 「手機版」的「訂單完工預估－標題、訂單數量、交期與產能設定」的「排列區」相關格式。 */
+  .forecast-head { align-items: stretch; flex-direction: column; }.forecast-head input.order-quantity-input { width: 100%; text-align: left; }.forecast-config-grid { grid-template-columns: 1fr 1fr; }.forecast-grid { grid-template-columns: 1fr 1fr; }
 
   /* 「手機版」的「加工時間計算－計算內容」的「整個計算區塊」相關格式：本行可修改內距、排列方式、欄位數量與寬度、寬度、垂直對齊、flex-direction、元件間距。 */
   .modal-calculation { padding: 11px; }.modal-tool-actions { display: grid; grid-template-columns: 1fr; }.modal-tool-actions .button { width: 100%; }.time-result { align-items: flex-start; flex-direction: column; gap: 5px; }
@@ -2374,6 +2420,20 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版」的「訂單完工預估」的「訂單總數量輸入框」字體大小。 */
   .forecast-head input.order-quantity-input { font-size: var(--font-size-mobile-forecast-head-input-order-quantity-input); }
 
+  /* 「手機版」的「訂單完工預估－交期與產能設定」的「欄位標題」字體大小。 */
+  .forecast-setting > span { font-size: var(--font-size-mobile-forecast-setting-label); }
+
+  /* 「手機版」的「訂單完工預估－交期與產能設定」的「輸入框與選單」字體大小。 */
+  .forecast-setting input,
+  .forecast-setting select { font-size: var(--font-size-mobile-forecast-setting-control); }
+
+  /* 「手機版」的「訂單完工預估」的「歷史判斷摘要」字體大小。 */
+  .forecast-history-basis { font-size: var(--font-size-mobile-forecast-history-basis); }
+
+  /* 「手機版」的「訂單完工預估」的「交期判斷標題與說明」字體大小。 */
+  .forecast-deadline-status strong { font-size: var(--font-size-mobile-forecast-deadline-strong); }
+  .forecast-deadline-status span { font-size: var(--font-size-mobile-forecast-deadline-span); }
+
   /* 「手機版」的「訂單完工預估」的「尚未輸入或沒有歷史資料提示」字體大小。 */
   .forecast-placeholder { font-size: var(--font-size-mobile-forecast-placeholder); }
 
@@ -2619,6 +2679,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 將欄位改為可換行或卡片排列；電腦版表格不受影響。                            */
 /* ========================================================================== */
 @media (max-width: 620px) {
+
+  /* 「手機版－訂單完工預估」的「交期、排程、機台數與每日工時」改成單欄，避免欄位被壓縮。 */
+  .forecast-config-grid { grid-template-columns: 1fr; }
 
   /* 「手機版－加工數量查詢結果」的「表格外框」：關閉左右捲動，文字可自動換行。 */
   .production-table-wrap { overflow-x: hidden; }
