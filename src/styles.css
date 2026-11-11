@@ -105,7 +105,7 @@
   /* 「訂單完工預估」的「交期、排程、機台數、每日工時」的「欄位標題」字體大小。｜選擇器：.forecast-setting > span */
   --font-size-base-forecast-setting-label: 14px;
   /* 「訂單完工預估」的「交期、排程、機台數、每日工時」的「輸入框與選單」字體大小。｜選擇器：.forecast-setting input, .forecast-setting select */
-  --font-size-base-forecast-setting-control: 17px;
+  --font-size-base-forecast-setting-control: 15px;
   /* 「訂單完工預估」的「歷史加工日、平均機台與工時」的「歷史判斷摘要」字體大小。｜選擇器：.forecast-history-basis */
   --font-size-base-forecast-history-basis: 13px;
   /* 「訂單完工預估」的「能否在交期內完成」的「判斷結果標題」字體大小。｜選擇器：.forecast-deadline-status strong */
@@ -1237,6 +1237,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* 「訂單完工預估」的「預估結果卡片」的「標題與數字」相關格式：本行可修改文字或圖示顏色、字體大小、上方外距、字型／粗細／大小。 */
 .forecast-grid span { color: #84949c; font-size: var(--font-size-base-forecast-grid-span); }.forecast-grid strong { margin-top: 7px; color: #e4ecef; font: 800 var(--font-size-base-forecast-grid-strong-font-shorthand) ui-monospace, monospace; }.forecast-grid .accent strong { color: var(--yellow); }.forecast-grid small { color: #82919a; font-size: var(--font-size-base-forecast-grid-small); }
+
+/* 「訂單完工預估」的「加工日產能與實際加工天數」的「結果卡片補充說明」上方間距。 */
+.forecast-grid > div > small { margin-top: 4px; }
 
 /* 「訂單完工預估」的「能否在訂單交期內完成」的「判斷結果提示」相關格式。 */
 .forecast-deadline-status { display: flex; align-items: flex-start; gap: 13px; margin-top: 10px; padding: 14px 16px; border: 1px solid; border-radius: 7px; }
