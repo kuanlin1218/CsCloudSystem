@@ -388,7 +388,7 @@
   --font-size-mobile-time-result-span: 16px;
   /* 「手機版」的「加工時間計算」的「計算結果數字」字體大小。｜選擇器：.time-result strong */
   --font-size-mobile-time-result-strong: 20px;
-  /* 「手機版」的「加工數量查詢」的「日期區間、最後一筆、全部與下載 Excel 按鈕」字體大小。｜選擇器：.query-button */
+  /* 「手機版」的「加工數量查詢與資料匯出刪除」的「查詢、下載與刪除按鈕」字體大小。｜選擇器：.query-button */
   --font-size-mobile-query-button: 16px;
   /* 「手機版」的「訂單完工預估」的「功能標題」字體大小。｜選擇器：.forecast-head strong */
   --font-size-mobile-forecast-head-strong: 17px;
@@ -1226,8 +1226,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「訂單完工預估」的「訂單總數量」的「輸入區外框」相關格式：本行可修改內距、邊框、圓角、背景。 */
 .modal-forecast-head { padding: 16px; border: 1px solid #344148; border-radius: 8px; background: #0d1316; }
 
-/* 「加工數量查詢」的「查詢操作」的「日期區間查詢、查詢最後一筆、查詢全部、下載 Excel 按鈕排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、上方外距。 */
-.query-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+/* 「加工數量查詢」的「查詢操作」的「查詢最後一筆、查詢全部、日期查詢按鈕排列」相關格式：本行可修改排列方式、欄位數量與寬度、元件間距、上方外距。 */
+.query-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
 
 /* 「加工數量查詢」的「查詢操作」的「查詢與下載按鈕」相關格式：本行可修改最小高度、排列方式、垂直對齊、水平對齊、元件間距、邊框、圓角、背景、文字或圖示顏色、字體大小、字體粗細、cursor、陰影。 */
 .query-button { min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 9px; border: 1px solid #36434a; border-radius: 8px; background: #151c20; color: #dbe4e8; font-size: var(--font-size-base-query-button); font-weight: 850; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,.14); }
@@ -1238,7 +1238,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「加工數量查詢」的「查詢操作」的「查詢與下載按鈕」相關格式：本行可修改位移或旋轉、背景。 */
 .query-button:not(:disabled):hover { transform: translateY(-1px); background: #1b2429; }
 
-/* 「加工數量查詢」的「查詢操作」的「四種查詢與下載按鈕顏色」相關格式：本行可修改邊框顏色、文字或圖示顏色。 */
+/* 「加工數量查詢與資料匯出刪除」的「查詢、下載與刪除按鈕顏色」相關格式：本行可修改邊框顏色、文字或圖示顏色。 */
 .query-button.range { border-color: #496473; color: #a8d4ea; }.query-button.latest { border-color: #39717a; color: #79d7e8; }.query-button.all { border-color: #7c6429; color: var(--yellow); }.query-button.export { border-color: #356f62; color: var(--green); }.query-button.danger { border-color: rgba(255,121,92,.48); color: var(--red); background: rgba(255,121,92,.045); }
 
 /* 「基礎資料設定」的「管理產品編號與管理機台」的「新增、編輯與刪除說明」相關格式：本行可修改外距、文字或圖示顏色、字體大小。 */
@@ -1452,28 +1452,40 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .production-setting-card small { display: block; margin-top: 7px; color: #8d9ca4; line-height: 1.5; }
 .production-setting-card.machine-setting > svg:first-child { color: var(--green); }
 
-/* 「加工管理系統－訂單完工預估與永久刪除資料」的「功能內容卡片」相關格式。 */
+/* 「加工管理系統－訂單完工預估與資料匯出刪除」的「功能內容卡片」相關格式。 */
 .production-tool-page-card { max-width: 980px; margin-inline: auto; }
 .production-forecast-panel { margin-bottom: 0; }
 .production-tool-placeholder { min-height: 210px; display: grid; place-content: center; justify-items: center; gap: 12px; margin-top: 18px; border: 1px dashed #344148; border-radius: 8px; color: #7f9099; }
 .production-tool-placeholder svg { width: 34px; color: #586970; }
 
-/* 「加工管理系統－永久刪除資料」的「無法復原警告」相關格式。 */
+/* 「加工管理系統－資料匯出與刪除」的「下載 EXCEL 與永久刪除」兩個操作按鈕排列。 */
+.production-data-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+
+/* 「加工管理系統－資料匯出與刪除」的「全部加工資料預覽表格」外框。 */
+.production-export-preview { margin-top: 20px; }
+.production-export-preview-table th:nth-child(1) { width: 15%; }
+.production-export-preview-table th:nth-child(2) { width: 13%; }
+.production-export-preview-table th:nth-child(3),
+.production-export-preview-table th:nth-child(4) { width: 8%; }
+.production-export-preview-table th:nth-child(5),
+.production-export-preview-table th:nth-child(6) { width: 12%; }
+.production-export-preview-table th:nth-child(7) { width: 32%; }
+
+/* 「加工管理系統－資料匯出與刪除」的「尚未選擇產品編號」提示卡片。 */
+.production-data-placeholder { max-width: 980px; margin-inline: auto; }
+
+/* 「加工管理系統－資料匯出與刪除」的「永久刪除風險與下載不會修改資料」說明。 */
 .production-delete-warning { display: flex; align-items: flex-start; gap: 13px; margin-top: 18px; padding: 16px; border: 1px solid rgba(255,121,92,.35); border-radius: 8px; background: rgba(255,121,92,.055); }
 .production-delete-warning > svg { width: 25px; flex: 0 0 auto; color: var(--red); }
 .production-delete-warning strong { display: block; color: #ff9b86; }
 .production-delete-warning span { display: block; margin-top: 5px; color: #a9847c; line-height: 1.6; }
 
-/* 「加工管理系統－永久刪除資料」的「目前加工紀錄筆數」相關格式。 */
-.production-delete-count { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 14px; padding: 15px 17px; border: 1px solid #313c42; border-radius: 7px; background: #10171a; color: #8d9ca4; }
-.production-delete-count strong { color: #fff; font-family: ui-monospace, "Cascadia Code", monospace; }
-.production-delete-count small { color: #82919a; }
-.production-delete-submit { width: 100%; margin-top: 14px; }
-
 @media (max-width: 760px) {
   /* 「手機版－基礎資料設定」的「管理產品編號與管理機台」：改成單欄排列。 */
   .production-settings-grid { grid-template-columns: 1fr; }
   .production-setting-card { min-height: 105px; padding: 15px; }
+  /* 「手機版－資料匯出與刪除」的「下載與刪除按鈕」改成上下排列。 */
+  .production-data-actions { grid-template-columns: 1fr; gap: 9px; }
 }
 
 
@@ -2107,7 +2119,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版」的「加工數量登記－實際工時與總時間」的「三欄排列」相關格式：本行可修改欄位數量與寬度、grid-column。 */
   .duration-fields { grid-template-columns: 1fr 1fr; }.duration-fields > div { grid-column: 1 / -1; }
 
-  /* 「手機版」的「加工數量查詢－查詢操作」的「日期區間查詢、查詢最後一筆、查詢全部、下載 Excel 按鈕排列」相關格式：本行可修改欄位數量與寬度、元件間距、最小高度、字體大小。 */
+  /* 「手機版」的「加工數量查詢－查詢操作」的「查詢最後一筆、查詢全部、日期查詢按鈕排列」相關格式：本行可修改欄位數量與寬度、元件間距、最小高度、字體大小。 */
   .query-actions { grid-template-columns: 1fr; gap: 9px; }.query-button { min-height: 48px; }
 
   /* 「手機版」的「訂單完工預估－標題與訂單總數量」的「排列區」相關格式：本行可修改垂直對齊、flex-direction、寬度、文字對齊、欄位數量與寬度、grid-column。 */
@@ -2346,7 +2358,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
   /* ---------- 加工數量查詢與訂單完工預估 ---------- */
 
-  /* 「手機版」的「加工數量查詢」的「日期區間、最後一筆、全部與下載 Excel 按鈕」字體大小。 */
+  /* 「手機版」的「加工數量查詢與資料匯出刪除」的「查詢、下載與刪除按鈕」字體大小。 */
   .query-button { font-size: var(--font-size-mobile-query-button); }
 
 

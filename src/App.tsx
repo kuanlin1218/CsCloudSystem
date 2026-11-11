@@ -321,7 +321,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   const isInventory = activePage === 'dashboard' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
   const isProduction = activePage === 'production-dashboard' || activePage === 'production-entry' || activePage === 'production-query' || activePage === 'production-forecast' || activePage === 'production-settings' || activePage === 'production-delete'
   const isSystem = isInventory || isProduction
-  const showTableScrollControls = activePage === 'production-query' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
+  const showTableScrollControls = activePage === 'production-query' || activePage === 'production-delete' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
   const productionEntryProductCodes = useMemo(() => productionOptions.filter((option) => option.option_type === 'product').map((option) => option.value).sort(), [productionOptions])
   const productionQueryProductCodes = useMemo(() => [...new Set([
     ...productionEntryProductCodes,
@@ -346,7 +346,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
             <NavItem active={activePage === 'production-query'} icon={<Search />} onClick={() => nav('production-query')}>加工數量查詢</NavItem>
             <NavItem active={activePage === 'production-forecast'} icon={<Calculator />} onClick={() => nav('production-forecast')}>訂單完工預估</NavItem>
             {!guestMode && <NavItem active={activePage === 'production-settings'} icon={<Wrench />} onClick={() => nav('production-settings')}>基礎資料設定</NavItem>}
-            {!guestMode && <NavItem active={activePage === 'production-delete'} icon={<Trash2 />} onClick={() => nav('production-delete')}>永久刪除資料</NavItem>}
+            {!guestMode && <NavItem active={activePage === 'production-delete'} icon={<FileSpreadsheet />} onClick={() => nav('production-delete')}>資料匯出與刪除</NavItem>}
           </> : <>
             <NavItem active={activePage === 'dashboard'} icon={<LayoutGrid />} onClick={() => nav('dashboard')}>總覽</NavItem>
             <NavItem active={activePage === 'movements'} icon={<ArrowLeftRight />} onClick={() => nav('movements')}>出入庫</NavItem>
@@ -391,7 +391,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         }} />}
         {activePage === 'production-forecast' && <ProductionForecastPage records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
         {activePage === 'production-settings' && !guestMode && <ProductionSettingsPage openOption={setProductionOptionModal} />}
-        {activePage === 'production-delete' && !guestMode && <ProductionDeletePage records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} onDeleteProductRecords={async (productCode, count) => {
+        {activePage === 'production-delete' && !guestMode && <ProductionDataManagementPage records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} onDeleteProductRecords={async (productCode, count) => {
           const deleted = await requestAdminDelete('永久刪除產品加工資料', `將刪除產品編號「${productCode}」、管理清單選項與全部 ${count} 筆加工紀錄。`, () => deleteProductionProductData(productCode))
           if (deleted) await afterSave(`${productCode} 的產品編號與全部加工紀錄已永久刪除`)
           return deleted
@@ -590,6 +590,30 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
 
 type ProductionQueryMode = 'range' | 'latest' | 'all'
 
+/* 「加工數量查詢」與「資料匯出與刪除」共用的加工統計，數值與下載 Excel 的合計欄位一致。 */
+function calculateProductionTotals(records: ProductionRecord[]) {
+  const totalQuantity = records.reduce((sum, record) => sum + record.quantity, 0)
+  const totalMinutes = records.reduce((sum, record) => sum + record.total_minutes, 0)
+  const totalDays = new Set(records.map((record) => record.work_date)).size
+  return {
+    totalQuantity,
+    totalMinutes,
+    totalDays,
+    dailyAverage: totalDays ? Math.round(totalQuantity / totalDays) : 0,
+    pieceSeconds: totalQuantity ? Math.round(totalMinutes * 60 / totalQuantity) : 0,
+  }
+}
+
+function ProductionTotals({ totals }: { totals: ReturnType<typeof calculateProductionTotals> }) {
+  return <div className="production-totals">
+    <div><span>總天數</span><strong>{formatNumber(totals.totalDays)}</strong></div>
+    <div><span>總時間</span><strong>{formatNumber(totals.totalMinutes)} <small>分</small></strong></div>
+    <div><span>1天平均</span><strong>{formatNumber(totals.dailyAverage)} <small>顆</small></strong></div>
+    <div><span>1顆平均</span><strong>{formatNumber(totals.pieceSeconds)} <small>秒</small></strong></div>
+    <div className="production-total-quantity"><span>總數量</span><strong>{formatNumber(totals.totalQuantity)}</strong></div>
+  </div>
+}
+
 function ProductionQueryPage({ records, productCodes, machines, loading, readOnly, onUpdateRecord, onDeleteRecord }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; readOnly: boolean; onUpdateRecord: (record: ProductionRecord, input: ProductionInput) => Promise<void>; onDeleteRecord: (record: ProductionRecord) => Promise<boolean> }) {
   const [productCode, setProductCode] = useState('')
   const [from, setFrom] = useState(`${today().slice(0, 8)}01`)
@@ -598,7 +622,6 @@ function ProductionQueryPage({ records, productCodes, machines, loading, readOnl
   const [editingRecord, setEditingRecord] = useState<ProductionRecord | null>(null)
   const [queryError, setQueryError] = useState('')
   const [deletingRecordId, setDeletingRecordId] = useState('')
-  const [exporting, setExporting] = useState(false)
   const selectedRecords = useMemo(() => records
     .filter((record) => record.product_code.toLowerCase() === productCode.trim().toLowerCase())
     .sort((a, b) => `${b.work_date}-${b.created_at}-${b.id}`.localeCompare(`${a.work_date}-${a.created_at}-${a.id}`)), [records, productCode])
@@ -611,30 +634,12 @@ function ProductionQueryPage({ records, productCodes, machines, loading, readOnl
     }
     return selectedRecords
   }, [mode, selectedRecords, from, to])
-  const totals = useMemo(() => {
-    const totalQuantity = results.reduce((sum, record) => sum + record.quantity, 0)
-    const totalMinutes = results.reduce((sum, record) => sum + record.total_minutes, 0)
-    const totalDays = new Set(results.map((record) => record.work_date)).size
-    return {
-      totalQuantity, totalMinutes, totalDays,
-      dailyAverage: totalDays ? Math.round(totalQuantity / totalDays) : 0,
-      pieceSeconds: totalQuantity ? Math.round(totalMinutes * 60 / totalQuantity) : 0,
-    }
-  }, [results])
+  const totals = useMemo(() => calculateProductionTotals(results), [results])
   const runQuery = (nextMode: ProductionQueryMode) => {
     setQueryError('')
     if (!productCode.trim()) { setMode(null); setQueryError('請先輸入或選擇產品編號'); return }
     if (nextMode === 'range' && from && to && from > to) { setMode(null); setQueryError('開始日期不能晚於結束日期'); return }
     setMode(nextMode)
-  }
-
-  const downloadExcel = async () => {
-    if (mode !== 'all') { setQueryError('請先執行「查詢全部」後再下載 Excel'); return }
-    if (!results.length) { setQueryError('目前沒有可下載的查詢結果'); return }
-    setExporting(true); setQueryError('')
-    try { await exportProductionXlsx(productCode, results) }
-    catch (error) { setQueryError(`Excel 產生失敗：${messageFor(error)}`) }
-    finally { setExporting(false) }
   }
 
   const deleteOneRecord = async (record: ProductionRecord) => {
@@ -655,7 +660,6 @@ function ProductionQueryPage({ records, productCodes, machines, loading, readOnl
         <button className="query-button latest" onClick={() => runQuery('latest')}><Clock3 />查詢最後一筆</button>
         <button className="query-button all" onClick={() => runQuery('all')}><Search />查詢全部</button>
         <button className="query-button range" onClick={() => runQuery('range')}><CalendarDays />日期查詢</button>
-        {!readOnly && <button className="query-button export" onClick={() => void downloadExcel()} disabled={mode !== 'all' || !results.length || exporting} title={mode === 'all' ? '下載全部查詢結果' : '請先按「查詢全部」'}><Download />{exporting ? '產生中…' : '下載 EXCEL'}</button>}
       </div>
       {queryError && <div className="form-error production-error">{queryError}</div>}
     </div>
@@ -664,13 +668,7 @@ function ProductionQueryPage({ records, productCodes, machines, loading, readOnl
       <div className="result-title"><span>產品編號</span><strong>{productCode.trim().toUpperCase()}</strong><small>{mode === 'range' ? `${formatDate(from)} ～ ${formatDate(to)}` : mode === 'latest' ? `最後日期 ${formatDate(results[0]?.work_date || '')}・全部機台` : '全部紀錄'}</small></div>
       {results.length === 0 ? <div className="production-empty"><ClipboardList />沒有符合條件的加工紀錄</div> : <>
         <div className="production-table-wrap"><table className={`production-table ${readOnly ? 'guest-read-only-table' : ''}`}><thead><tr><th>日期</th><th>機台</th><th>時</th><th>分</th><th>數量</th><th>總時間</th><th>備註</th>{!readOnly && <th className="record-action-column" aria-label="操作" />}</tr></thead><tbody>{results.map((record) => <tr key={record.id}><td>{formatDate(record.work_date)}</td><td>{record.machine}</td><td>{record.hours}</td><td>{record.minutes}</td><td>{formatNumber(record.quantity)}</td><td>{formatNumber(record.total_minutes)}</td><td>{record.notes || '—'}</td>{!readOnly && <td><div className="production-row-actions"><button className="production-row-edit" onClick={() => setEditingRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`編輯 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Pencil />編輯</button><button className="production-row-delete" onClick={() => void deleteOneRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`刪除 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Trash2 />{deletingRecordId === record.id ? '刪除中' : '刪除'}</button></div></td>}</tr>)}</tbody></table></div>
-        <div className="production-totals">
-          <div><span>總天數</span><strong>{formatNumber(totals.totalDays)}</strong></div>
-          <div><span>總時間</span><strong>{formatNumber(totals.totalMinutes)} <small>分</small></strong></div>
-          <div><span>1天平均</span><strong>{formatNumber(totals.dailyAverage)} <small>顆</small></strong></div>
-          <div><span>1顆平均</span><strong>{formatNumber(totals.pieceSeconds)} <small>秒</small></strong></div>
-          <div className="production-total-quantity"><span>總數量</span><strong>{formatNumber(totals.totalQuantity)}</strong></div>
-        </div>
+        <ProductionTotals totals={totals} />
       </>}
     </div>}
     {!readOnly && editingRecord && <ProductionRecordEditModal record={editingRecord} productCodes={productCodes} machines={machines} close={() => setEditingRecord(null)} save={async (input) => { await onUpdateRecord(editingRecord, input); setEditingRecord(null) }} />}
@@ -703,25 +701,48 @@ function ProductionForecastPage({ records, productCodes, loading }: { records: P
   </section>
 }
 
-function ProductionDeletePage({ records, productCodes, loading, onDeleteProductRecords }: { records: ProductionRecord[]; productCodes: string[]; loading: boolean; onDeleteProductRecords: (productCode: string, count: number) => Promise<boolean> }) {
+function ProductionDataManagementPage({ records, productCodes, loading, onDeleteProductRecords }: { records: ProductionRecord[]; productCodes: string[]; loading: boolean; onDeleteProductRecords: (productCode: string, count: number) => Promise<boolean> }) {
   const [productCode, setProductCode] = useState('')
   const [deleting, setDeleting] = useState(false)
-  const recordCount = useMemo(() => records.filter((record) => record.product_code.toLowerCase() === productCode.toLowerCase()).length, [records, productCode])
+  const [exporting, setExporting] = useState(false)
+  const [actionError, setActionError] = useState('')
+  const selectedRecords = useMemo(() => records
+    .filter((record) => record.product_code.toLowerCase() === productCode.toLowerCase())
+    .sort((a, b) => `${a.work_date}-${a.machine}-${a.created_at}-${a.id}`.localeCompare(`${b.work_date}-${b.machine}-${b.created_at}-${b.id}`, 'zh-Hant')), [records, productCode])
+  const recordCount = selectedRecords.length
+  const totals = useMemo(() => calculateProductionTotals(selectedRecords), [selectedRecords])
+  const downloadExcel = async () => {
+    if (!productCode || !selectedRecords.length) return
+    setExporting(true); setActionError('')
+    try { await exportProductionXlsx(productCode, selectedRecords) }
+    catch (error) { setActionError(`Excel 產生失敗：${messageFor(error)}`) }
+    finally { setExporting(false) }
+  }
   const removeSelectedProduct = async () => {
     if (!productCode) return
-    setDeleting(true)
+    setDeleting(true); setActionError('')
     try {
       if (await onDeleteProductRecords(productCode, recordCount)) setProductCode('')
     } finally { setDeleting(false) }
   }
   return <section className="page-content production-system-page production-delete-page">
-    <PageTitle eyebrow="PERMANENT DELETE" title="永久刪除資料" />
+    <PageTitle eyebrow="DATA EXPORT & DELETE" title="資料匯出與刪除" />
     <div className="production-card production-tool-page-card production-delete-card">
-      <div className="production-field-row"><label>產品編號</label><select value={productCode} onChange={(event) => setProductCode(event.target.value)} disabled={loading || deleting}><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
-      <div className="production-delete-warning"><Trash2 /><div><strong>產品編號與全部加工紀錄會永久移除</strong><span>選擇產品後會刪除「管理產品編號」中的項目，以及該產品全部加工紀錄；操作時仍需輸入登入密碼。</span></div></div>
-      <div className="production-delete-count"><span>目前加工紀錄</span><strong>{productCode ? formatNumber(recordCount) : '—'} <small>筆</small></strong></div>
-      <button className="query-button danger production-delete-submit" type="button" onClick={() => void removeSelectedProduct()} disabled={!productCode || loading || deleting}><Trash2 />{deleting ? '刪除中…' : `永久刪除所選產品${productCode ? `（${recordCount} 筆）` : ''}`}</button>
+      <div className="production-field-row"><label>產品編號</label><select value={productCode} onChange={(event) => { setProductCode(event.target.value); setActionError('') }} disabled={loading || deleting || exporting}><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+      <div className="production-data-actions">
+        <button className="query-button export" type="button" onClick={() => void downloadExcel()} disabled={!productCode || !recordCount || loading || deleting || exporting}><Download />{exporting ? '產生中…' : '下載 EXCEL'}</button>
+        <button className="query-button danger" type="button" onClick={() => void removeSelectedProduct()} disabled={!productCode || loading || deleting || exporting}><Trash2 />{deleting ? '刪除中…' : `永久刪除${productCode ? `（${recordCount} 筆）` : ''}`}</button>
+      </div>
+      {actionError && <div className="form-error production-error">{actionError}</div>}
+      <div className="production-delete-warning"><Trash2 /><div><strong>刪除會永久移除產品編號與全部加工紀錄</strong><span>「下載 EXCEL」只會下載資料，不會修改雲端內容；「永久刪除」仍需輸入登入密碼確認。</span></div></div>
     </div>
+    {loading ? <PageSkeleton /> : productCode ? <div className="production-results production-export-preview">
+      <div className="result-title"><span>產品編號</span><strong>{productCode.trim().toUpperCase()}</strong><small>全部加工紀錄・共 {formatNumber(recordCount)} 筆</small></div>
+      {selectedRecords.length === 0 ? <div className="production-empty"><ClipboardList />此產品目前沒有加工紀錄，仍可永久刪除產品編號</div> : <>
+        <div className="production-table-wrap"><table className="production-table production-export-preview-table"><thead><tr><th>日期</th><th>機台</th><th>時</th><th>分</th><th>數量</th><th>總時間</th><th>備註</th></tr></thead><tbody>{selectedRecords.map((record) => <tr key={record.id}><td>{formatDate(record.work_date)}</td><td>{record.machine}</td><td>{record.hours}</td><td>{record.minutes}</td><td>{formatNumber(record.quantity)}</td><td>{formatNumber(record.total_minutes)}</td><td>{record.notes || '—'}</td></tr>)}</tbody></table></div>
+        <ProductionTotals totals={totals} />
+      </>}
+    </div> : <div className="production-card production-tool-placeholder production-data-placeholder"><FileSpreadsheet />請先選擇產品編號，即可預覽全部資料</div>}
   </section>
 }
 
