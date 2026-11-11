@@ -1070,7 +1070,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
           controlsRef.current = null
           setCameraActive(false)
           setBarcode(value)
-          setManualBarcode(value)
+          setManualBarcode('')
         },
       )
       controlsRef.current = controls
@@ -1091,7 +1091,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
   const useManualBarcode = () => {
     const value = manualBarcode.trim()
     if (!value) { setError('請輸入條碼內容'); return }
-    stopCamera(); setError(''); setBarcode(value); setSelectedProductId('')
+    stopCamera(); setError(''); setBarcode(value); setManualBarcode(''); setSelectedProductId('')
   }
 
   const bindExistingProduct = async () => {

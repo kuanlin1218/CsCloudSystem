@@ -494,6 +494,15 @@ SQL：不需要執行 SQL。
 GitHub Summary：將 iOS 鍵盤切換碼移至掃描視窗。
 
 
+2026-11-11
+修改內容：「掃描刀具條碼」視窗每次完成相機辨識或手動／掃描槍查詢後，自動清空條碼輸入框；查詢結果仍保留在下方，下一筆掃描不會接在上一筆條碼後面。
+修改檔案：
+- src/App.tsx：BarcodeScannerModal 的相機辨識回呼與 useManualBarcode 查詢流程，成功取得條碼後清空 manualBarcode。
+- 專案修改紀錄.txt：新增本次修改紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：查詢後自動清空條碼輸入框。
+
+
 【之後每次追加格式】
 
 YYYY-MM-DD
