@@ -2786,8 +2786,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .barcode-link-existing > .button { min-width: 160px; }
 
 @media (max-width: 620px) {
-  /* 「手機版－庫存頁面標題」的「掃描條碼按鈕」：維持緊湊並避免擠壓標題。 */
-  .title-actions .scan-button { min-width: 46px; padding: 0 11px; font-size: 0 !important; }
+  /* 「手機版－庫存頁面標題」的「掃描條碼按鈕」：固定為正方形並只顯示掃描圖示，避免擠壓入庫與出庫按鈕。 */
+  .title-actions .scan-button { width: 46px; min-width: 46px; flex: 0 0 46px; padding: 0; gap: 0; font-size: 0 !important; }
   .title-actions .scan-button svg { width: 21px; height: 21px; }
 
   /* 「手機版－掃描刀具條碼」的「相機與結果」相關格式。 */

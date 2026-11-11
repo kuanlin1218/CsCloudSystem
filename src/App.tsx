@@ -775,7 +775,7 @@ function StockButtons({ openStock }: { openStock: (type: MovementType) => void }
 }
 
 function ScanButton({ openScanner }: { openScanner: () => void }) {
-  return <button className="button scan-button" type="button" onClick={openScanner}><ScanBarcode />掃描條碼</button>
+  return <button className="button scan-button" type="button" onClick={openScanner} aria-label="掃描條碼" title="掃描條碼"><ScanBarcode />掃描條碼</button>
 }
 
 function Dashboard({ products, movements, loading, openStock, openScanner, readOnly }: { products: Product[]; movements: Movement[]; loading: boolean; openStock: (t: MovementType) => void; openScanner: () => void; readOnly: boolean }) {

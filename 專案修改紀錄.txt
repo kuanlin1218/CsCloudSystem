@@ -524,6 +524,16 @@ SQL：不需要執行 SQL。
 GitHub Summary：新增條碼掃描成功提示與結果回饋。
 
 
+2026-11-11
+修改內容：手機版頁面標題旁的掃描條碼按鈕改為固定正方形，只顯示掃描圖示；入庫與出庫按鈕仍保留圖示及文字，電腦版掃描按鈕仍顯示文字。
+修改檔案：
+- src/App.tsx：ScanButton 補上掃描條碼的 aria-label 與 title，圖示模式仍保有易懂名稱。
+- src/styles.css：手機版 title-actions 內的 scan-button 固定為 46×46 圖示按鈕並移除多餘內距。
+- 專案修改紀錄.txt：新增本次修改紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：調整手機版掃描圖示按鈕。
+
+
 【之後每次追加格式】
 
 YYYY-MM-DD
