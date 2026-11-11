@@ -161,7 +161,7 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
     <section className="auth-card" aria-label="登入系統">
       <div className="auth-brand">
         <img className="auth-logo" src={`${import.meta.env.BASE_URL}company-logo.png`} alt="詮栩公司 Logo"/>
-        <p className="auth-copy">詮栩股份有限公司 Chyuan Sheu Co.,Ltd</p>
+        <p className="auth-copy">詮栩股份有限公司 Chyuan Sheu Co.,Ltd.</p>
         <h1>登入雲端系統</h1>
         <p className="auth-eyebrow">2026</p>
       </div>
