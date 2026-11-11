@@ -558,6 +558,15 @@ SQL：不需要執行 SQL。
 GitHub Summary：新增條碼產生器與 Excel QR 標籤。
 
 
+2026-11-11
+修改內容：修正含 QR Code 標籤的完整 Excel 備份開啟時顯示「部分內容有問題」；原因是先由 SheetJS 建立再交給 ExcelJS 加入圖片時，篩選器定義在轉換後不相容。現在所有匯出工作表、篩選器、格式與 QR 圖片均由 ExcelJS 一次建立，原本 Excel 匯入仍使用 SheetJS 讀取。修正版已使用本機 Microsoft Excel 實際唯讀開啟，6 個工作表均正常載入。
+修改檔案：
+- src/lib/adminDataWorkbook.ts：改為單一 ExcelJS 匯出流程，移除兩套工具間的工作簿轉換，保留刀具、出入庫、加工數量、管理選項與 QR Code 標籤內容。
+- 專案修改紀錄.txt：新增本次修正與實際 Excel 開啟驗證紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：修正 QR 備份 Excel 開啟警告。
+
+
 【之後每次追加格式】
 
 YYYY-MM-DD

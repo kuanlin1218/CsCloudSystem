@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs'
-import { read, utils, write } from 'xlsx'
+import { read, utils } from 'xlsx'
 import type { AdminDataPayload, AdminMovementRow, AdminOptionRow, AdminProductRow, AdminProductionRow } from './adminData'
 import { createQrCodeDataUrl } from './barcode'
 
@@ -38,11 +38,30 @@ function rows(workbook: ReturnType<typeof read>, sheetName: string) {
   return utils.sheet_to_json<CellRow>(sheet, { defval: '', raw: true })
 }
 
-function addSheet(workbook: ReturnType<typeof utils.book_new>, name: string, data: CellRow[], widths: number[]) {
-  const sheet = utils.json_to_sheet(data)
-  sheet['!cols'] = widths.map((wch) => ({ wch }))
-  if (sheet['!ref']) sheet['!autofilter'] = { ref: sheet['!ref'] }
-  utils.book_append_sheet(workbook, sheet, name)
+function addDataSheet(workbook: ExcelJS.Workbook, name: string, data: Record<string, string | number>[], columns: { header: string; key: string; width: number }[]) {
+  const sheet = workbook.addWorksheet(name)
+  sheet.columns = columns
+  sheet.addRows(data)
+  sheet.views = [{ state: 'frozen', ySplit: 1 }]
+  sheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: Math.max(2, data.length + 1), column: columns.length },
+  }
+  const header = sheet.getRow(1)
+  header.height = 25
+  header.font = { name: 'Microsoft JhengHei', bold: true, color: { argb: 'FFFFFFFF' } }
+  header.alignment = { vertical: 'middle', horizontal: 'center' }
+  header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF176B8F' } }
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return
+    row.height = 22
+    row.font = { name: 'Microsoft JhengHei', size: 10, color: { argb: 'FF172126' } }
+    row.alignment = { vertical: 'middle' }
+    row.eachCell((cell) => {
+      cell.border = { bottom: { style: 'thin', color: { argb: 'FFDCE3E6' } } }
+    })
+  })
+  return sheet
 }
 
 async function addQrLabelSheet(workbook: ExcelJS.Workbook, products: AdminProductRow[]) {
@@ -127,9 +146,14 @@ async function addQrLabelSheet(workbook: ExcelJS.Workbook, products: AdminProduc
   sheet.pageSetup.printArea = `A1:I${3 + Math.ceil(labelProducts.length / 2) * 5}`
 }
 
+/* 「資料備份／還原」的「完整 Excel 與 QR Code 標籤匯出」：全程使用 ExcelJS，避免不同 Excel 套件轉換後產生損壞的篩選器定義。 */
 export async function downloadAdminWorkbook(payload: AdminDataPayload, exportedAt: string) {
-  const workbook = utils.book_new()
-  const guide = utils.aoa_to_sheet([
+  const workbook = new ExcelJS.Workbook()
+  workbook.creator = '詮栩 CNC 雲端系統'
+  workbook.created = new Date(exportedAt)
+  workbook.modified = new Date()
+  const guide = workbook.addWorksheet(SHEETS.guide)
+  guide.addRows([
     ['詮栩 CNC 雲端系統｜完整資料備份'],
     ['匯出時間', new Date(exportedAt).toLocaleString('zh-TW')],
     [],
@@ -141,36 +165,60 @@ export async function downloadAdminWorkbook(payload: AdminDataPayload, exportedA
     ['5', '修改「目前庫存」時，系統會自動建立一筆「Excel 匯入盤點調整」紀錄。'],
     ['6', '「QR Code 標籤」會列出所有已綁定條碼的刀具，可直接列印；匯入時只讀取「刀具資料」中的條碼文字。'],
   ])
-  guide['!cols'] = [{ wch: 12 }, { wch: 78 }]
-  utils.book_append_sheet(workbook, guide, SHEETS.guide)
+  guide.columns = [{ width: 12 }, { width: 78 }]
+  guide.mergeCells('A1:B1')
+  guide.getRow(1).height = 32
+  guide.getCell('A1').font = { name: 'Microsoft JhengHei', size: 17, bold: true, color: { argb: 'FF172126' } }
+  guide.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' }
+  guide.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE9F3F1' } }
+  guide.eachRow((row, rowNumber) => {
+    if (rowNumber > 1) row.font = { name: 'Microsoft JhengHei', size: 11, color: { argb: 'FF27363D' } }
+    row.alignment = { vertical: 'middle', wrapText: true }
+  })
 
-  addSheet(workbook, SHEETS.products, payload.products.map((p) => ({
-    '刀具編號': p.code, '條碼': p.barcode || '', '分類': p.category, '規格': p.specification, '尺寸': p.size,
-    '斷屑槽': p.chipbreaker, '材質': p.material, '品名（自動組合）': p.name || '',
-    '廠牌': p.brand, '供應商': p.supplier, '單位': p.unit, '目前庫存': p.stock_quantity,
-    '最新單價': p.unit_price, '最近購入日期': p.purchased_at || '', '備註': p.notes,
-  })), [14, 20, 10, 18, 14, 12, 14, 34, 16, 16, 9, 12, 12, 14, 30])
+  addDataSheet(workbook, SHEETS.products, payload.products.map((p) => ({
+    code: p.code, barcode: p.barcode || '', category: p.category, specification: p.specification, size: p.size,
+    chipbreaker: p.chipbreaker, material: p.material, name: p.name || '', brand: p.brand, supplier: p.supplier,
+    unit: p.unit, stock: p.stock_quantity, price: p.unit_price, purchasedAt: p.purchased_at || '', notes: p.notes,
+  })), [
+    { header: '刀具編號', key: 'code', width: 14 }, { header: '條碼', key: 'barcode', width: 20 },
+    { header: '分類', key: 'category', width: 10 }, { header: '規格', key: 'specification', width: 18 },
+    { header: '尺寸', key: 'size', width: 14 }, { header: '斷屑槽', key: 'chipbreaker', width: 12 },
+    { header: '材質', key: 'material', width: 14 }, { header: '品名（自動組合）', key: 'name', width: 34 },
+    { header: '廠牌', key: 'brand', width: 16 }, { header: '供應商', key: 'supplier', width: 16 },
+    { header: '單位', key: 'unit', width: 9 }, { header: '目前庫存', key: 'stock', width: 12 },
+    { header: '最新單價', key: 'price', width: 12 }, { header: '最近購入日期', key: 'purchasedAt', width: 14 },
+    { header: '備註', key: 'notes', width: 30 },
+  ])
 
-  addSheet(workbook, SHEETS.movements, payload.movements.map((m, index) => ({
-    '紀錄順序': m.sequence || index + 1, '刀具編號': m.product_code,
-    '類型': m.movement_type === 'in' ? '入庫' : '出庫', '日期': m.movement_date,
-    '數量': m.quantity, '單價': m.unit_price ?? '', '供應商': m.supplier, '備註': m.notes,
-  })), [12, 14, 10, 14, 10, 12, 18, 34])
+  addDataSheet(workbook, SHEETS.movements, payload.movements.map((m, index) => ({
+    sequence: m.sequence || index + 1, productCode: m.product_code, type: m.movement_type === 'in' ? '入庫' : '出庫',
+    date: m.movement_date, quantity: m.quantity, price: m.unit_price ?? '', supplier: m.supplier, notes: m.notes,
+  })), [
+    { header: '紀錄順序', key: 'sequence', width: 12 }, { header: '刀具編號', key: 'productCode', width: 14 },
+    { header: '類型', key: 'type', width: 10 }, { header: '日期', key: 'date', width: 14 },
+    { header: '數量', key: 'quantity', width: 10 }, { header: '單價', key: 'price', width: 12 },
+    { header: '供應商', key: 'supplier', width: 18 }, { header: '備註', key: 'notes', width: 34 },
+  ])
 
-  addSheet(workbook, SHEETS.production, payload.production_records.map((r) => ({
-    '日期': r.work_date, '產品編號': r.product_code, '機台': r.machine,
-    '時': r.hours, '分': r.minutes, '數量': r.quantity, '備註': r.notes,
-  })), [14, 24, 12, 9, 9, 12, 34])
+  addDataSheet(workbook, SHEETS.production, payload.production_records.map((r) => ({
+    date: r.work_date, productCode: r.product_code, machine: r.machine, hours: r.hours,
+    minutes: r.minutes, quantity: r.quantity, notes: r.notes,
+  })), [
+    { header: '日期', key: 'date', width: 14 }, { header: '產品編號', key: 'productCode', width: 24 },
+    { header: '機台', key: 'machine', width: 12 }, { header: '時', key: 'hours', width: 9 },
+    { header: '分', key: 'minutes', width: 9 }, { header: '數量', key: 'quantity', width: 12 },
+    { header: '備註', key: 'notes', width: 34 },
+  ])
 
-  addSheet(workbook, SHEETS.options, payload.production_options.map((o) => ({
-    '類型': o.option_type === 'product' ? '產品編號' : '機台', '值': o.value,
-  })), [16, 32])
+  addDataSheet(workbook, SHEETS.options, payload.production_options.map((o) => ({
+    type: o.option_type === 'product' ? '產品編號' : '機台', value: o.value,
+  })), [
+    { header: '類型', key: 'type', width: 16 }, { header: '值', key: 'value', width: 32 },
+  ])
 
-  const baseWorkbook = write(workbook, { bookType: 'xlsx', type: 'array', compression: true })
-  const printableWorkbook = new ExcelJS.Workbook()
-  await printableWorkbook.xlsx.load(baseWorkbook)
-  await addQrLabelSheet(printableWorkbook, payload.products)
-  const finalWorkbook = await printableWorkbook.xlsx.writeBuffer()
+  await addQrLabelSheet(workbook, payload.products)
+  const finalWorkbook = await workbook.xlsx.writeBuffer()
   const downloadUrl = URL.createObjectURL(new Blob([finalWorkbook], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
   const link = document.createElement('a')
   const day = new Date().toLocaleDateString('sv-SE')
