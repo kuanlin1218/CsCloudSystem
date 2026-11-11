@@ -3,7 +3,7 @@ import type { Session, User } from '@supabase/supabase-js'
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
   Calculator, Camera, ChevronLeft, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
-  FileSpreadsheet, FileUp, Keyboard, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, Wrench, X,
+  FileSpreadsheet, FileUp, Keyboard, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, QrCode, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, WandSparkles, Wrench, X,
   ScanBarcode,
 } from 'lucide-react'
 import { isDemoMode, supabase } from './lib/supabase'
@@ -11,6 +11,7 @@ import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, verifyOwnerPassword } from '.
 import { composeProductName, formatDate, formatMoney, formatNumber, today } from './lib/format'
 import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
+import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
 import type { WorkbookPreview } from './lib/adminDataWorkbook'
 import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, loadInventory, loadProductionOptions, loadProductionRecords, registerMovement, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
@@ -1245,6 +1246,8 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
   const [data, setData] = useState<ProductInput>(() => product ? { barcode: product.barcode || '', specification: product.specification, size: product.size, chipbreaker: product.chipbreaker, material: product.material, brand: product.brand, supplier: product.supplier, category: product.category, unit: product.unit, notes: product.notes, initial_quantity: 0, initial_unit_price: 0, purchased_at: product.purchased_at || today() } : { ...blankProduct(), barcode: initialBarcode })
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState('')
+  const [qrPreview, setQrPreview] = useState('')
+  const [qrPreviewError, setQrPreviewError] = useState('')
   const set = <K extends keyof ProductInput>(key: K, value: ProductInput[K]) => setData((old) => ({ ...old, [key]: value }))
   const name = composeProductName(data.category, data.specification, data.size, data.chipbreaker, data.material)
   const initialTotalPrice = data.initial_quantity * data.initial_unit_price
@@ -1257,6 +1260,23 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
   const brandOptions = uniqueValues(products, 'brand')
   const supplierOptions = uniqueValues(products, 'supplier')
   const unitOptions = uniqueValues(products, 'unit')
+  useEffect(() => {
+    let cancelled = false
+    const barcode = data.barcode.trim()
+    setQrPreview(''); setQrPreviewError('')
+    if (!barcode) return () => { cancelled = true }
+    void createQrCodeDataUrl(barcode).then((image) => {
+      if (!cancelled) setQrPreview(image)
+    }).catch(() => {
+      if (!cancelled) setQrPreviewError('QR Code 產生失敗，請重新產生或重新輸入條碼')
+    })
+    return () => { cancelled = true }
+  }, [data.barcode])
+  const generateBarcode = () => {
+    setFormError('')
+    try { set('barcode', generateUniqueToolBarcode(products.map((item) => item.barcode))) }
+    catch (error) { setFormError(messageFor(error)) }
+  }
   const changeCategory = (category: ProductCategory) => setData((old) => ({
     ...old,
     category,
@@ -1280,7 +1300,19 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
         <Field label="編號"><input disabled value={product?.code || '儲存後自動產生'} /></Field>
         <Field label="分類 *"><select required value={data.category} onChange={(e) => { changeCategory(e.target.value as ProductCategory); e.currentTarget.blur() }}>{PRODUCT_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
       </div>
-      <Field label="條碼（可由掃描結果自動帶入）" wide><div className="barcode-input"><ScanBarcode/><input value={data.barcode} onChange={(event) => set('barcode', event.target.value.trimStart())} placeholder="尚未綁定條碼，可手動輸入" autoComplete="off" /></div></Field>
+      <Field label="條碼（可掃描、手動輸入或自動產生）" wide>
+        <div className="barcode-generator">
+          <div className="barcode-generator-entry">
+            <div className="barcode-input"><ScanBarcode/><input value={data.barcode} onChange={(event) => set('barcode', event.target.value.trimStart())} placeholder="尚未綁定條碼，可手動輸入" autoComplete="off" /></div>
+            <button className="button barcode-generate-button" type="button" onClick={generateBarcode}><WandSparkles/>{data.barcode.trim() ? '重新產生條碼' : '自動產生條碼'}</button>
+          </div>
+          {data.barcode.trim() && <figure className="product-qr-preview">
+            <div>{qrPreview ? <img src={qrPreview} alt={`條碼 ${data.barcode.trim()} 的 QR Code`}/> : <QrCode aria-hidden="true"/>}</div>
+            <figcaption><strong>QR Code 預覽</strong><span>{data.barcode.trim()}</span><small>QR Code 與條碼號碼使用相同內容</small></figcaption>
+          </figure>}
+          {qrPreviewError && <p className="form-error barcode-qr-error">{qrPreviewError}</p>}
+        </div>
+      </Field>
       <Field label="品名（自動組合）" wide><input className="composed-name" disabled value={name || (data.category === '刀片' ? '規格-尺寸-斷屑槽-材質' : data.category === '鑽銑刀' ? '規格-尺寸-材質' : '規格')} /></Field>
       <div className="form-grid dynamic-fields">
         <Field label="規格 *"><EditableCombo options={specificationOptions} required value={data.specification} onChange={(value) => set('specification', value.toUpperCase())} placeholder={data.category === '刀片' ? 'WNMG' : data.category === '鑽銑刀' ? 'EMM4100' : '選擇既有資料或輸入新規格'}/></Field>
@@ -1376,7 +1408,7 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
       await verifyOwnerPassword(password)
       const result = await exportAllAdminData()
       const { downloadAdminWorkbook } = await import('./lib/adminDataWorkbook')
-      downloadAdminWorkbook(result.data, result.exported_at)
+      await downloadAdminWorkbook(result.data, result.exported_at)
       setSuccess(true); setMessage('完整備份已下載，請保留一份未修改的原始檔')
     } catch (error) { setMessage(messageFor(error)) }
     finally { setBusy(null) }

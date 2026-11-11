@@ -2707,6 +2707,41 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .barcode-input > svg { position: absolute; left: 14px; z-index: 1; width: 20px; color: var(--green); pointer-events: none; }
 .barcode-input > input { width: 100%; padding-left: 45px !important; font-family: ui-monospace, "Cascadia Code", monospace; }
 
+/* 「新增／編輯刀具」的「自動產生條碼按鈕與條碼輸入框」相關格式：同一列排列，手機版會改為上下排列。 */
+.barcode-generator { display: grid; gap: 11px; }
+.barcode-generator-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; }
+.barcode-generate-button {
+  min-width: 178px;
+  min-height: 46px;
+  padding: 0 14px;
+  border-color: rgba(255, 194, 58, .46);
+  background: rgba(255, 194, 58, .08);
+  color: var(--yellow);
+  font-size: 15px;
+}
+.barcode-generate-button:hover:not(:disabled) { border-color: var(--yellow); background: rgba(255, 194, 58, .15); }
+
+/* 「新增／編輯刀具」的「自動產生 QR Code 預覽卡」相關格式：可修改 QR 圖形大小、說明文字與卡片顏色。 */
+.product-qr-preview {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  padding: 13px;
+  border: 1px solid rgba(61, 204, 179, .32);
+  border-radius: 8px;
+  background: linear-gradient(115deg, rgba(61, 204, 179, .07), rgba(9, 15, 18, .96));
+}
+.product-qr-preview > div { width: 124px; height: 124px; display: grid; place-items: center; padding: 6px; border-radius: 6px; background: #fff; }
+.product-qr-preview img { width: 100%; height: 100%; display: block; object-fit: contain; image-rendering: pixelated; }
+.product-qr-preview > div > svg { width: 54px; height: 54px; color: #75868d; }
+.product-qr-preview figcaption { min-width: 0; display: grid; gap: 6px; }
+.product-qr-preview figcaption strong { color: var(--green); font-size: 17px; }
+.product-qr-preview figcaption span { color: #fff; font: 850 19px ui-monospace, "Cascadia Code", monospace; overflow-wrap: anywhere; }
+.product-qr-preview figcaption small { color: #91a2a9; line-height: 1.5; }
+.barcode-qr-error { margin: 0; }
+
 /* 「掃描刀具條碼」的「彈出視窗整體寬度與說明」相關格式。 */
 .modal.barcode-scanner-modal { width: min(720px, 100%); }
 .barcode-scanner-intro { margin: -6px 0 15px; color: #91a1a9; line-height: 1.6; }
@@ -2790,6 +2825,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .barcode-link-existing > .button { min-width: 160px; }
 
 @media (max-width: 620px) {
+  /* 「手機版－新增／編輯刀具」的「自動產生條碼與 QR Code 預覽」相關格式。 */
+  .barcode-generator-entry { grid-template-columns: 1fr; }
+  .barcode-generate-button { width: 100%; min-width: 0; font-size: 16px; }
+  .product-qr-preview { grid-template-columns: 104px minmax(0, 1fr); gap: 12px; padding: 10px; }
+  .product-qr-preview > div { width: 104px; height: 104px; padding: 5px; }
+  .product-qr-preview figcaption strong { font-size: 16px; }
+  .product-qr-preview figcaption span { font-size: 16px; }
+  .product-qr-preview figcaption small { font-size: 13px; }
+
   /* 「手機版－庫存頁面標題」的「掃描條碼按鈕」：固定為正方形並只顯示掃描圖示，避免擠壓入庫與出庫按鈕。 */
   .title-actions .scan-button { width: 46px; min-width: 46px; flex: 0 0 46px; padding: 0; gap: 0; font-size: 0 !important; }
   .title-actions .scan-button svg { width: 21px; height: 21px; }

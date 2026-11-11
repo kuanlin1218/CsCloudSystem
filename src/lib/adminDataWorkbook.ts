@@ -1,8 +1,10 @@
-import { read, utils, writeFileXLSX } from 'xlsx'
+import ExcelJS from 'exceljs'
+import { read, utils, write } from 'xlsx'
 import type { AdminDataPayload, AdminMovementRow, AdminOptionRow, AdminProductRow, AdminProductionRow } from './adminData'
+import { createQrCodeDataUrl } from './barcode'
 
 const SHEETS = {
-  guide: '使用說明', products: '刀具資料', movements: '出入庫歷史', production: '加工數量', options: '管理選項',
+  guide: '使用說明', products: '刀具資料', movements: '出入庫歷史', production: '加工數量', options: '管理選項', qrLabels: 'QR Code 標籤',
 } as const
 
 type CellRow = Record<string, unknown>
@@ -43,7 +45,89 @@ function addSheet(workbook: ReturnType<typeof utils.book_new>, name: string, dat
   utils.book_append_sheet(workbook, sheet, name)
 }
 
-export function downloadAdminWorkbook(payload: AdminDataPayload, exportedAt: string) {
+async function addQrLabelSheet(workbook: ExcelJS.Workbook, products: AdminProductRow[]) {
+  const sheet = workbook.addWorksheet(SHEETS.qrLabels, {
+    properties: { defaultRowHeight: 21 },
+    pageSetup: {
+      paperSize: 9,
+      orientation: 'landscape',
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      margins: { left: 0.25, right: 0.25, top: 0.35, bottom: 0.35, header: 0.1, footer: 0.1 },
+    },
+  })
+  sheet.views = [{ showGridLines: false }]
+  sheet.columns = [9, 9, 16, 16, 3, 9, 9, 16, 16].map((width) => ({ width }))
+  sheet.mergeCells('A1:I1')
+  const title = sheet.getCell('A1')
+  title.value = '詮栩 CNC 雲端系統｜刀具 QR Code 標籤'
+  title.font = { name: 'Microsoft JhengHei', size: 16, bold: true, color: { argb: 'FF172126' } }
+  title.alignment = { horizontal: 'center', vertical: 'middle' }
+  title.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE9F3F1' } }
+  sheet.getRow(1).height = 30
+
+  const labelProducts = products.filter((product) => product.barcode.trim())
+  if (!labelProducts.length) {
+    sheet.mergeCells('A3:I5')
+    const empty = sheet.getCell('A3')
+    empty.value = '目前沒有已綁定條碼的刀具'
+    empty.font = { name: 'Microsoft JhengHei', size: 14, color: { argb: 'FF68777E' } }
+    empty.alignment = { horizontal: 'center', vertical: 'middle' }
+    return
+  }
+
+  const qrImages = await Promise.all(labelProducts.map((product) => createQrCodeDataUrl(product.barcode, 320)))
+  const thinBorder: Partial<ExcelJS.Borders> = {
+    top: { style: 'thin', color: { argb: 'FFB7C3C8' } },
+    left: { style: 'thin', color: { argb: 'FFB7C3C8' } },
+    bottom: { style: 'thin', color: { argb: 'FFB7C3C8' } },
+    right: { style: 'thin', color: { argb: 'FFB7C3C8' } },
+  }
+
+  labelProducts.forEach((product, index) => {
+    const blockRow = 3 + Math.floor(index / 2) * 5
+    const leftColumn = index % 2 === 0 ? 1 : 6
+    const textStart = leftColumn + 2
+    const textEnd = leftColumn + 3
+
+    for (let row = blockRow; row < blockRow + 5; row += 1) {
+      sheet.getRow(row).height = 21
+      for (let column = leftColumn; column <= leftColumn + 3; column += 1) {
+        const cell = sheet.getCell(row, column)
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } }
+        cell.border = thinBorder
+      }
+      sheet.mergeCells(row, textStart, row, textEnd)
+    }
+    sheet.mergeCells(blockRow, leftColumn, blockRow + 4, leftColumn + 1)
+
+    const values = [
+      { value: product.code, size: 14, bold: true, color: 'FFC68A00' },
+      { value: product.name || product.specification, size: 11, bold: true, color: 'FF172126' },
+      { value: `條碼：${product.barcode}`, size: 9, bold: false, color: 'FF34454D' },
+      { value: `${product.category}${product.brand ? `｜${product.brand}` : ''}`, size: 9, bold: false, color: 'FF52636B' },
+      { value: product.supplier ? `供應商：${product.supplier}` : '供應商：—', size: 9, bold: false, color: 'FF52636B' },
+    ]
+    values.forEach((item, offset) => {
+      const cell = sheet.getCell(blockRow + offset, textStart)
+      cell.value = item.value
+      cell.font = { name: 'Microsoft JhengHei', size: item.size, bold: item.bold, color: { argb: item.color } }
+      cell.alignment = { vertical: 'middle', wrapText: true }
+    })
+
+    const imageId = workbook.addImage({ base64: qrImages[index], extension: 'png' })
+    sheet.addImage(imageId, {
+      tl: { col: leftColumn - 1 + 0.25, row: blockRow - 1 + 0.2 },
+      ext: { width: 112, height: 112 },
+      editAs: 'oneCell',
+    })
+  })
+
+  sheet.pageSetup.printArea = `A1:I${3 + Math.ceil(labelProducts.length / 2) * 5}`
+}
+
+export async function downloadAdminWorkbook(payload: AdminDataPayload, exportedAt: string) {
   const workbook = utils.book_new()
   const guide = utils.aoa_to_sheet([
     ['詮栩 CNC 雲端系統｜完整資料備份'],
@@ -55,6 +139,7 @@ export function downloadAdminWorkbook(payload: AdminDataPayload, exportedAt: str
     ['3', '匯入會完整取代雲端資料，請先保留一份未修改的備份。'],
     ['4', '「品名（自動組合）」只供閱讀，匯入時會依規格等欄位重新產生。'],
     ['5', '修改「目前庫存」時，系統會自動建立一筆「Excel 匯入盤點調整」紀錄。'],
+    ['6', '「QR Code 標籤」會列出所有已綁定條碼的刀具，可直接列印；匯入時只讀取「刀具資料」中的條碼文字。'],
   ])
   guide['!cols'] = [{ wch: 12 }, { wch: 78 }]
   utils.book_append_sheet(workbook, guide, SHEETS.guide)
@@ -81,8 +166,20 @@ export function downloadAdminWorkbook(payload: AdminDataPayload, exportedAt: str
     '類型': o.option_type === 'product' ? '產品編號' : '機台', '值': o.value,
   })), [16, 32])
 
+  const baseWorkbook = write(workbook, { bookType: 'xlsx', type: 'array', compression: true })
+  const printableWorkbook = new ExcelJS.Workbook()
+  await printableWorkbook.xlsx.load(baseWorkbook)
+  await addQrLabelSheet(printableWorkbook, payload.products)
+  const finalWorkbook = await printableWorkbook.xlsx.writeBuffer()
+  const downloadUrl = URL.createObjectURL(new Blob([finalWorkbook], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
+  const link = document.createElement('a')
   const day = new Date().toLocaleDateString('sv-SE')
-  writeFileXLSX(workbook, `詮栩CNC完整備份_${day}.xlsx`, { compression: true })
+  link.href = downloadUrl
+  link.download = `詮栩CNC完整備份_${day}.xlsx`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000)
 }
 
 export interface WorkbookPreview {

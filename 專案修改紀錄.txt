@@ -544,6 +544,20 @@ SQL：不需要執行 SQL。
 GitHub Summary：新增掃描區域展開與縮小效果。
 
 
+2026-11-11
+修改內容：新增刀具條碼自動產生與 QR Code 預覽；自動產生以 29 開頭、含 EAN-13 檢查碼且不與現有刀具重複的 13 位條碼。完整 Excel 備份新增「QR Code 標籤」工作表，以兩欄版面列出已綁定條碼刀具的 QR 圖形、編號、品名、條碼、分類、廠牌與供應商，可直接列印。
+修改檔案：
+- src/App.tsx：新增／編輯刀具的條碼欄位加入自動產生按鈕、即時 QR Code 預覽，下載完整備份時等待 QR 標籤製作完成。
+- src/lib/barcode.ts：新增內部 EAN-13 條碼產生、重複檢查及 QR Code PNG 產生共用功能。
+- src/lib/adminDataWorkbook.ts：Excel 備份新增可列印的「QR Code 標籤」工作表與內嵌 QR 圖片，原本匯入資料工作表維持不變。
+- src/styles.css：新增電腦版與手機版條碼產生按鈕、QR Code 預覽卡格式。
+- package.json、package-lock.json：加入 exceljs、qrcode 與型別套件。
+- README.md：補充自動產生條碼、QR 預覽及 Excel QR 標籤備份說明。
+- 專案修改紀錄.txt：新增本次修改紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：新增條碼產生器與 Excel QR 標籤。
+
+
 【之後每次追加格式】
 
 YYYY-MM-DD
