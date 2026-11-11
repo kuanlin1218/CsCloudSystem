@@ -1,5 +1,5 @@
 export type MovementType = 'in' | 'out'
-export type Page = 'home' | 'production-entry' | 'production-query' | 'dashboard' | 'movements' | 'stocktake' | 'products'
+export type Page = 'home' | 'production-dashboard' | 'production-entry' | 'production-query' | 'dashboard' | 'movements' | 'stocktake' | 'products'
 export type ProductCategory = '刀片' | '鑽銑刀' | '刀柄' | '其他'
 export const PRODUCT_CATEGORIES: ProductCategory[] = ['刀片', '鑽銑刀', '刀柄', '其他']
 

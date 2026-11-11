@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEven
 import type { Session, User } from '@supabase/supabase-js'
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
-  Calculator, Camera, ChevronLeft, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
+  Calculator, Camera, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
   FileSpreadsheet, FileUp, Keyboard, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, QrCode, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, WandSparkles, Wrench, X,
   ScanBarcode,
 } from 'lucide-react'
@@ -30,7 +30,15 @@ const previousLocalDate = () => {
   return `${year}-${month}-${day}`
 }
 
-const PAGE_VALUES: Page[] = ['home', 'production-entry', 'production-query', 'dashboard', 'movements', 'stocktake', 'products']
+/* 「加工管理系統總覽」的「長條圖日期與星期」：圖表刻度顯示月日，日期範圍顯示完整年月日。 */
+const formatProductionChartDate = (value: string, includeYear = false) => {
+  const [year, month, day] = value.split('-').map(Number)
+  const weekday = year && month && day ? ['日', '一', '二', '三', '四', '五', '六'][new Date(year, month - 1, day).getDay()] : ''
+  const dateLabel = includeYear ? formatDate(value) : formatDate(value).slice(5)
+  return weekday ? `${dateLabel}（${weekday}）` : dateLabel
+}
+
+const PAGE_VALUES: Page[] = ['home', 'production-dashboard', 'production-entry', 'production-query', 'dashboard', 'movements', 'stocktake', 'products']
 const preventInputEnterSubmit = (event: ReactKeyboardEvent<HTMLFormElement>) => {
   if (event.key !== 'Enter' || event.nativeEvent.isComposing || !(event.target instanceof HTMLInputElement)) return
   event.preventDefault()
@@ -310,6 +318,8 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   const activePage: Page = guestMode && page === 'production-entry' ? 'home' : guestMode && page === 'stocktake' ? 'dashboard' : page
   const isHome = activePage === 'home'
   const isInventory = activePage === 'dashboard' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
+  const isProduction = activePage === 'production-dashboard' || activePage === 'production-entry' || activePage === 'production-query'
+  const isSystem = isInventory || isProduction
   const showTableScrollControls = activePage === 'production-query' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
   const productionEntryProductCodes = useMemo(() => productionOptions.filter((option) => option.option_type === 'product').map((option) => option.value).sort(), [productionOptions])
   const productionQueryProductCodes = useMemo(() => [...new Set([
@@ -320,19 +330,25 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
 
   return (
     <div className={`app-shell ${isHome ? 'portal-shell' : ''}`}>
-      {!isDemoMode && !isInventory && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>}
-      {isInventory && <aside className={`sidebar ${mobileNav ? 'is-open' : ''}`}>
-        <div className="brand">
+      {!isDemoMode && !isSystem && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>}
+      {isSystem && <aside className={`sidebar ${isProduction ? 'production-sidebar' : ''} ${mobileNav ? 'is-open' : ''}`}>
+        <div className={`brand ${isProduction ? 'production-brand' : ''}`}>
           <span className="brand-mark"><Triangle fill="currentColor" /><i /></span>
-          <span><strong>庫存管理系統</strong><small>INVENTORY SYSTEM</small></span>
+          <span><strong>{isProduction ? '加工管理系統' : '庫存管理系統'}</strong><small>{isProduction ? 'PRODUCTION SYSTEM' : 'INVENTORY SYSTEM'}</small></span>
           <button className="icon-button mobile-close" onClick={() => setMobileNav(false)} aria-label="關閉選單"><X /></button>
         </div>
         <nav>
           <NavItem active={false} icon={<Home />} onClick={() => nav('home')}>系統首頁</NavItem>
-          <NavItem active={activePage === 'dashboard'} icon={<LayoutGrid />} onClick={() => nav('dashboard')}>總覽</NavItem>
-          <NavItem active={activePage === 'movements'} icon={<ArrowLeftRight />} onClick={() => nav('movements')}>出入庫</NavItem>
-          {!guestMode && <NavItem active={activePage === 'stocktake'} icon={<ClipboardCheck />} onClick={() => nav('stocktake')}>庫存盤點</NavItem>}
-          <NavItem active={activePage === 'products'} icon={<Boxes />} onClick={() => nav('products')}>刀具資料</NavItem>
+          {isProduction ? <>
+            <NavItem active={activePage === 'production-dashboard'} icon={<LayoutGrid />} onClick={() => nav('production-dashboard')}>總覽</NavItem>
+            {!guestMode && <NavItem active={activePage === 'production-entry'} icon={<ListPlus />} onClick={() => nav('production-entry')}>加工數量登記</NavItem>}
+            <NavItem active={activePage === 'production-query'} icon={<Search />} onClick={() => nav('production-query')}>加工數量查詢</NavItem>
+          </> : <>
+            <NavItem active={activePage === 'dashboard'} icon={<LayoutGrid />} onClick={() => nav('dashboard')}>總覽</NavItem>
+            <NavItem active={activePage === 'movements'} icon={<ArrowLeftRight />} onClick={() => nav('movements')}>出入庫</NavItem>
+            {!guestMode && <NavItem active={activePage === 'stocktake'} icon={<ClipboardCheck />} onClick={() => nav('stocktake')}>庫存盤點</NavItem>}
+            <NavItem active={activePage === 'products'} icon={<Boxes />} onClick={() => nav('products')}>刀具資料</NavItem>
+          </>}
         </nav>
         <div className="sidebar-foot">
           <span className="status-line">{guestMode ? <ShieldCheck /> : isDemoMode ? <ShieldCheck /> : <Database />} {guestMode ? '訪客唯讀模式' : isDemoMode ? '示範模式' : realtimeConnected ? '雲端即時同步' : '雲端連線中'}</span>
@@ -341,26 +357,27 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         </div>
       </aside>}
 
-      {isInventory && mobileNav && <button className="nav-scrim" onClick={() => setMobileNav(false)} aria-label="關閉選單" />}
+      {isSystem && mobileNav && <button className="nav-scrim" onClick={() => setMobileNav(false)} aria-label="關閉選單" />}
 
-      <main className={`main-panel ${!isInventory ? 'wide-panel' : ''} ${isHome ? 'portal-panel' : ''}`}>
-        {isInventory && <header className="mobile-header">
+      <main className={`main-panel ${!isSystem ? 'wide-panel' : ''} ${isHome ? 'portal-panel' : ''}`}>
+        {isSystem && <header className={`mobile-header ${isProduction ? 'production-mobile-header' : ''}`}>
           <button className="icon-button" onClick={() => setMobileNav(true)} aria-label="開啟選單"><Menu /></button>
-          <strong>庫存管理系統</strong>
+          <strong>{isProduction ? '加工管理系統' : '庫存管理系統'}</strong>
           <span className="mobile-dot" />
         </header>}
-        {isInventory && isDemoMode && <div className="demo-banner"><ShieldCheck /> 目前是可操作的示範模式，資料儲存在這台裝置。設定 Supabase 後會自動切換為雲端模式。</div>}
+        {isSystem && isDemoMode && <div className="demo-banner"><ShieldCheck /> 目前是可操作的示範模式，資料儲存在這台裝置。設定 Supabase 後會自動切換為雲端模式。</div>}
         {guestMode && <div className="guest-banner"><ShieldCheck /> 訪客模式僅供查看，無法新增、修改、刪除、盤點、匯出或還原資料。</div>}
         {error && <div className="error-banner">{error}<button onClick={() => void refresh()}>重試</button></div>}
 
         {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} />}
-        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} goHome={() => nav('home')} addOption={setProductionOptionModal} onSave={async (input) => {
+        {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
+        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} addOption={setProductionOptionModal} onSave={async (input) => {
           await createProductionRecord(input); await afterSave('加工數量已登記')
         }} onDeleteLast={async (record) => {
           const deleted = await requestAdminDelete('刪除最後一筆加工紀錄', `${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, () => deleteProductionRecord(record.id))
           if (deleted) await afterSave('最後一筆加工紀錄已刪除')
         }} />}
-        {activePage === 'production-query' && <ProductionQueryPage records={productionRecords} productCodes={productionQueryProductCodes} machines={productionMachines} loading={loading} goHome={() => nav('home')} readOnly={guestMode} onUpdateRecord={async (record, input) => {
+        {activePage === 'production-query' && <ProductionQueryPage records={productionRecords} productCodes={productionQueryProductCodes} machines={productionMachines} loading={loading} readOnly={guestMode} onUpdateRecord={async (record, input) => {
           await updateProductionRecord(record.id, input)
           await afterSave('加工紀錄已更新')
         }} onDeleteRecord={async (record) => {
@@ -450,23 +467,63 @@ function HomePage({ navigate, openAdmin, guestMode }: { navigate: (page: Page) =
     </div>
     <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div><small>選擇要使用的系統</small></div>
     <div className="function-grid portal-functions">
-      <FunctionCard icon={<ListPlus/>} title="加工數量登記" description={guestMode ? '訪客模式無法新增加工紀錄' : '登記數量並自動計算加工時間'} tone="pink" onClick={() => navigate('production-entry')} disabled={guestMode} disabledLabel="登入後使用"/>
-      <FunctionCard icon={<Search/>} title="加工數量查詢" description={guestMode ? '依產品編號查看加工紀錄' : '依產品編號查詢與匯出紀錄'} tone="sunset" onClick={() => navigate('production-query')}/>
+      <FunctionCard icon={<ListPlus/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
       <FunctionCard icon={<FileSpreadsheet/>} title="資料備份／還原" description={guestMode ? '訪客模式無法匯出或還原資料' : '匯出或整批匯入 Supabase Excel'} tone="purple" onClick={openAdmin} disabled={guestMode} disabledLabel="管理員限定"/>
     </div>
   </section>
 }
 
-function ProductionHeader({ title, eyebrow, icon, goHome, readOnly = false }: { title: string; eyebrow: string; icon: ReactNode; goHome: () => void; readOnly?: boolean }) {
-  return <div className="production-head">
-    <button className="production-back" onClick={goHome}><ChevronLeft />系統首頁</button>
-    <div><span className="production-head-icon">{icon}</span><span>{eyebrow}</span><h1>{title}</h1></div>
-    <span className={`production-mode ${readOnly ? 'guest' : isDemoMode ? 'demo' : ''}`}>{readOnly ? '訪客唯讀' : isDemoMode ? '示範資料' : '雲端資料'}</span>
-  </div>
+function ProductionDashboard({ records, productCodes, loading }: { records: ProductionRecord[]; productCodes: string[]; loading: boolean }) {
+  /* 「加工管理系統總覽」的「每個產品獨立圖表資料」：新增產品編號後會自動建立圖表，不需要另外設定。 */
+  const productCharts = useMemo(() => productCodes.map((productCode) => {
+    const productRecords = records.filter((record) => record.product_code === productCode)
+    const dailyTotals = new Map<string, number>()
+    productRecords.forEach((record) => dailyTotals.set(record.work_date, (dailyTotals.get(record.work_date) || 0) + record.quantity))
+    const days = [...dailyTotals.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([date, quantity]) => ({ date, quantity }))
+    return {
+      productCode,
+      days,
+      total: productRecords.reduce((sum, record) => sum + record.quantity, 0),
+    }
+  }), [productCodes, records])
+
+  return <section className="page-content production-dashboard-page">
+    <PageTitle eyebrow="PRODUCTION OVERVIEW" title="加工總覽" />
+    {loading ? <PageSkeleton /> : <div className="production-chart-list">
+      {productCharts.length
+        ? productCharts.map((chart) => <ProductionQuantityChart key={chart.productCode} productCode={chart.productCode} days={chart.days} total={chart.total} />)
+        : <article className="chart-card production-chart-card"><div className="production-chart-empty"><ClipboardList />尚未建立產品編號</div></article>}
+    </div>}
+  </section>
 }
 
-function ProductionEntryPage({ records, productCodes, machines, loading, goHome, addOption, onSave, onDeleteLast }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; goHome: () => void; addOption: (type: ProductionOptionType) => void; onSave: (input: ProductionInput) => Promise<void>; onDeleteLast: (record: ProductionRecord) => Promise<void> }) {
+function ProductionQuantityChart({ productCode, days, total }: { productCode: string; days: { date: string; quantity: number }[]; total: number }) {
+  const maximum = Math.max(1, ...days.map((day) => day.quantity))
+  const roundedMaximum = Math.ceil(maximum / 10) * 10 || 10
+  /* 「加工管理系統總覽」的「全部日期長條圖寬度」：日期越多，圖表越寬並由外層提供左右捲動。 */
+  const chartWidth = Math.max(760, 82 + days.length * 92)
+  const step = (chartWidth - 82) / Math.max(days.length, 1)
+  const barWidth = Math.min(42, Math.max(20, step * .48))
+  const dateRange = days.length ? `日期範圍 ${formatProductionChartDate(days[0].date, true)} ～ ${formatProductionChartDate(days[days.length - 1].date, true)}` : '尚無加工日期'
+  return <article className="chart-card production-chart-card">
+    <div className="chart-head production-chart-head"><span>{dateRange}</span><div><strong>{productCode}</strong><small className="production-chart-total"><span>總加工數量</span><b>{formatNumber(total)}</b></small></div></div>
+    {days.length ? <div className="chart-wrap production-chart-wrap">
+      <svg viewBox={`0 0 ${chartWidth} 270`} style={{ width: `${chartWidth}px`, minWidth: '100%' }} role="img" aria-label={`${productCode} 依日期統計的加工數量長條圖`}>
+        {[0, 1, 2, 3, 4].map((index) => { const y = 22 + index * 44; const value = Math.round(roundedMaximum * (1 - index / 4)); return <g key={index}><line x1="52" x2={chartWidth - 18} y1={y} y2={y}/><text x="43" y={y + 5} textAnchor="end">{formatNumber(value)}</text></g> })}
+        {days.map((day, index) => {
+          const x = 58 + step * index + (step - barWidth) / 2
+          const height = day.quantity / roundedMaximum * 176
+          return <g key={day.date}><rect className="production-bar" x={x} y={198 - height} width={barWidth} height={height} rx="3"/><text className="production-bar-value" x={x + barWidth / 2} y={Math.max(16, 190 - height)} textAnchor="middle">{formatNumber(day.quantity)}</text><text x={x + barWidth / 2} y="224" textAnchor="middle">{formatProductionChartDate(day.date)}</text></g>
+        })}
+      </svg>
+    </div> : <div className="production-chart-empty"><ClipboardList />此產品尚無加工紀錄</div>}
+  </article>
+}
+
+function ProductionEntryPage({ records, productCodes, machines, loading, addOption, onSave, onDeleteLast }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; addOption: (type: ProductionOptionType) => void; onSave: (input: ProductionInput) => Promise<void>; onDeleteLast: (record: ProductionRecord) => Promise<void> }) {
   const [form, setForm] = useState<ProductionInput>({ work_date: previousLocalDate(), product_code: '', machine: '', hours: 0, minutes: 0, quantity: 0, notes: '' })
   const [showTimeCalculator, setShowTimeCalculator] = useState(false)
   const [formError, setFormError] = useState('')
@@ -495,8 +552,8 @@ function ProductionEntryPage({ records, productCodes, machines, loading, goHome,
     finally { setSaving(false) }
   }
 
-  return <section className="production-page production-entry-page">
-    <ProductionHeader title="加工數量登記" eyebrow="PRODUCTION ENTRY" icon={<ListPlus />} goHome={goHome} />
+  return <section className="page-content production-system-page production-entry-page">
+    <PageTitle eyebrow="PRODUCTION ENTRY" title="加工數量登記" />
     <form className="production-card entry-card" onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="production-field-row"><label>日期</label><input type="date" value={form.work_date} onChange={(e) => setForm({ ...form, work_date: e.target.value })} required /></div>
       <div className="production-field-row"><label>產品編號</label><select value={form.product_code} onChange={(e) => setForm({ ...form, product_code: e.target.value })} required><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
@@ -527,7 +584,7 @@ function ProductionEntryPage({ records, productCodes, machines, loading, goHome,
 
 type ProductionQueryMode = 'range' | 'latest' | 'all'
 
-function ProductionQueryPage({ records, productCodes, machines, loading, goHome, readOnly, onUpdateRecord, onDeleteRecord, onDeleteProductRecords }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; goHome: () => void; readOnly: boolean; onUpdateRecord: (record: ProductionRecord, input: ProductionInput) => Promise<void>; onDeleteRecord: (record: ProductionRecord) => Promise<boolean>; onDeleteProductRecords: (productCode: string, count: number) => Promise<boolean> }) {
+function ProductionQueryPage({ records, productCodes, machines, loading, readOnly, onUpdateRecord, onDeleteRecord, onDeleteProductRecords }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; readOnly: boolean; onUpdateRecord: (record: ProductionRecord, input: ProductionInput) => Promise<void>; onDeleteRecord: (record: ProductionRecord) => Promise<boolean>; onDeleteProductRecords: (productCode: string, count: number) => Promise<boolean> }) {
   const [productCode, setProductCode] = useState('')
   const [from, setFrom] = useState(`${today().slice(0, 8)}01`)
   const [to, setTo] = useState(today())
@@ -590,8 +647,8 @@ function ProductionQueryPage({ records, productCodes, machines, loading, goHome,
     setDeletingRecordId('')
   }
 
-  return <section className="production-page production-query-page">
-    <ProductionHeader title="加工數量查詢" eyebrow="PRODUCTION LOOKUP" icon={<Search />} goHome={goHome} readOnly={readOnly} />
+  return <section className="page-content production-system-page production-query-page">
+    <PageTitle eyebrow="PRODUCTION LOOKUP" title="加工數量查詢" />
     <div className="production-card query-card">
       <div className="query-fields">
         <div className="production-field-row"><label>開始日期</label><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
