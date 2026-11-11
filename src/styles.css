@@ -1457,9 +1457,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* ========================================================================== */
 
 /* 「加工管理系統」的「側邊選單」的「系統標誌與目前分頁標示」相關格式。 */
-.production-sidebar .brand-mark { color: #ff69b4; }
-.production-sidebar .nav-item.active::before { background: #ff69b4; }
-.production-mobile-header .mobile-dot { background: #ff69b4; }
+.production-sidebar .brand-mark { color: #0dee76; }
+.production-sidebar .nav-item.active::before { background: #0dee76; }
+.production-mobile-header .mobile-dot { background:#0dee76; }
 
 /* 「加工管理系統」的「加工數量登記與查詢」的「內容寬度」相關格式。 */
 .production-system-page { max-width: 1080px; }

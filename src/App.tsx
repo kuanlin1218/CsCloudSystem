@@ -4,7 +4,7 @@ import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
   Calculator, Camera, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
   FileSpreadsheet, FileUp, Keyboard, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, QrCode, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, WandSparkles, Wrench, X,
-  ScanBarcode,
+  ScanBarcode,Factory
 } from 'lucide-react'
 import { isDemoMode, supabase } from './lib/supabase'
 import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, verifyOwnerPassword } from './lib/auth'
@@ -427,7 +427,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
       {!isDemoMode && !isSystem && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>}
       {isSystem && <aside className={`sidebar ${isProduction ? 'production-sidebar' : ''} ${mobileNav ? 'is-open' : ''}`}>
         <div className={`brand ${isProduction ? 'production-brand' : ''}`}>
-          <span className="brand-mark"><Triangle fill="currentColor" /><i /></span>
+          <span className="brand-mark">{isProduction? <Factory />: <><Triangle fill="currentColor" /><i /></>}</span>
           <span><strong>{isProduction ? '加工管理系統' : '庫存管理系統'}</strong><small>{isProduction ? 'PRODUCTION SYSTEM' : 'INVENTORY SYSTEM'}</small></span>
           <button className="icon-button mobile-close" onClick={() => setMobileNav(false)} aria-label="關閉選單"><X /></button>
         </div>
