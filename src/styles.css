@@ -2723,10 +2723,26 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 .barcode-camera video { width: 100%; height: 100%; display: block; object-fit: cover; }
 .barcode-camera:not(.is-active) video { visibility: hidden; }
+.barcode-camera.is-active { border-color: rgba(255, 194, 58, .62); }
+.barcode-camera.is-success { border-color: rgba(61, 204, 179, .72); background: radial-gradient(circle at 50% 42%, rgba(61, 204, 179, .13), #07100f 72%); box-shadow: inset 0 0 35px rgba(61, 204, 179, .08); }
+.barcode-camera.is-unmatched { border-color: rgba(255, 194, 58, .72); background: radial-gradient(circle at 50% 42%, rgba(255, 194, 58, .12), #110e06 72%); box-shadow: inset 0 0 35px rgba(255, 194, 58, .07); }
 .barcode-camera-placeholder { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; color: #758991; }
 .barcode-camera-placeholder svg { width: 48px; height: 48px; color: #47636c; }
 .barcode-target { position: absolute; z-index: 2; left: 9%; right: 9%; top: 35%; height: 30%; border: 2px solid var(--yellow); border-radius: 7px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .22); pointer-events: none; }
 .barcode-target::after { content: ""; position: absolute; left: 5%; right: 5%; top: 50%; height: 1px; background: rgba(255, 194, 58, .78); box-shadow: 0 0 8px rgba(255, 194, 58, .75); }
+.barcode-scanning-label { position: absolute; z-index: 3; top: 12px; left: 50%; display: inline-flex; align-items: center; gap: 7px; min-height: 32px; padding: 0 11px; border: 1px solid rgba(255, 194, 58, .52); border-radius: 999px; background: rgba(9, 12, 13, .82); color: var(--yellow); font-size: 13px; font-weight: 850; transform: translateX(-50%); backdrop-filter: blur(8px); }
+.barcode-scanning-label svg { width: 16px; height: 16px; }
+
+/* 「掃描刀具條碼」的「掃描成功／尚未綁定相機區域提示」相關格式。 */
+.barcode-scan-feedback { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 7px; padding: 22px; text-align: center; }
+.barcode-scan-feedback > svg { width: 64px; height: 64px; margin-bottom: 3px; }
+.barcode-scan-feedback.success > svg,
+.barcode-scan-feedback.success > strong { color: var(--green); }
+.barcode-scan-feedback.unmatched > svg,
+.barcode-scan-feedback.unmatched > strong { color: var(--yellow); }
+.barcode-scan-feedback > strong { font-size: 27px; letter-spacing: .03em; }
+.barcode-scan-feedback > span { max-width: 100%; color: #f2f6f7; font: 850 18px ui-monospace, "Cascadia Code", monospace; overflow-wrap: anywhere; }
+.barcode-scan-feedback > small { max-width: 100%; color: #afbdc3; font-size: 16px; font-weight: 750; line-height: 1.45; overflow-wrap: anywhere; }
 .barcode-camera-button { width: 100%; margin-top: 10px; }
 
 /* 「掃描刀具條碼」的「手動輸入測試區」相關格式。 */
@@ -2779,6 +2795,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .barcode-scanner-intro { font-size: 14px; }
   .barcode-camera { aspect-ratio: 4 / 3; }
   .barcode-target { left: 6%; right: 6%; top: 34%; height: 32%; }
+  .barcode-scan-feedback { padding: 16px; gap: 5px; }
+  .barcode-scan-feedback > svg { width: 54px; height: 54px; }
+  .barcode-scan-feedback > strong { font-size: 23px; }
+  .barcode-scan-feedback > span { font-size: 16px; }
+  .barcode-scan-feedback > small { font-size: 15px; }
   .barcode-manual-test { padding: 11px; }
   .barcode-result { padding: 13px; }
   .barcode-result-code { align-items: flex-start; flex-direction: column; gap: 4px; }
