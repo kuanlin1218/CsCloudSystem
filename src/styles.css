@@ -2715,15 +2715,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .barcode-camera {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  height: 136px;
   overflow: hidden;
   border: 1px solid #344248;
   border-radius: 8px;
   background: #05090b;
+  transition: height .26s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+  will-change: height;
 }
 .barcode-camera video { width: 100%; height: 100%; display: block; object-fit: cover; }
 .barcode-camera:not(.is-active) video { visibility: hidden; }
-.barcode-camera.is-active { border-color: rgba(255, 194, 58, .62); }
+.barcode-camera.is-active { height: clamp(300px, 48vw, 425px); border-color: rgba(255, 194, 58, .62); }
+.barcode-camera.is-success,
+.barcode-camera.is-unmatched { height: 200px; }
 .barcode-camera.is-success { border-color: rgba(61, 204, 179, .72); background: radial-gradient(circle at 50% 42%, rgba(61, 204, 179, .13), #07100f 72%); box-shadow: inset 0 0 35px rgba(61, 204, 179, .08); }
 .barcode-camera.is-unmatched { border-color: rgba(255, 194, 58, .72); background: radial-gradient(circle at 50% 42%, rgba(255, 194, 58, .12), #110e06 72%); box-shadow: inset 0 0 35px rgba(255, 194, 58, .07); }
 .barcode-camera-placeholder { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; color: #758991; }
@@ -2793,7 +2797,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版－掃描刀具條碼」的「相機與結果」相關格式。 */
   .modal.barcode-scanner-modal { max-height: 96vh; }
   .barcode-scanner-intro { font-size: 14px; }
-  .barcode-camera { aspect-ratio: 4 / 3; }
+  /* 「手機版－掃描刀具條碼」的「掃描前、掃描中與掃描完成相機區域高度」：開始時縮小、掃描時展開、完成後縮回結果卡高度。 */
+  .barcode-camera { height: 108px; }
+  .barcode-camera.is-active { height: clamp(260px, 68vw, 340px); }
+  .barcode-camera.is-success,
+  .barcode-camera.is-unmatched { height: 175px; }
   .barcode-target { left: 6%; right: 6%; top: 34%; height: 32%; }
   .barcode-scan-feedback { padding: 16px; gap: 5px; }
   .barcode-scan-feedback > svg { width: 54px; height: 54px; }

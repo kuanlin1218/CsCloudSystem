@@ -1206,7 +1206,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
         <span>{barcode}</span>
         <small>{matchedProduct ? `${matchedProduct.code}・${matchedProduct.name}` : '此條碼尚未綁定刀具'}</small>
       </div>}
-      {!cameraActive && !barcode && <div className="barcode-camera-placeholder"><ScanBarcode/><span>尚未開啟相機</span></div>}
+      {!cameraActive && !barcode && <div className="barcode-camera-placeholder"><ScanBarcode/><span>點擊下方按鈕開始掃描</span></div>}
     </div>
     <button className={`button barcode-camera-button ${cameraActive ? 'outbound' : 'scan-button'}`} type="button" onClick={() => cameraActive ? stopCamera() : void startCamera()}>{cameraActive ? <X/> : barcode ? <History/> : <Camera/>}{cameraActive ? '停止相機' : barcode ? '掃描下一筆' : '開啟相機掃描'}</button>
 
