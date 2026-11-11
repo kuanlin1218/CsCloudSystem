@@ -91,11 +91,11 @@
   /* 「加工時間計算」的「時間輸入」的「欄位標題」相關格式：本行可修改排列方式、元件間距、文字或圖示顏色、字體大小。｜選擇器：.time-range label, .duration-fields label */
   --font-size-base-time-range-label-duration-fields-label: 13px;
   /* 「加工數量登記」的「實際工時（時）」的「欄位標題」相關格式：本行可修改字體大小。｜選擇器：.duration-fields label.actual-hours-field > span */
-  --font-size-base-duration-fields-label-actual-hours-field-span: 13px;
+  --font-size-base-duration-fields-label-actual-hours-field-span: 15px;
   /* 「加工數量登記」的「實際工時（時）」的「輸入框」相關格式：本行可修改字體大小。｜選擇器：.duration-fields input.actual-hours-input */
   --font-size-base-duration-fields-input-actual-hours-input: 24px;
   /* 「加工數量登記」的「實際工時（分）」的「欄位標題」相關格式：本行可修改字體大小。｜選擇器：.duration-fields label.actual-minutes-field > span */
-  --font-size-base-duration-fields-label-actual-minutes-field-span: 13px;
+  --font-size-base-duration-fields-label-actual-minutes-field-span: 15px;
   /* 「加工數量登記」的「實際工時（分）」的「輸入框」相關格式：本行可修改字體大小。｜選擇器：.duration-fields input.actual-minutes-input */
   --font-size-base-duration-fields-input-actual-minutes-input: 24px;
   /* 「加工數量登記」的「實際總時間」的「標題與分鐘數字」相關格式：本行可修改文字或圖示顏色、字體大小、上方外距、字型／粗細／大小。｜選擇器：.duration-fields > div span */
@@ -379,11 +379,11 @@
   /* 「手機版」的「加工數量登記」的「管理產品編號與管理機台按鈕」字體大小。｜選擇器：.production-data-tools button */
   --font-size-mobile-production-data-tools-button: 16px;
   /* 「手機版」的「加工數量登記」的「實際工時（時）欄位標題」字體大小。｜選擇器：.duration-fields label.actual-hours-field > span */
-  --font-size-mobile-duration-fields-label-actual-hours-field-span: 13px;
+  --font-size-mobile-duration-fields-label-actual-hours-field-span: 15px;
   /* 「手機版」的「加工數量登記」的「實際工時（時）輸入框」字體大小。｜選擇器：.duration-fields input.actual-hours-input */
   --font-size-mobile-duration-fields-input-actual-hours-input: 23px;
   /* 「手機版」的「加工數量登記」的「實際工時（分）欄位標題」字體大小。｜選擇器：.duration-fields label.actual-minutes-field > span */
-  --font-size-mobile-duration-fields-label-actual-minutes-field-span: 13px;
+  --font-size-mobile-duration-fields-label-actual-minutes-field-span: 15px;
   /* 「手機版」的「加工數量登記」的「實際工時（分）輸入框」字體大小。｜選擇器：.duration-fields input.actual-minutes-input */
   --font-size-mobile-duration-fields-input-actual-minutes-input: 23px;
   /* 「手機版」的「加工數量登記」的「實際總時間標題」字體大小。｜選擇器：.duration-fields > div span */
