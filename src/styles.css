@@ -369,7 +369,7 @@
   /* 「手機版」的「加工數量登記與加工數量查詢」的「日期輸入框」字體大小：只調整日期，不會影響數量與備註。｜選擇器：.production-field-row > input[type="date"] */
   --font-size-mobile-production-field-row-date-input: 18px;
   /* 「手機版」的「加工數量登記與加工數量查詢」的「產品編號與機台下拉選單」字體大小。｜選擇器：.production-field-row > select */
-  --font-size-mobile-production-field-row-select: 22px;
+  --font-size-mobile-production-field-row-select: 21px;
   /* 「手機版」的「加工數量登記與加工數量查詢」的「可以輸入關鍵字的下拉選單」字體大小。｜選擇器：.production-field-row .editable-combo input */
   --font-size-mobile-production-field-row-editable-combo-input: 22px;
   /* 「手機版」的「加工數量登記」的「管理產品編號與機台標題」字體大小。｜選擇器：.production-data-tools > div:first-child span */
