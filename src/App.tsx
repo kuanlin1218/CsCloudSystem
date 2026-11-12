@@ -259,7 +259,7 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         <p className="auth-eyebrow">2026</p>
       </div>
       <form onSubmit={submit}>
-        <Field label="登入名稱" wide><input autoFocus autoCapitalize="none" autoCorrect="off" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入登入名稱" disabled={busy}/></Field>
+        <Field label="登入名稱" wide><input autoFocus type="text" inputMode="text" pattern="[A-Za-z0-9]*" lang="en" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" enterKeyHint="next" value={username} onChange={(event) => setUsername(event.target.value.replace(/[^A-Za-z0-9]/g, ''))} placeholder="輸入英文或數字登入名稱" disabled={busy}/></Field>
         <Field label="密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={busy}/></Field>
         {message && <p className={success ? 'admin-success' : 'form-error'}>{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
