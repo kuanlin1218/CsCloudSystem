@@ -172,6 +172,33 @@
   --font-size-base-data-table-th: 15px;
   /* 「刀具資料與出入庫歷史」的「資料表格」的「每筆資料列」相關格式：本行可修改高度、內距、border-bottom、字體大小。｜選擇器：.data-table td */
   --font-size-base-data-table-td: 15px;
+  /* --------------------------------------------------------------------------
+     「庫存管理系統」的「所有資料表格」字體集中設定區
+     適用：刀具資料、出入庫、庫存盤點、歷史價格。
+     標題與內容分開設定；只控制字型、大小、粗細與行高，不會改變任何文字顏色。
+  -------------------------------------------------------------------------- */
+  /* 「庫存管理系統」的「電腦版表格標題」：廠牌、供應商、單價、庫存等欄位標題。 */
+  --inventory-table-heading-font-family: var(--font-family-site);
+  --inventory-table-heading-font-size: 15px;
+  --inventory-table-heading-font-weight: 700;
+  --inventory-table-heading-line-height: 1.35;
+  /* 「庫存管理系統」的「電腦版表格內容」：所有資料、輸入框、標籤及操作按鈕文字。 */
+  --inventory-table-content-font-family: var(--font-family-site);
+  --inventory-table-content-font-size: 16px;
+  --inventory-table-content-font-weight: 600;
+  --inventory-table-content-line-height: 1.35;
+  /* 「庫存管理系統」的「手機版資料卡欄位標題」：編號、品名、廠牌、供應商等提示文字。 */
+  --inventory-table-mobile-heading-font-size: 15px;
+  --inventory-table-mobile-heading-font-weight: 700;
+  /* 「庫存管理系統」的「手機版資料卡內容」：所有資料、輸入框、標籤及操作按鈕文字。 */
+  --inventory-table-mobile-content-font-size: 16px;
+  --inventory-table-mobile-content-font-weight: 600;
+  /* 「刀具資料」的「單價旁漲跌百分比」：電腦版與手機版可分別縮小，紅色／綠色維持原設定。 */
+  --inventory-table-price-change-font-size: 11px;
+  --inventory-table-mobile-price-change-font-size: 11px;
+  /* 「刀具資料」的「品名下方條碼號碼」：電腦版與手機版可分別縮小。 */
+  --inventory-table-barcode-font-size: 11px;
+  --inventory-table-mobile-barcode-font-size: 11px;
   /* 「刀具資料與出入庫歷史」的「資料表格」的「刀具編號」相關格式：本行可修改文字或圖示顏色、字型／粗細／大小。｜選擇器：.data-table .code｜原 font 縮寫 */
   --font-size-base-data-table-code-font-shorthand: 16px;
   /* 「庫存盤點」的「目前單價」的「已知價格標示」相關格式：本行可修改文字或圖示顏色、字型／粗細／大小、排列方式、垂直對齊、高度、內距、邊框、圓角、背景、字體大小、字體粗細。｜選擇器：.known-price｜原 font 縮寫 */
@@ -286,20 +313,20 @@
   /* .movement-table td,一般內容與「差異」
   .stocktake-table td｜選擇器：.movement-table td,
   .stocktake-table td */
-  --font-size-desktop-movement-table-td-stocktake-table-td: 14px;
+  --font-size-desktop-movement-table-td-stocktake-table-td: 16px;
   /* 「電腦版－出入庫與庫存盤點」的「編號、品名、數量與分類標籤」：比照刀具資料。｜選擇器：.movement-table .code,
   .stocktake-table .code */
-  --font-size-desktop-movement-table-code-stocktake-table-code: 14px;
+  --font-size-desktop-movement-table-code-stocktake-table-code: 16px;
   /* .movement-table .quantity,「庫存數量」
   .stocktake-table .quantity｜選擇器：.movement-table .quantity,
   .stocktake-table .quantity */
-  --font-size-desktop-movement-table-quantity-stocktake-table-quantity: 14px;
+  --font-size-desktop-movement-table-quantity-stocktake-table-quantity: 16px;
   /* .movement-table .tag,「分類」內容，例如「刀柄」
   .stocktake-table .tag｜選擇器：.movement-table .tag,
   .stocktake-table .tag */
   --font-size-desktop-movement-table-tag-stocktake-table-tag: 14px;
   /*「實際盤點數量」輸入框.stocktake-table .stocktake-quantity input｜選擇器：.stocktake-table .stocktake-quantity input */
-  --font-size-desktop-stocktake-table-stocktake-quantity-input: 15px;
+  --font-size-desktop-stocktake-table-stocktake-quantity-input: 16px;
   /* 「電腦版－庫存盤點」的「備註輸入框」：縮小寬度與高度。｜選擇器：.stocktake-table .stocktake-note */
   --font-size-desktop-stocktake-table-stocktake-note: 13px;
   /* 「電腦版－庫存盤點」的「更新數量按鈕」：配合縮小後的表格欄位。｜選擇器：.stocktake-table .stocktake-save */
@@ -1657,20 +1684,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* 「庫存盤點」的「刀具清單」的「盤點表格」相關格式：本行可修改最小寬度、背景。 */
 .stocktake-table { min-width: 1260px; }.stocktake-table tbody tr.has-stocktake-difference { background: rgba(255,194,58,.025); }.stocktake-table tbody tr.has-stocktake-difference:hover { background: rgba(255,194,58,.05); }
 
-/* 「庫存盤點」的「目前單價」的「已知價格標示」相關格式：本行可修改文字或圖示顏色、字型／粗細／大小、排列方式、垂直對齊、高度、內距、邊框、圓角、背景、字體大小、字體粗細。 */
-.known-price { color: #b7c4ca; font: 700 var(--font-size-base-known-price-font-shorthand) var(--font-family-monospace); }.unknown-price { display: inline-flex; align-items: center; height: 27px; padding: 0 9px; border: 1px solid rgba(255,194,58,.25); border-radius: 4px; background: rgba(255,194,58,.055); color: #d4b663; font-size: var(--font-size-base-unknown-price); font-weight: 800; }
+/* 庫存盤點｜目前單價 */
+.known-price { color: #b7c4ca; font: 700 var(--font-size-base-known-price-font-shorthand) var(--font-family-monospace); } .unknown-price { display: inline-flex; align-items: center; height: 27px; padding: 0 9px; border: 1px solid rgba(255,194,58,.25); border-radius: 4px; background: rgba(255,194,58,.055); color: #d4b663; font-size: var(--font-size-base-unknown-price); font-weight: 800; }
 
-/* 「庫存盤點」的「實際盤點數量」的「數量輸入框」相關格式：本行可修改寬度、高度、排列方式、垂直對齊、捲動方式、邊框、圓角、背景、邊框顏色、陰影、最小寬度、內距、文字或圖示顏色、字型／粗細／大小、文字對齊、outline、字體大小。 */
-.stocktake-quantity { width: 150px; height: 42px; display: flex; align-items: center; overflow: hidden; border: 1px solid #3a464d; border-radius: 5px; background: #0b1013; }.stocktake-quantity:focus-within { border-color: var(--yellow); box-shadow: 0 0 0 2px rgba(255,194,58,.1); }.stocktake-quantity.invalid { border-color: var(--red); }.stocktake-quantity input { width: 100%; min-width: 0; height: 100%; padding: 0 10px; border: 0; background: transparent; color: #eef4f6; font: 800 var(--font-size-base-stocktake-quantity-input-font-shorthand) var(--font-family-monospace); text-align: right; outline: 0; }.stocktake-quantity span { padding: 0 10px 0 4px; color: #7f8f97; font-size: var(--font-size-base-stocktake-quantity-span); }
+/* 庫存盤點｜實際盤點數量 */
+.stocktake-quantity { width: 150px; height: 42px; display: flex; align-items: center; overflow: hidden; border: 1px solid #3a464d; border-radius: 5px; background: #0b1013; } .stocktake-quantity:focus-within { border-color: var(--yellow); box-shadow: 0 0 0 2px rgba(255,194,58,.1); } .stocktake-quantity.invalid { border-color: var(--red); }
+.stocktake-quantity input { width: 100%; min-width: 0; height: 100%; padding: 0 10px; border: 0; background: transparent; color: #eef4f6; font: 800 var(--font-size-base-stocktake-quantity-input-font-shorthand) var(--font-family-monospace); text-align: right; outline: 0; } .stocktake-quantity span { padding: 0 10px 0 4px; color: #7f8f97; font-size: var(--font-size-base-stocktake-quantity-span); }
 
-/* 「庫存盤點」的「差異」的「差異數字」相關格式：本行可修改字體粗細、文字或圖示顏色、字體大小。 */
-.stocktake-difference { font-weight: 850; }.stocktake-difference.positive { color: var(--green); }.stocktake-difference.negative, .stocktake-difference.invalid { color: var(--red); }.stocktake-difference.invalid { font-size: var(--font-size-base-stocktake-difference-invalid); }
+/* 庫存盤點｜差異 */
+.stocktake-difference { font-weight: 800; } .stocktake-difference.positive { color: var(--green); } .stocktake-difference.negative, .stocktake-difference.invalid { color: var(--red); } .stocktake-difference.invalid { font-size: var(--font-size-base-stocktake-difference-invalid); }
 
-/* 「庫存盤點」的「盤點備註」的「備註輸入框」相關格式：本行可修改寬度、高度、內距、邊框、圓角、背景、文字或圖示顏色、outline、邊框顏色。 */
-.stocktake-note { width: 190px; height: 40px; padding: 0 10px; border: 1px solid #343f45; border-radius: 5px; background: #0d1316; color: var(--text); outline: 0; }.stocktake-note:focus { border-color: #687a84; }.stocktake-note::placeholder { color: #69777f; }
+/* 庫存盤點｜盤點備註 */
+.stocktake-note { font-weight: 500; width: 190px; height: 40px; padding: 0 10px; border: 1px solid #343f45; border-radius: 5px; background: #0d1316; color: var(--text); outline: 0; } .stocktake-note:focus { border-color: #687a84; } .stocktake-note::placeholder { color: #69777f; }
 
-/* 「庫存盤點」的「更新數量」的「更新數量按鈕」相關格式：本行可修改最小寬度、最小高度、排列方式、垂直對齊、水平對齊、元件間距、內距、邊框、圓角、背景、文字或圖示顏色、字體粗細、cursor、white-space、邊框顏色、透明度、寬度。 */
-.stocktake-save { min-width: 112px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 11px; border: 1px solid rgba(61,204,179,.4); border-radius: 5px; background: rgba(61,204,179,.07); color: var(--green); font-weight: 850; cursor: pointer; white-space: nowrap; }.stocktake-save:hover:not(:disabled) { border-color: var(--green); background: rgba(61,204,179,.13); }.stocktake-save:disabled { opacity: .35; cursor: not-allowed; }.stocktake-save svg { width: 16px; }
+/* 庫存盤點｜更新數量 */
+.stocktake-save { min-width: 112px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 11px; border: 1px solid rgba(61,204,179,.4); border-radius: 5px; background: rgba(61,204,179,.07); color: var(--green); font-weight: 850; cursor: pointer; white-space: nowrap; } .stocktake-save:hover:not(:disabled) { border-color: var(--green); background: rgba(61,204,179,.13); } .stocktake-save:disabled { opacity: .35; cursor: not-allowed; } .stocktake-save svg { width: 16px; }
 
 /* 「刀具資料」的「單價」的「單價與漲跌幅」相關格式：本行可修改字體粗細、文字或圖示顏色。 */
 .price-cell > span { font-weight: 800; color: #edf4f7; }
@@ -3047,11 +3075,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .movement-table .tag,
   .stocktake-table .tag { padding: 0 7px; font-size: var(--font-size-desktop-movement-table-tag-stocktake-table-tag); }
 
-  /* 「電腦版－出入庫」的「備註與刪除按鈕」：使用與刀具資料相同的自然內容寬度。 */
-  .movement-table .note-cell { max-width: 230px; white-space: normal; overflow: visible; text-overflow: clip; }
+  /* 「電腦版－出入庫」的「備註欄標題」：縮小欄寬，避免備註占用過多表格空間。 */
+  .movement-table th:nth-child(9) { width: 150px; max-width: 150px; }
+  /* 「電腦版－出入庫」的「備註內容」：固定較小欄寬，內容超過時自動換行顯示。 */
+  .movement-table .note-cell { width: 150px; max-width: 150px; white-space: normal; overflow: visible; overflow-wrap: anywhere; word-break: break-word; text-overflow: clip; }
   .movement-table td.muted { color: #edf4f7; }
   .movement-table .row-actions { min-width: 0; justify-content: flex-end; }
   .movement-table .row-actions button { width: 29px; height: 31px; }
+  /* 「電腦版－出入庫」的「備註內容」字體大小 */
+  .data-table.movement-table tbody td.note-cell {  font-size: 13px !important;}
 
   /* 「電腦版－庫存盤點」的「輸入框與更新按鈕」：可隨自然欄寬縮放，不撐開表格。 */
   .stocktake-table .stocktake-quantity,
@@ -3613,4 +3645,75 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   /* 「手機版－加工管理系統總覽」的「圖表標題」：產品編號與總數量換行顯示。 */
   .production-chart-head { align-items: flex-start; flex-direction: column; gap: 9px; }
   .production-chart-head > div { width: 100%; align-items: flex-start; flex-direction: column; gap: 4px; }
+}
+
+/* ============================================================================
+   庫存管理系統所有表格字體統一套用區
+   修改字體時，請只改檔案最前方的「庫存管理系統－所有資料表格字體集中設定區」。
+   下列規則只套用字型、大小、粗細與行高；各欄位原本顏色完全保留。
+============================================================================ */
+
+/* 「庫存管理系統」的「刀具資料、出入庫、庫存盤點、歷史價格表格標題」統一字體。 */
+.data-table:is(.product-table, .movement-table, .stocktake-table) thead th,
+.price-history-table .data-table thead th {
+  font-family: var(--inventory-table-heading-font-family) !important;
+  font-size: var(--inventory-table-heading-font-size) !important;
+  font-weight: var(--inventory-table-heading-font-weight) !important;
+  line-height: var(--inventory-table-heading-line-height) !important;
+}
+
+/* 「庫存管理系統」的「刀具資料、出入庫、庫存盤點、歷史價格表格內容」統一字體。 */
+.data-table:is(.product-table, .movement-table, .stocktake-table) tbody td,
+.data-table:is(.product-table, .movement-table, .stocktake-table) tbody td *,
+.price-history-table .data-table tbody td,
+.price-history-table .data-table tbody td * {
+  font-family: var(--inventory-table-content-font-family) !important;
+  font-size: var(--inventory-table-content-font-size) !important;
+  font-weight: var(--inventory-table-content-font-weight) !important;
+  line-height: var(--inventory-table-content-line-height) !important;
+}
+
+/* 「刀具資料」的「單價旁漲跌百分比」：只縮小文字，原本漲價紅色與降價綠色不變。 */
+.data-table.product-table tbody td.price-cell small {
+  font-size: var(--inventory-table-price-change-font-size) !important;
+}
+
+/* 「刀具資料」的「品名下方條碼號碼」：比一般表格內容小。 */
+.data-table.product-table tbody td.product-name .product-barcode,
+.data-table.product-table tbody td.product-name .product-barcode * {
+  font-size: var(--inventory-table-barcode-font-size) !important;
+}
+
+/* 「手機版庫存管理系統」的「資料卡欄位標題與內容」分別套用手機版集中設定。 */
+@media (max-width: 620px) {
+  .data-table:is(.product-table, .movement-table, .stocktake-table) tbody td::before,
+  .price-history-table .data-table tbody td::before {
+    font-family: var(--inventory-table-heading-font-family) !important;
+    font-size: var(--inventory-table-mobile-heading-font-size) !important;
+    font-weight: var(--inventory-table-mobile-heading-font-weight) !important;
+    line-height: var(--inventory-table-heading-line-height) !important;
+  }
+
+  .data-table:is(.product-table, .movement-table, .stocktake-table) tbody td,
+  .data-table:is(.product-table, .movement-table, .stocktake-table) tbody td *,
+  .price-history-table .data-table thead th,
+  .price-history-table .data-table tbody td,
+  .price-history-table .data-table tbody td * {
+    font-size: var(--inventory-table-mobile-content-font-size) !important;
+    font-weight: var(--inventory-table-mobile-content-font-weight) !important;
+  }
+
+  .price-history-table .data-table thead th {
+    font-size: var(--inventory-table-mobile-heading-font-size) !important;
+    font-weight: var(--inventory-table-mobile-heading-font-weight) !important;
+  }
+
+  .data-table.product-table tbody td.price-cell small {
+    font-size: var(--inventory-table-mobile-price-change-font-size) !important;
+  }
+
+  .data-table.product-table tbody td.product-name .product-barcode,
+  .data-table.product-table tbody td.product-name .product-barcode * {
+    font-size: var(--inventory-table-mobile-barcode-font-size) !important;
+  }
 }
