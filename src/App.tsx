@@ -1158,7 +1158,7 @@ function MovementsPage({ products, movements, loading, openStock, openScanner, r
   return <section className="page-content">
     <PageTitle eyebrow="STOCK MOVEMENTS" title="出入庫" actions={!readOnly ? <><ScanButton openScanner={openScanner}/><StockButtons openStock={openStock} /></> : undefined} />
     <div className="filter-card">
-      <SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商、備註" />
+      <SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商、備註" scanProducts={products} />
       <div className="filter-row">
         <label className="select-wrap"><select value={type} onChange={(e) => setType(e.target.value as 'all' | MovementType)}><option value="all">全部類型</option><option value="in">入庫</option><option value="out">出庫</option></select><ChevronDown /></label>
         <label className="date-wrap"><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="開始日期"/><CalendarDays /></label>
@@ -1226,7 +1226,7 @@ function StocktakePage({ products, loading, add, openScanner, focusProductId, on
       <div><span>未設定單價</span><strong>{formatNumber(noPriceCount)}</strong><small>仍可盤點</small></div>
       <div className={pendingCount ? 'attention' : ''}><span>待儲存差異</span><strong>{formatNumber(pendingCount)}</strong><small>個品項</small></div>
     </div>
-    <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="搜尋編號、品名、廠牌、供應商"/><label className="select-wrap"><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((value) => <option key={value}>{value}</option>)}</select><ChevronDown /></label></div>
+    <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商" scanProducts={products}/><label className="select-wrap"><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((value) => <option key={value}>{value}</option>)}</select><ChevronDown /></label></div>
     {pageError && <div className="form-error stocktake-error">{pageError}</div>}
     {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table stocktake-table"><thead><tr><th>編號</th><th>品名</th><th>分類</th><th>單價</th><th className="number">庫存</th><th className="number">實際數量</th><th className="number">差異</th><th aria-label="更新" /><th>盤點備註</th></tr></thead><tbody>
       {filtered.length === 0 ? <EmptyRow colSpan={9} label="沒有符合條件的刀具"/> : filtered.map((product) => {
@@ -1257,7 +1257,7 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, open
     .sort((a, b) => `${b.purchased_at || '0000-00-00'}-${b.updated_at}-${b.code}`.localeCompare(`${a.purchased_at || '0000-00-00'}-${a.updated_at}-${a.code}`))
   return <section className="page-content">
     <PageTitle eyebrow="TOOLS" title="刀具資料" actions={!readOnly ? <><ScanButton openScanner={openScanner}/><button className="button primary" onClick={add}><Plus />新增刀具</button></> : undefined} />
-    <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="搜尋編號、條碼、品名、廠牌、供應商"/><label className="select-wrap"><select value={category} onChange={(e) => setCategory(e.target.value)}>{categories.map((c) => <option key={c}>{c}</option>)}</select><ChevronDown /></label></div>
+    <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商" scanProducts={products}/><label className="select-wrap"><select value={category} onChange={(e) => setCategory(e.target.value)}>{categories.map((c) => <option key={c}>{c}</option>)}</select><ChevronDown /></label></div>
     {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table product-table"><thead><tr><th>編號</th><th>品名</th><th>廠牌</th><th>供應商</th><th>分類</th><th className="number">數量</th><th className="number">單價</th><th>購入日期</th><th aria-label="操作" /></tr></thead><tbody>
       {filtered.length === 0 ? <EmptyRow colSpan={9} label="沒有符合條件的刀具"/> : filtered.map((p) => {
         const prices = priceEntriesFor(p.id, movements)
@@ -1270,8 +1270,47 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, open
   </section>
 }
 
-function SearchField({ value, setValue, placeholder }: { value: string; setValue: (v: string) => void; placeholder: string }) {
-  return <label className="search-field"><Search /><input value={value} onChange={(e) => setValue(e.target.value)} placeholder={placeholder}/>{value && <button type="button" onClick={() => setValue('')} aria-label="清除搜尋"><X /></button>}</label>
+function SearchField({ value, setValue, placeholder, scanProducts = [] }: { value: string; setValue: (v: string) => void; placeholder: string; scanProducts?: Product[] }) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const clearTimerRef = useRef<number | null>(null)
+  const [inputValue, setInputValue] = useState(value)
+  const [scanResult, setScanResult] = useState<{ success: boolean; message: string } | null>(null)
+
+  useEffect(() => { setInputValue(value) }, [value])
+  useEffect(() => () => {
+    if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current)
+  }, [])
+
+  /* 「出入庫、庫存盤點、刀具資料」的「條碼搜尋」：清空可輸入文字但保留篩選條件，下一筆掃描會直接取代上一筆。 */
+  const finishBarcodeScan = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter' || event.nativeEvent.isComposing || !scanProducts.length) return
+    event.preventDefault()
+    const barcode = inputValue.trim()
+    if (!barcode) return
+    const matchedProduct = scanProducts.find((product) => product.barcode?.trim().toLowerCase() === barcode.toLowerCase())
+    setScanResult(matchedProduct
+      ? { success: true, message: `掃碼成功：${matchedProduct.code} ${matchedProduct.name}` }
+      : { success: false, message: `掃碼失敗：找不到條碼 ${barcode}` })
+    if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current)
+    clearTimerRef.current = window.setTimeout(() => {
+      setInputValue('')
+      setScanResult(null)
+      inputRef.current?.focus()
+      clearTimerRef.current = null
+    }, 1800)
+  }
+
+  const clearSearch = () => {
+    if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current)
+    clearTimerRef.current = null
+    setScanResult(null)
+    setInputValue('')
+    setValue('')
+    inputRef.current?.focus()
+  }
+
+  const inputPlaceholder = !inputValue && value ? `目前保留 ${value} 的搜尋結果，可直接掃描下一筆` : placeholder
+  return <label className="search-field"><Search /><input ref={inputRef} value={inputValue} onChange={(e) => { setInputValue(e.target.value); setValue(e.target.value); setScanResult(null) }} onKeyDown={finishBarcodeScan} placeholder={inputPlaceholder}/>{(inputValue || value) && <button type="button" onClick={clearSearch} aria-label="清除搜尋文字與目前結果"><X /></button>}{scanResult && <span className={`search-scan-status ${scanResult.success ? 'success' : 'failure'}`} role="status">{scanResult.success ? <ShieldCheck/> : <Triangle/>}<strong>{scanResult.message}</strong><small>輸入文字即將清空，搜尋結果會保留，可繼續掃描下一筆</small></span>}</label>
 }
 
 function EmptyRow({ colSpan, label }: { colSpan: number; label: string }) { return <tr><td colSpan={colSpan}><div className="empty-state"><ClipboardList />{label}</div></td></tr> }
