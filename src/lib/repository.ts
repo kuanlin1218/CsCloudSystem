@@ -53,6 +53,16 @@ const seedProductionOptions: ProductionOption[] = [
 
 const normalizeCategory = (value: string): ProductCategory => PRODUCT_CATEGORIES.includes(value as ProductCategory) ? value as ProductCategory : '刀片'
 
+/* 「庫存盤點」的「盤點備註日期與時間」：固定使用台灣時區，避免不同裝置時區造成紀錄時間不同。 */
+const formatTaipeiDateTime = () => {
+  const parts = new Intl.DateTimeFormat('zh-TW', {
+    timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+  }).formatToParts(new Date())
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value || ''
+  return `${part('year')}/${part('month')}/${part('day')} ${part('hour')}:${part('minute')}:${part('second')}`
+}
+
 function readLocal<T>(key: string, fallback: T): T {
   const value = localStorage.getItem(key)
   if (!value) { localStorage.setItem(key, JSON.stringify(fallback)); return fallback }
@@ -289,6 +299,8 @@ export async function registerMovement(input: MovementInput): Promise<void> {
 
 export async function setStocktakeQuantity(input: StocktakeInput): Promise<void> {
   if (!Number.isInteger(input.actual_quantity) || input.actual_quantity < 0) throw new Error('實際盤點數量必須是 0 以上的整數')
+  const userNotes = input.notes.trim()
+  const timestampedNotes = `盤點時間：${formatTaipeiDateTime()}${userNotes ? `｜${userNotes}` : ''}`
   if (isDemoMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts)
     const product = products.find((item) => item.id === input.product_id)
@@ -300,7 +312,7 @@ export async function setStocktakeQuantity(input: StocktakeInput): Promise<void>
       id: id(), product_id: product.id, movement_type: difference > 0 ? 'in' : 'out', quantity: Math.abs(difference),
       movement_date: today(), unit_price: difference > 0 ? product.unit_price : null,
       supplier: difference > 0 ? product.supplier : '',
-      notes: `庫存盤點調整：${product.stock_quantity} → ${input.actual_quantity}${input.notes.trim() ? `｜${input.notes.trim()}` : ''}`,
+      notes: `庫存盤點調整：${product.stock_quantity} → ${input.actual_quantity}｜${timestampedNotes}`,
       stock_after: input.actual_quantity, request_key: input.request_key, created_at: now,
       product: { code: product.code, name: product.name, unit: product.unit, brand: product.brand },
     }
@@ -311,7 +323,7 @@ export async function setStocktakeQuantity(input: StocktakeInput): Promise<void>
   const { error } = await supabase!.rpc('set_stocktake_quantity', {
     p_product_id: input.product_id,
     p_actual_quantity: input.actual_quantity,
-    p_notes: input.notes.trim() || null,
+    p_notes: timestampedNotes,
     p_request_key: input.request_key,
   })
   if (error) throw error
