@@ -229,7 +229,8 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setMessage(''); setSuccess(false)
-    if (username.trim().toLowerCase() !== OWNER_USERNAME) { setMessage('登入名稱或密碼不正確'); return }
+    const normalizedUsername = username.trim().toLowerCase()
+    if (!/^[a-z0-9]+$/.test(normalizedUsername) || normalizedUsername !== OWNER_USERNAME) { setMessage('登入名稱或密碼不正確'); return }
     if (!/^\d{4,}$/.test(password)) { setMessage('密碼必須是至少 4 位數字'); return }
     setBusy(true)
     try { await verifyOwnerPassword(password) }
@@ -259,7 +260,8 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         <p className="auth-eyebrow">2026</p>
       </div>
       <form onSubmit={submit}>
-        <Field label="登入名稱" wide><input autoFocus type="text" inputMode="text" pattern="[A-Za-z0-9]*" lang="en" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" enterKeyHint="next" value={username} onChange={(event) => setUsername(event.target.value.replace(/[^A-Za-z0-9]/g, ''))} placeholder="輸入英文或數字登入名稱" disabled={busy}/></Field>
+        {/* 「登入畫面」的「登入名稱輸入框」：允許桌面中文輸入法正常組字，送出時再驗證只能使用英文字母與數字。 */}
+        <Field label="登入名稱" wide><input autoFocus type="text" inputMode="email" pattern="[A-Za-z0-9]*" lang="en" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" enterKeyHint="next" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入英文或數字登入名稱" disabled={busy}/></Field>
         <Field label="密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={busy}/></Field>
         {message && <p className={success ? 'admin-success' : 'form-error'}>{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
