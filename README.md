@@ -241,6 +241,14 @@ blade-inventory/
 └─ vite.config.ts
 ```
 
+### 修改網站字型
+
+開啟 `src/styles.css`，搜尋「全站一般文字字型」或「編號、數量、金額、條碼與等寬文字字型」。全站字型已集中為 `--font-family-site` 與 `--font-family-monospace` 兩個變數；修改前者可更換一般文字，修改後者可一次更換編號、數量、金額、統計數字、條碼與其他等寬文字。下方各功能樣式只引用這兩個變數，不需要逐項修改 `ui-monospace`。
+
+搜尋 `--font-feature-slashed-zero` 可控制全站斜線 0；目前設定為 `"zero" 1`，並搭配 `font-variant-numeric: slashed-zero`。只有字型本身包含斜線 0 字形時才會顯示效果，JetBrains Mono、Cascadia Code 等常用等寬字型通常支援此功能。
+
+`index.html` 已透過 Google Fonts 正式載入 Noto Sans TC 與 JetBrains Mono。一般繁體中文介面使用 Noto Sans TC；編號、數量、金額、統計數字與條碼使用 JetBrains Mono，確保未安裝字型的 Windows、iPhone 與其他裝置仍能取得一致的網頁字型。若裝置無法連線 Google Fonts，CSS 會依序使用後方列出的系統備用字型。
+
 ### 修改網站字體大小
 
 開啟 `src/styles.css`，檔案最前方有「全站字體大小集中設定區」。所有固定的 `font-size` 與 `font:` 縮寫尺寸都已集中成獨立變數，並分成共用／電腦版、平板版、電腦版補充、手機版等區域。可在 VS Code 按 `Ctrl + F` 搜尋畫面中文名稱，例如「實際工時（時）」、「訂單總數量」或「庫存盤點」，直接修改對應變數的 `px` 數值。下方各功能樣式只引用變數，不必再從整份 CSS 尋找數字。

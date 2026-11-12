@@ -746,6 +746,37 @@ SQL：不需要執行 SQL。
 GitHub Summary：盤點備註自動加入日期時間。
 
 
+2026-11-12
+修改內容：將全站一般文字與原本分散在各功能中的 ui-monospace 等寬字型集中管理。新增 `--font-family-site` 與 `--font-family-monospace` 兩個變數，編號、數量、金額、統計數字、條碼、圖表文字及其他等寬文字全部改為引用同一個等寬字型變數；目前顯示外觀維持不變。以後只需在全站色彩與基礎設定區修改一行即可更換整類字型。
+修改檔案：
+- src/styles.css：新增一般文字與等寬文字字型變數，將所有 ui-monospace 設定改為統一引用變數。
+- README.md：新增全站字型集中管理的修改說明。
+- 專案修改紀錄.txt：新增本次字型整理紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：集中管理全站一般與等寬字型。
+
+
+2026-11-12
+修改內容：新增全站斜線 0 功能。集中設定 `--font-feature-slashed-zero: "zero" 1`，並將 OpenType `zero` 功能與標準 `font-variant-numeric: slashed-zero` 套用到一般文字、表格、輸入框、編號、數量、金額、統計數字及條碼；目前選用的 JetBrains Mono 支援時會將數字 0 顯示為斜線樣式。
+修改檔案：
+- src/styles.css：新增全站斜線 0 變數及所有元素的字型功能設定。
+- README.md：補充斜線 0 的修改位置與字型支援限制。
+- 專案修改紀錄.txt：新增本次功能紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：啟用全站數字斜線零功能。
+
+
+2026-11-12
+修改內容：正式載入 Google Fonts 字型。繁體中文與一般介面改用 Noto Sans Traditional Chinese（CSS 名稱 Noto Sans TC），編號、數量、金額、統計數字與條碼改用 JetBrains Mono，以支援已啟用的斜線 0。加入 400～900 所需字重與系統備用字型，讓 Windows、iPhone 及未安裝字型的裝置顯示一致；無法連線 Google Fonts 時仍會自動使用系統字型。
+修改檔案：
+- index.html：加入 Google Fonts 預先連線及 Noto Sans TC、JetBrains Mono 字型載入連結。
+- src/styles.css：一般文字指定 Noto Sans TC，數字與等寬文字指定 JetBrains Mono，並保留跨裝置備用字型。
+- README.md：補充網頁字型載入、用途分工及離線備用規則。
+- 專案修改紀錄.txt：新增本次字型載入紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：載入繁中字型並保留斜線零。
+
+
 【之後每次追加格式】
 
 YYYY-MM-DD
