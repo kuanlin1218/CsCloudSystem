@@ -755,7 +755,7 @@
   color-scheme: dark;
 
   /* 「整個網站」的「全站一般文字字型」：Google Fonts 載入 Noto Sans Traditional Chinese，後方保留系統備用字型。 */
-  --font-family-site: "Noto Sans TC",system-ui,"Microsoft JhengHei", "PingFang TC", sans-serif;;
+  --font-family-site: "Noto Sans TC",system-ui,"Microsoft JhengHei", "PingFang TC", sans-serif;
 
   /* 「整個網站」的「編號、數量、金額、條碼與等寬文字字型」：JetBrains Mono 支援下方啟用的斜線 0。 */
   --font-family-monospace: "Roboto Mono","SFMono-Regular", "Cascadia Code", Consolas,Menlo,"Liberation Mono",ui-monospace,monospace;
