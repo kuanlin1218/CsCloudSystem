@@ -4,7 +4,7 @@ import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
   Calculator, Camera, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
   FileSpreadsheet, FileUp, Keyboard, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, QrCode, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, WandSparkles, Wrench, X,
-  ScanBarcode,Factory
+  ScanBarcode,Factory,LayoutDashboard,Layers,DatabaseBackup,Combine,ChartColumnBig,CalendarClock,LaptopMinimal
 } from 'lucide-react'
 import { isDemoMode, supabase } from './lib/supabase'
 import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, verifyOwnerPassword } from './lib/auth'
@@ -434,17 +434,17 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         <nav>
           <NavItem active={false} icon={<Home />} onClick={() => nav('home')}>系統首頁</NavItem>
           {isProduction ? <>
-            <NavItem active={activePage === 'production-dashboard'} icon={<LayoutGrid />} onClick={() => nav('production-dashboard')}>總覽</NavItem>
+            <NavItem active={activePage === 'production-dashboard'} icon={<ChartColumnBig  />} onClick={() => nav('production-dashboard')}>總覽</NavItem>
             {!guestMode && <NavItem active={activePage === 'production-entry'} icon={<ListPlus />} onClick={() => nav('production-entry')}>加工數量登記</NavItem>}
             <NavItem active={activePage === 'production-query'} icon={<Search />} onClick={() => nav('production-query')}>加工數量查詢</NavItem>
-            <NavItem active={activePage === 'production-forecast'} icon={<Calculator />} onClick={() => nav('production-forecast')}>訂單完工預估</NavItem>
+            <NavItem active={activePage === 'production-forecast'} icon={<CalendarClock />} onClick={() => nav('production-forecast')}>訂單完工預估</NavItem>
             {!guestMode && <NavItem active={activePage === 'production-settings'} icon={<Wrench />} onClick={() => nav('production-settings')}>基礎資料設定</NavItem>}
-            {!guestMode && <NavItem active={activePage === 'production-delete'} icon={<FileSpreadsheet />} onClick={() => nav('production-delete')}>資料匯出與刪除</NavItem>}
+            {!guestMode && <NavItem active={activePage === 'production-delete'} icon={<Combine />} onClick={() => nav('production-delete')}>資料匯出與刪除</NavItem>}
           </> : <>
-            <NavItem active={activePage === 'dashboard'} icon={<LayoutGrid />} onClick={() => nav('dashboard')}>總覽</NavItem>
+            <NavItem active={activePage === 'dashboard'} icon={<LayoutDashboard />} onClick={() => nav('dashboard')}>總覽</NavItem>
             <NavItem active={activePage === 'movements'} icon={<ArrowLeftRight />} onClick={() => nav('movements')}>出入庫</NavItem>
             {!guestMode && <NavItem active={activePage === 'stocktake'} icon={<ClipboardCheck />} onClick={() => nav('stocktake')}>庫存盤點</NavItem>}
-            <NavItem active={activePage === 'products'} icon={<Boxes />} onClick={() => nav('products')}>刀具資料</NavItem>
+            <NavItem active={activePage === 'products'} icon={<LaptopMinimal />} onClick={() => nav('products')}>刀具資料</NavItem>
           </>}
         </nav>
         <div className="sidebar-foot">
@@ -570,9 +570,9 @@ function HomePage({ navigate, openAdmin, guestMode }: { navigate: (page: Page) =
     </div>
     <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div><small className="home-eyebrow"></small></div>
     <div className="function-grid portal-functions">
-      <FunctionCard icon={<ListPlus/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>
+      <FunctionCard icon={<Layers/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
-      <FunctionCard icon={<FileSpreadsheet/>} title="資料備份／還原" description={guestMode ? '訪客模式無法匯出或還原資料' : '匯出或整批匯入 Supabase Excel'} tone="purple" onClick={openAdmin} disabled={guestMode} disabledLabel="管理員限定"/>
+      <FunctionCard icon={<DatabaseBackup/>} title="資料備份／還原" description={guestMode ? '訪客模式無法匯出或還原資料' : '匯出或整批匯入 Supabase Excel'} tone="purple" onClick={openAdmin} disabled={guestMode} disabledLabel="管理員限定"/>
     </div>
   </section>
 }
