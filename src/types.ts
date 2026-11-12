@@ -36,7 +36,7 @@ export interface Movement {
   stock_after: number
   request_key: string
   created_at: string
-  product?: Pick<Product, 'code' | 'name' | 'unit' | 'brand'>
+  product?: Pick<Product, 'code' | 'name' | 'unit' | 'brand'> & { barcode?: string }
 }
 
 export interface ProductInput {

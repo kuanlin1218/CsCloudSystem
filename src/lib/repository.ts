@@ -77,7 +77,7 @@ export async function loadInventory(): Promise<{ products: Product[]; movements:
   }
   const [productsResult, movementsResult] = await Promise.all([
     supabase!.from('products').select('*').order('code'),
-    supabase!.from('stock_movements').select('*, product:products(code,name,unit,brand)').order('movement_date', { ascending: false }).order('created_at', { ascending: false }),
+    supabase!.from('stock_movements').select('*, product:products(code,barcode,name,unit,brand)').order('movement_date', { ascending: false }).order('created_at', { ascending: false }),
   ])
   if (productsResult.error) throw productsResult.error
   if (movementsResult.error) throw movementsResult.error

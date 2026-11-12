@@ -1145,10 +1145,12 @@ function MovementsPage({ products, movements, loading, openStock, openScanner, r
   const [type, setType] = useState<'all' | MovementType>('all')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const normalizedQuery = query.trim().toLowerCase()
   const filtered = movements.filter((m) => {
-    const product = m.product || products.find((p) => p.id === m.product_id)
-    const haystack = `${product?.code} ${product?.name} ${product?.brand} ${m.supplier} ${m.notes}`.toLowerCase()
-    return (!query || haystack.includes(query.toLowerCase())) && (type === 'all' || m.movement_type === type) && (!from || m.movement_date >= from) && (!to || m.movement_date <= to)
+    const product = products.find((p) => p.id === m.product_id) || m.product
+    /* 「出入庫」的「搜尋輸入框」：條碼掃描或手動輸入後，同時比對條碼、編號、品名、廠牌、供應商與備註。 */
+    const haystack = `${product?.barcode || ''} ${product?.code || ''} ${product?.name || ''} ${product?.brand || ''} ${m.supplier || ''} ${m.notes || ''}`.toLowerCase()
+    return (!normalizedQuery || haystack.includes(normalizedQuery)) && (type === 'all' || m.movement_type === type) && (!from || m.movement_date >= from) && (!to || m.movement_date <= to)
   })
   const inQty = filtered.filter((m) => m.movement_type === 'in').reduce((s, m) => s + m.quantity, 0)
   const outQty = filtered.filter((m) => m.movement_type === 'out').reduce((s, m) => s + m.quantity, 0)
@@ -1156,7 +1158,7 @@ function MovementsPage({ products, movements, loading, openStock, openScanner, r
   return <section className="page-content">
     <PageTitle eyebrow="STOCK MOVEMENTS" title="出入庫" actions={!readOnly ? <><ScanButton openScanner={openScanner}/><StockButtons openStock={openStock} /></> : undefined} />
     <div className="filter-card">
-      <SearchField value={query} setValue={setQuery} placeholder="搜尋編號、品名、廠牌、供應商、備註" />
+      <SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商、備註" />
       <div className="filter-row">
         <label className="select-wrap"><select value={type} onChange={(e) => setType(e.target.value as 'all' | MovementType)}><option value="all">全部類型</option><option value="in">入庫</option><option value="out">出庫</option></select><ChevronDown /></label>
         <label className="date-wrap"><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="開始日期"/><CalendarDays /></label>
