@@ -996,6 +996,24 @@ GitHub Summary：修正手機盤點搜尋與分類欄位溢出。
 SQL：不需要執行 SQL。
 GitHub Summary：徹底清除盤點頁上一筆掃碼搜尋。
 
+2026-11-13
+修改內容：修正電腦版庫存管理系統側邊欄標題右側多出一個 X。該按鈕原本是手機版側邊選單關閉按鈕，但 `.mobile-close` 的 display:none 被後方同權重的 `.icon-button` display:grid 覆蓋。現在桌面隱藏與手機顯示均改用更明確的 `.icon-button.mobile-close`，確保電腦版不顯示、手機版仍可正常關閉選單。
+修改檔案：
+- src/styles.css：提高 mobile-close 顯示規則的選擇器明確度，區分電腦版與手機版。
+- README.md：補充側邊選單 X 僅限手機版顯示的說明。
+- 專案修改紀錄.txt：新增本次電腦版多餘 X 修正紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：移除電腦版側邊欄多餘關閉按鈕。
+
+2026-11-13
+修改內容：修正電腦版新增刀具時 QR Code 預覽產生失敗。原本 `createQrCodeDataUrl` 會在輸入條碼後才動態 import qrcode，桌面瀏覽器若保留舊版主程式，而 GitHub Pages 已更新並移除舊 hash 的 QR 動態檔案，便會在產圖時載入失敗。現在 qrcode 改為靜態匯入並隨主程式一併打包，不再於操作時另外下載動態檔案；QR 預覽與 Excel QR 標籤共用流程維持不變。
+修改檔案：
+- src/lib/barcode.ts：將 qrcode 從動態 import 改為靜態匯入，避免部署與瀏覽器快取版本不同步。
+- README.md：補充 QR 套件載入方式與部署後強制重新整理說明。
+- 專案修改紀錄.txt：新增本次電腦版 QR Code 產生失敗修正紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：修正電腦版 QR Code 預覽產生失敗。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

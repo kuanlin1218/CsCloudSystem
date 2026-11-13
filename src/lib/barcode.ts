@@ -1,3 +1,5 @@
+import * as QRCode from 'qrcode'
+
 const PRIVATE_EAN_PREFIX = '29'
 
 function ean13CheckDigit(base12: string) {
@@ -22,7 +24,6 @@ export function generateUniqueToolBarcode(existingBarcodes: string[]) {
 
 /** 依條碼內容產生可顯示、下載或嵌入 Excel 的 QR Code PNG。 */
 export async function createQrCodeDataUrl(value: string, width = 280) {
-  const QRCode = await import('qrcode')
   return QRCode.toDataURL(value, {
     errorCorrectionLevel: 'M',
     margin: 1,
