@@ -377,7 +377,9 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   useEffect(() => {
     if (window.location.hash !== `#${pageFromLocation()}` || !window.location.hash) window.history.replaceState({ page: pageFromLocation() }, '', pageUrl(pageFromLocation()))
     const followBrowserHistory = () => {
-      setPage(pageFromLocation())
+      const nextPage = pageFromLocation()
+      setPage(nextPage)
+      if (nextPage !== 'stocktake') setStocktakeFocusProductId('')
       setMobileNav(false)
       setStockModal(null); setProductModal(null); setBarcodeScanner(false); setPendingBarcode(''); setPriceHistoryProduct(null)
       setProductionOptionModal(null); setAdminDataModal(false)
@@ -403,6 +405,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   const nav = (next: Page) => {
     if (guestMode && (next === 'production-entry' || next === 'production-settings' || next === 'production-delete' || next === 'stocktake')) return
     if (window.location.hash !== `#${next}`) window.history.pushState({ page: next }, '', pageUrl(next))
+    if (next !== 'stocktake') setStocktakeFocusProductId('')
     setPage(next)
     setMobileNav(false)
     void refresh()
@@ -497,7 +500,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
           const deleted = await requestAdminDelete('刪除出入庫紀錄', `${formatDate(movement.movement_date)} 的${movement.movement_type === 'in' ? '入庫' : '出庫'}紀錄「${product?.name || ''}」。庫存會自動重新計算。`, () => deleteMovement(movement.id))
           if (deleted) await afterSave('出入庫紀錄已刪除，庫存已重新計算')
         }} />}
-        {activePage === 'stocktake' && !guestMode && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} openScanner={() => setBarcodeScanner(true)} focusProductId={stocktakeFocusProductId} onAdjust={async (product, actualQuantity, notes) => {
+        {activePage === 'stocktake' && !guestMode && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} openScanner={() => setBarcodeScanner(true)} focusProductId={stocktakeFocusProductId} clearFocusProduct={() => setStocktakeFocusProductId('')} onAdjust={async (product, actualQuantity, notes) => {
           if (actualQuantity === product.stock_quantity) return true
           if (!window.confirm(`確定將 ${product.code}「${product.name}」的庫存由 ${product.stock_quantity} ${product.unit}調整為 ${actualQuantity} ${product.unit}？`)) return false
           try {
@@ -1185,7 +1188,7 @@ const priceEntriesFor = (productId: string, movements: Movement[]) => movements
   .filter((movement) => movement.product_id === productId && movement.movement_type === 'in' && movement.unit_price !== null)
   .sort((a, b) => `${b.movement_date}-${b.created_at}`.localeCompare(`${a.movement_date}-${a.created_at}`))
 
-function StocktakePage({ products, loading, add, openScanner, focusProductId, onAdjust }: { products: Product[]; loading: boolean; add: () => void; openScanner: () => void; focusProductId: string; onAdjust: (product: Product, actualQuantity: number, notes: string) => Promise<boolean> }) {
+function StocktakePage({ products, loading, add, openScanner, focusProductId, clearFocusProduct, onAdjust }: { products: Product[]; loading: boolean; add: () => void; openScanner: () => void; focusProductId: string; clearFocusProduct: () => void; onAdjust: (product: Product, actualQuantity: number, notes: string) => Promise<boolean> }) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('全部分類')
   const [drafts, setDrafts] = useState<Record<string, string>>({})
@@ -1195,7 +1198,11 @@ function StocktakePage({ products, loading, add, openScanner, focusProductId, on
   const categories = ['全部分類', ...PRODUCT_CATEGORIES]
   useEffect(() => {
     const product = products.find((item) => item.id === focusProductId)
-    if (product) { setQuery(product.code); setCategory('全部分類') }
+    if (product) {
+      setQuery(product.code)
+      setCategory('全部分類')
+      clearFocusProduct()
+    }
   }, [focusProductId, products])
   const filtered = products.filter((product) => `${product.code} ${product.barcode || ''} ${product.name} ${product.brand} ${product.supplier}`.toLowerCase().includes(query.toLowerCase()) && (category === '全部分類' || product.category === category))
   const actualFor = (product: Product) => drafts[product.id] ?? String(product.stock_quantity)

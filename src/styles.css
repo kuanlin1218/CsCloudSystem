@@ -6759,9 +6759,21 @@ textarea:focus-visible {
 }
 
 @media (max-width: 620px) {
-  /* 手機版 + 庫存管理系統－刀具資料｜搜尋與分類篩選區 */
+  /* 手機版 + 庫存管理系統－出入庫、庫存盤點、刀具資料｜搜尋與分類篩選區不得超出實體手機畫面。 */
   .product-filter {
-      grid-template-columns: 1fr;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      grid-template-columns: minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+  /* 手機版 + 庫存管理系統－出入庫、庫存盤點、刀具資料｜搜尋框與分類下拉選單限制在篩選卡內。 */
+  .product-filter > .search-field,
+  .product-filter > .select-wrap {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
     }
 }
 
