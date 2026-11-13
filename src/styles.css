@@ -2608,7 +2608,7 @@ textarea:focus-visible {
 
 /* 加工管理系統｜「加工時間（時）」輸入框內的數字 */
 .duration-fields input.actual-hours-input {
-  font-size: 24px;
+  font-size: 22px;
 }
 
 /* 加工管理系統｜「加工時間（分）」欄位標題文字 */
@@ -2618,7 +2618,7 @@ textarea:focus-visible {
 
 /* 加工管理系統｜「加工時間（分）」輸入框內的數字 */
 .duration-fields input.actual-minutes-input {
-  font-size: 24px;
+  font-size: 22px;
 }
 
 /* 加工管理系統｜「計算」按鈕內的按鈕 */
@@ -2664,7 +2664,7 @@ textarea:focus-visible {
 .duration-fields > div strong {
   margin-top: 3px;
   color: #ffc23a;
-  font: 800 24px var(--font-family-monospace);
+  font: 800 20px var(--font-family-monospace);
 }
 
 /* 加工管理系統｜「加工時間（時）」「加工時間（分）」「實際總時間」整列與上方間距 */
@@ -4068,7 +4068,7 @@ textarea:focus-visible {
   /* 加工管理系統｜加工登記／查詢表單的「日期、產品編號、機台、數量、備註」各欄位 */
   .production-field-row > textarea {
       padding-inline: 10px;
-      font-size: 23px;
+      font-size: 18px;
     }
 
   /* 加工管理系統｜加工登記／查詢表單的「日期、產品編號、機台、數量、備註」各欄位 */
@@ -4121,7 +4121,7 @@ textarea:focus-visible {
 
   /* 加工管理系統｜「實際總時間」的分鐘數字 */
   .duration-fields > div strong {
-      font-size: 22px;
+      font-size: 18px;
     }
 
   /* 加工管理系統｜大型操作按鈕 */
