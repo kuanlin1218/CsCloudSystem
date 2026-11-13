@@ -346,7 +346,7 @@ textarea:focus-visible {
 @media (max-width: 620px) {
   /* 手機版 + 全站基本元件｜關閉選單按鈕 */
   .icon-button.mobile-close {
-      display: grid;
+       display: none; /* grid顯示 */
       margin-left: auto;
     }
 
@@ -5453,7 +5453,7 @@ textarea:focus-visible {
   /* 庫存管理系統－出入庫｜每個欄位左側的欄位名稱 手機版出入庫標題 */
   .data-table.movement-table tbody td::before {
       display: inline;
-      margin-right: 5px;
+      margin-right: 16px;
       color: #82929a;
       font: 750 16px/1.35 var(--font-family-site);
     }
@@ -6093,11 +6093,11 @@ textarea:focus-visible {
       overflow-wrap: anywhere;
     }
 
-  /* 庫存管理系統－庫存盤點｜手機資料卡的「實際數量」標題與輸入框保持同一行。 */
+  /* 庫存管理系統－庫存盤點｜手機資料卡的「實際數量」標題與輸入框保持同一行。 手機版庫存盤點數量輸入框*/
   .data-table.stocktake-table tbody td:nth-child(6) {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 12px;
       font-family: var(--font-family-monospace);
       font-feature-settings: var(--font-feature-slashed-zero) !important;
       font-variant-numeric: slashed-zero tabular-nums;
@@ -6117,10 +6117,10 @@ textarea:focus-visible {
       min-width: 0;
     }
 
-  /* 庫存管理系統－庫存盤點｜每個欄位左側的欄位名稱 */
+  /* 庫存管理系統－庫存盤點｜每個欄位左側的欄位名稱 手機版庫存盤點標題*/
   .data-table.stocktake-table tbody td::before {
       display: inline;
-      margin-right: 5px;
+      margin-right: 16px;
       color: #82929a;
       font: 750 16px/1.35 var(--font-family-site);
     }
@@ -7050,10 +7050,10 @@ textarea:focus-visible {
       overflow-wrap: anywhere;
     }
 
-  /* 庫存管理系統－刀具資料｜每個欄位左側的欄位名稱 */
+  /* 庫存管理系統－刀具資料｜每個欄位左側的欄位名稱 手機版刀具資料標題*/
   .data-table.product-table tbody td::before {
       display: inline;
-      margin-right: 5px;
+      margin-right: 16px;
       color: #82929a;
       font: 750 16px/1.35 var(--font-family-site);
     }
