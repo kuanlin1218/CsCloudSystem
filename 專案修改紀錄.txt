@@ -1217,6 +1217,14 @@ GitHub Summary：調整購入日期時間排列並顯示秒數。
 SQL：網站顯示不需要執行 SQL；不要把 TSX 畫面程式貼到 Supabase SQL Editor。若要讓雲端資料庫未來直接儲存新文字，需重新執行更新後的 secure_single_user.sql。
 GitHub Summary：相容期初庫存新舊文字並修正顯示。
 
+2026-11-16
+修改內容：修正電腦版加工數量登記的備註輸入框修改字體大小後看不出變化的問題。將原本共用的 textarea 字體設定移到 621px 以上電腦版專用且更明確的選擇器，備註內容與「選填」提示文字都由同一個 25px 設定控制；手機版原有 18px 設定不變。
+修改檔案：
+- src/styles.css：新增電腦版加工登記備註 textarea 與 placeholder 的專用字體規則。
+- 專案修改紀錄.txt：新增本次電腦版備註文字大小修正紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：修正電腦版加工備註文字大小設定。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

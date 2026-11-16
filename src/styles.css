@@ -2485,6 +2485,18 @@ textarea:focus-visible {
   resize: vertical;
 }
 
+/* 電腦版｜加工管理系統 → 加工數量登記 →「備註」輸入框文字大小 */
+@media (min-width: 621px) {
+  .production-entry-page .entry-card .production-field-row.note-row > textarea {
+    font-size: 20px;
+  }
+
+  /* 電腦版｜加工管理系統 → 加工數量登記 →「備註」輸入框的「選填」提示文字大小 */
+  .production-entry-page .entry-card .production-field-row.note-row > textarea::placeholder {
+    font-size: inherit;
+  }
+}
+
 /* 加工管理系統｜加工登記／查詢表單的「日期、產品編號、機台、數量、備註」各欄位 */
 .production-field-row .editable-combo input {
   height: 100%;
