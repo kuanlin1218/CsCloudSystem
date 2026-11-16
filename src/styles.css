@@ -3233,7 +3233,7 @@ textarea:focus-visible {
   min-width: 0;
   overflow: hidden;
   color: #dce5e9;
-  font: 700 15px var(--font-family-monospace);
+  font: 700 18px var(--font-family-monospace);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -4283,7 +4283,7 @@ textarea:focus-visible {
 
   /* 加工管理系統｜基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 */
   .option-list-item > span {
-      font-size: 15px;
+      font-size: 18px;
     }
 
   /* 加工管理系統｜產品編號、日期範圍與筆數標題列內的標題或文字 */
