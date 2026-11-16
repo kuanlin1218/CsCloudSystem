@@ -2797,7 +2797,7 @@ textarea:focus-visible {
   display: grid;
   gap: 6px;
   color: #93a3ab;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 /* 加工管理系統｜「訂單總數量」輸入框 */
@@ -2811,6 +2811,7 @@ textarea:focus-visible {
   color: #e9eef1;
   text-align: right;
   outline: 0;
+  font-size: 18px;
 }
 
 /* 加工管理系統｜「訂單總數量」輸入框被點擊時的外框 */
@@ -2913,7 +2914,7 @@ textarea:focus-visible {
   border-radius: 6px;
   background-color: #090e11;
   color: #e9eef1;
-  font-size: 15px;
+  font-size: 16px;
   outline: 0;
 }
 
@@ -3029,7 +3030,7 @@ textarea:focus-visible {
 .forecast-grid strong {
   margin-top: 7px;
   color: #e4ecef;
-  font: 800 21px var(--font-family-monospace);
+  font: 800 20px var(--font-family-monospace);
 }
 
 /* 加工管理系統｜「剩餘數量」與「預估完工日期」黃色主要數值 */
@@ -4230,12 +4231,12 @@ textarea:focus-visible {
 
   /* 手機版｜加工管理系統｜歷史日期與預計使用機台數輸入框字體 */
   .forecast-setting input {
-      font-size: 18px;
+      font-size: 16px;
     }
 
   /* 加工管理系統｜「計算方式」下拉選單字體 */
   .forecast-setting select {
-      font-size: 18px;
+      font-size: 16px;
     }
 
   /* 加工管理系統｜「歷史判斷」、加工日、平均機台數與每日工時摘要字體 */
@@ -4255,7 +4256,7 @@ textarea:focus-visible {
 
   /* 手機版｜加工管理系統｜預估結果卡的主要數值字體 */
   .forecast-grid strong {
-      font-size: 21px;
+      font-size: 18px;
     }
 
   /* 加工管理系統｜結果卡內「加工日產能」或「實際加工天數」補充文字字體 */
