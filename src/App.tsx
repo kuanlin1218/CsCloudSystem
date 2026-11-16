@@ -428,7 +428,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   const productionMachines = useMemo(() => productionOptions.filter((option) => option.option_type === 'machine').map((option) => option.value).sort(), [productionOptions])
 
   return (
-    <div className={`app-shell ${isHome ? 'portal-shell' : ''}`}>
+    <div className={`app-shell ${isHome ? 'portal-shell' : ''} ${isSystem && !isProduction ? 'inventory-shell' : ''}`}>
       {!isDemoMode && !isSystem && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>}
       {isSystem && <aside className={`sidebar ${isProduction ? 'production-sidebar' : ''} ${mobileNav ? 'is-open' : ''}`}>
         <div className={`brand ${isProduction ? 'production-brand' : ''}`}>

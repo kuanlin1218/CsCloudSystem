@@ -1564,20 +1564,25 @@ textarea:focus-visible {
 }
 
 @media (max-width: 620px) {
-  /* 手機版｜庫存管理系統－出入庫｜入庫／出庫彈出視窗的「購入日期／出庫日期」輸入框：
-     限制 iPhone 原生日期元件跟隨彈窗寬度，避免向右超出畫面。 */
-  .stock-movement-form input[type="date"] {
+  /* 手機版｜整個庫存管理系統｜所有日期輸入框：
+     包含出入庫篩選日期、入庫／出庫彈窗日期與新增刀具購入日期。
+     關閉 iPhone 原生欄位會撐開寬度的外觀限制，強制日期框跟隨父層縮放。 */
+  .inventory-shell input[type="date"] {
       display: block;
       width: 100%;
       min-width: 0;
       max-width: 100%;
       inline-size: 100%;
       min-inline-size: 0;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
-  /* 手機版｜庫存管理系統－出入庫｜入庫／出庫彈出視窗的日期文字：
+  /* 手機版｜整個庫存管理系統｜所有日期輸入框內的日期文字：
      讓 Safari／Chrome 使用的 iOS 日期文字區可以縮小，不再撐開輸入框。 */
-  .stock-movement-form input[type="date"]::-webkit-date-and-time-value {
+  .inventory-shell input[type="date"]::-webkit-date-and-time-value {
+      width: 100%;
       min-width: 0;
       text-align: left;
     }
@@ -1598,25 +1603,27 @@ textarea:focus-visible {
       width: 100%;
     }
 
-  /* 網站共用按鈕、表單與彈出視窗｜覆蓋整個畫面的深色背景遮罩 */
+  /* 手機版｜全部彈出視窗｜深色背景遮罩與彈窗垂直位置：
+     彈窗改從畫面上方開始，並使用手機鍵盤出現後的動態可視高度。 */
   .modal-backdrop {
-      padding: 0;
-      align-items: end;
+      align-items: start;
+      padding: max(12px, env(safe-area-inset-top)) 0 max(12px, env(safe-area-inset-bottom));
     }
 
-  /* 網站共用按鈕、表單與彈出視窗｜視窗主要外框與捲動區 */
+  /* 手機版｜全部彈出視窗｜主要外框與捲動區：
+     鍵盤打開時依目前可見高度縮短，視窗內容可繼續上下捲動。 */
   .modal {
       width: 100%;
-      max-height: 94vh;
-      border-radius: 10px 10px 0 0;
+      max-height: calc(100dvh - 24px);
+      border-radius: 10px;
       padding: 22px 18px 26px;
     }
 
   /* 網站共用按鈕、表單與彈出視窗｜較寬的視窗外框 */
   .modal.large {
       width: 100%;
-      max-height: 94vh;
-      border-radius: 10px 10px 0 0;
+      max-height: calc(100dvh - 24px);
+      border-radius: 10px;
       padding: 22px 18px 26px;
     }
 
