@@ -5529,6 +5529,17 @@ textarea:focus-visible {
     }
 }
 
+/* 庫存管理系統－出入庫｜「建立時初庫存」下方的建立日期與時間 */
+.movement-table .movement-record-time {
+  display: block;
+  margin-top: 3px;
+  color: #7f9098;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: normal;
+}
+
 @media (min-width: 621px) {
   /* 庫存管理系統－出入庫｜整張表格的尺寸與排列 */
   .table-card:has(.movement-table) {
@@ -7071,11 +7082,22 @@ textarea:focus-visible {
       font-size: 14px; color: #91a1aa; font-weight: 800; line-height: 1.35; text-align: left;
     }
 
-  /* 庫存管理系統－刀具資料｜「購入日期」欄內容；手機版獨立放在數量與單價的下一列。 */
-  .product-table td:nth-child(9) {
+  /* 手機版｜庫存管理系統－刀具資料｜「購入日期」標題置左，日期時間緊接在右側 */
+  .data-table.product-table tbody td:nth-child(9) {
       grid-column: 1 / 7;
       grid-row: 5;
-      font-size: 16px; color: #edf4f7; font-weight: 600; line-height: 1.35; text-align: left;
+      display: grid;
+      grid-template-columns: max-content max-content;
+      column-gap: 12px;
+      justify-content: start;
+      align-items: center;
+      color: #edf4f7;
+      font-weight: 600;
+      line-height: 1.35;
+      text-align: left;
+      font-family: var(--font-family-monospace);
+      font-feature-settings: var(--font-feature-slashed-zero) !important;
+      font-variant-numeric: slashed-zero tabular-nums;
     }
 
   /* 庫存管理系統－刀具資料｜「操作按鈕」欄內容 */
@@ -7119,6 +7141,21 @@ textarea:focus-visible {
       margin-right: 16px;
       color: #82929a;
       font: 750 16px/1.35 var(--font-family-site);
+    }
+
+  /* 手機版｜庫存管理系統－刀具資料｜「購入日期」標題位置 */
+  .data-table.product-table tbody td:nth-child(9)::before {
+      grid-column: 1;
+      margin-right: 0;
+    }
+
+  /* 手機版｜庫存管理系統－刀具資料｜購入日期與秒數時間使用相同格式並排在同一行 */
+  .data-table.product-table tbody td:nth-child(9) .product-purchase-datetime {
+      grid-column: 2;
+      display: inline-flex;
+      gap: 4px;
+      justify-self: start;
+      text-align: left;
     }
 
   /* 庫存管理系統－刀具資料｜條碼號碼與 QR Code 預覽卡 */
@@ -7201,12 +7238,23 @@ textarea:focus-visible {
   .data-table.product-table tbody td:nth-child(6),
   .data-table.product-table tbody td:nth-child(7),
   .data-table.product-table tbody td:nth-child(8),
-  .data-table.product-table tbody td:nth-child(9),
   .data-table.product-table .product-barcode {
       font-family: var(--font-family-monospace);
       font-feature-settings: var(--font-feature-slashed-zero) !important;
       font-variant-numeric: slashed-zero tabular-nums;
     }
+}
+
+/* 庫存管理系統－刀具資料｜購入日期與紀錄時間共用相同字型格式及大小 */
+.product-table .product-purchase-datetime {
+  display: grid;
+  /* justify-items: left; */
+  gap: 0;
+  letter-spacing: -1px;
+  color: inherit;
+  font-size: 14px;
+  font-weight: inherit;
+  line-height: inherit;
 }
 
 @media (min-width: 621px) {
@@ -7228,24 +7276,24 @@ textarea:focus-visible {
   .product-table td:nth-child(1) { width: 8%; font-size: 16px; color: #ffc23a; font-weight: 700; text-align: left; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 刀具資料表格 + 第 2 欄「品名」。 */
-  .product-table th:nth-child(2) { width: 24%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: left; }
-  .product-table td:nth-child(2) { width: 24%; font-size: 16px; color: #e9eef1; font-weight: 700; text-align: left; }
+  .product-table th:nth-child(2) { width: 26%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: left; }
+  .product-table td:nth-child(2) { width: 26%; font-size: 16px; color: #e9eef1; font-weight: 700; text-align: left; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 刀具資料表格 + 第 3 欄「廠牌」。 */
-  .product-table th:nth-child(3) { width: 8%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: left; }
-  .product-table td:nth-child(3) { width: 8%; font-size: 16px; color: #e9eef1; font-weight: 600; text-align: left; }
+  .product-table th:nth-child(3) { width: 7%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: center; }
+  .product-table td:nth-child(3) { width: 7%; font-size: 16px; color: #e9eef1; font-weight: 600; text-align: center; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 刀具資料表格 + 第 4 欄「供應商」。 */
-  .product-table th:nth-child(4) { width: 8%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: left; }
-  .product-table td:nth-child(4) { width: 8%; font-size: 16px; color: #e9eef1; font-weight: 600; text-align: left; }
+  .product-table th:nth-child(4) { width: 7%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: center; }
+  .product-table td:nth-child(4) { width: 7%; font-size: 16px; color: #e9eef1; font-weight: 600; text-align: center; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 刀具資料表格 + 第 5 欄「分類」。 */
   .product-table th:nth-child(5) { width: 7%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: center; }
-  .product-table td:nth-child(5) { width: 7%; font-size: 14px; color: #e9eef1; font-weight: 600; text-align: center; }
+  .product-table td:nth-child(5) { width: 7%; font-size: 13px; color: #e9eef1; font-weight: 600; text-align: center; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 刀具資料表格 + 第 6 欄「數量」。 */
-  .product-table th:nth-child(6) { width: 7%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: right; }
-  .product-table td:nth-child(6) { width: 7%; font-size: 16px; color: #e9eef1; font-weight: 700; text-align: right; }
+  .product-table th:nth-child(6) { width: 9%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: right; }
+  .product-table td:nth-child(6) { width: 9%; font-size: 16px; color: #e9eef1; font-weight: 700; text-align: right; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 刀具資料表格 + 第 7 欄「單價」。 */
   .product-table th:nth-child(7) { width: 9%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: right; }
@@ -7256,8 +7304,8 @@ textarea:focus-visible {
   .product-table td:nth-child(8) { width: 5%; padding-left: 0; font-size: 12px; color: #91a1aa; font-weight: 800; text-align: left; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 刀具資料表格 + 第 9 欄「購入日期」。 */
-  .product-table th:nth-child(9) { width: 10%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: center; }
-  .product-table td:nth-child(9) { width: 10%; font-size: 14px; color: #e9eef1; font-weight: 600; text-align: center; }
+  .product-table th:nth-child(9) { width: 12%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: left; }
+  .product-table td:nth-child(9) { width: 12%; font-size: 13px; color: #e9eef1; font-weight: 600; text-align: left; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 刀具資料表格 + 第 10 欄「操作按鈕」。 */
   .product-table th:nth-child(10) { width: 14%; font-size: 13px; color: #8ca7b6; font-weight: 700; text-align: center; }

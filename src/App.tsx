@@ -31,6 +31,19 @@ const previousLocalDate = () => {
   return `${year}-${month}-${day}`
 }
 
+/* 庫存管理系統｜出入庫與刀具資料的紀錄時間：固定以台灣時區顯示，避免裝置時區不同。 */
+const formatTaipeiRecordTime = (value: string, includeDate = false, includeSeconds = false) => {
+  const date = new Date(value)
+  if (!value || Number.isNaN(date.getTime())) return '—'
+  const parts = new Intl.DateTimeFormat('zh-TW', {
+    timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+  }).formatToParts(date)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value || ''
+  const time = `${part('hour')}:${part('minute')}${includeSeconds ? `:${part('second')}` : ''}`
+  return includeDate ? `${part('year')}.${part('month')}.${part('day')} ${time}` : time
+}
+
 /* 「加工管理系統總覽」的「長條圖日期與星期」：圖表刻度顯示月日，日期範圍顯示完整年月日。 */
 const formatProductionChartDate = (value: string, includeYear = false) => {
   const [year, month, day] = value.split('-').map(Number)
@@ -118,6 +131,8 @@ const pageFromLocation = (): Page => {
 }
 const pageUrl = (page: Page) => `${window.location.pathname}${window.location.search}#${page}`
 const GUEST_SESSION_KEY = 'cnc-cloud-guest-mode'
+const INITIAL_STOCK_NOTE = '建立時初庫存'
+const isInitialStockNote = (value: string) => value === INITIAL_STOCK_NOTE || value === '建立商品時的期初庫存'
 
 type StockModalState = { type: MovementType; productId?: string }
 type AdminDeleteRequest = {
@@ -1170,7 +1185,7 @@ function MovementsPage({ products, movements, loading, openStock, openScanner, r
   const filtered = movements.filter((m) => {
     const product = products.find((p) => p.id === m.product_id) || m.product
     /* 「出入庫」的「搜尋輸入框」：條碼掃描或手動輸入後，同時比對條碼、編號、品名、廠牌、供應商與備註。 */
-    const haystack = `${product?.barcode || ''} ${product?.code || ''} ${product?.name || ''} ${product?.brand || ''} ${m.supplier || ''} ${m.notes || ''}`.toLowerCase()
+    const haystack = `${product?.barcode || ''} ${product?.code || ''} ${product?.name || ''} ${product?.brand || ''} ${m.supplier || ''} ${m.notes || ''} ${isInitialStockNote(m.notes) ? INITIAL_STOCK_NOTE : ''}`.toLowerCase()
     return (!normalizedQuery || haystack.includes(normalizedQuery)) && (type === 'all' || m.movement_type === type) && (!from || m.movement_date >= from) && (!to || m.movement_date <= to)
   })
   const inQty = filtered.filter((m) => m.movement_type === 'in').reduce((s, m) => s + m.quantity, 0)
@@ -1195,7 +1210,8 @@ function MovementTable({ movements, products, readOnly, onDelete }: { movements:
   return <div className="table-card"><table className={`data-table movement-table ${readOnly ? 'guest-read-only-table' : ''}`}><thead><tr><th>類型</th><th>日期</th><th>編號</th><th>品名</th><th className="number">數量</th><th className="number">單價</th><th className="number">金額</th><th>供應商</th><th>備註</th>{!readOnly && <th aria-label="操作" />}</tr></thead><tbody>
     {movements.length === 0 ? <EmptyRow colSpan={readOnly ? 9 : 10} label="沒有符合條件的出入庫紀錄" /> : movements.map((m) => {
       const p = m.product || products.find((item) => item.id === m.product_id)
-      return <tr key={m.id}><td><span className={`tag ${m.movement_type}`}>{m.movement_type === 'in' ? '入庫' : '出庫'}</span></td><td className="muted nowrap">{formatDate(m.movement_date)}</td><td className="code">{p?.code}</td><td className="product-name">{p?.name}</td><td className={`number ${m.movement_type === 'in' ? 'green-text' : 'red-text'}`}>{m.movement_type === 'in' ? '+' : '-'}{formatNumber(m.quantity)} <small>{p?.unit}</small></td><td className="number">{m.unit_price ? formatMoney(m.unit_price) : '—'}</td><td className="number muted">{m.unit_price ? formatMoney(m.quantity * m.unit_price) : '—'}</td><td>{m.supplier || '—'}</td><td className="muted note-cell">{m.notes || '—'}</td>{!readOnly && <td><div className="row-actions"><button className="danger-icon" onClick={() => onDelete(m)} aria-label={`刪除 ${formatDate(m.movement_date)} ${p?.name || ''} ${m.movement_type === 'in' ? '入庫' : '出庫'}紀錄`} title="刪除紀錄並重算庫存"><Trash2 /></button></div></td>}</tr>
+      const initialStock = isInitialStockNote(m.notes)
+      return <tr key={m.id}><td><span className={`tag ${m.movement_type}`}>{m.movement_type === 'in' ? '入庫' : '出庫'}</span></td><td className="muted nowrap">{formatDate(m.movement_date)}</td><td className="code">{p?.code}</td><td className="product-name">{p?.name}</td><td className={`number ${m.movement_type === 'in' ? 'green-text' : 'red-text'}`}>{m.movement_type === 'in' ? '+' : '-'}{formatNumber(m.quantity)} <small>{p?.unit}</small></td><td className="number">{m.unit_price ? formatMoney(m.unit_price) : '—'}</td><td className="number muted">{m.unit_price ? formatMoney(m.quantity * m.unit_price) : '—'}</td><td>{m.supplier || '—'}</td><td className="muted note-cell">{initialStock ? INITIAL_STOCK_NOTE : m.notes || '—'}{initialStock && <small className="movement-record-time">{formatTaipeiRecordTime(m.created_at, true)}</small>}</td>{!readOnly && <td><div className="row-actions"><button className="danger-icon" onClick={() => onDelete(m)} aria-label={`刪除 ${formatDate(m.movement_date)} ${p?.name || ''} ${m.movement_type === 'in' ? '入庫' : '出庫'}紀錄`} title="刪除紀錄並重算庫存"><Trash2 /></button></div></td>}</tr>
     })}
   </tbody></table></div>
 }
@@ -1294,7 +1310,9 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, open
         const percent = previous ? Math.round(((latest - previous) / previous) * 100) : null
         const percentClass = percent === null || percent === 0 ? 'price-flat' : percent > 0 ? 'price-up' : 'price-down'
         const percentLabel = percent === null ? '—' : percent === 0 ? '0%' : `${percent > 0 ? '▲' : '▼'}${Math.abs(percent)}%`
-        return <tr key={p.id}><td className="code">{p.code}</td><td className="product-name">{p.name}{p.barcode && <small className="product-barcode"><ScanBarcode />{p.barcode}</small>}</td><td><strong>{p.brand || '—'}</strong></td><td className="muted"><strong>{p.supplier || '—'}</strong></td><td><span className="tag neutral">{p.category}</span></td><td className="number quantity"><strong>{formatNumber(p.stock_quantity)}</strong> <small>{p.unit}</small></td><td className="number price-cell"><span>{formatMoney(p.unit_price)}</span><span className={`mobile-price-change ${percentClass}`}>{percentLabel}</span></td><td className="number price-change-cell"><span className={percentClass}>{percentLabel}</span></td><td className="muted nowrap">{p.purchased_at ? formatDate(p.purchased_at) : '—'}</td><td><div className={`row-actions product-actions ${readOnly ? 'guest-view-actions' : ''}`}>{!readOnly && <><button className="in-icon" onClick={() => openStock('in', p.id)} aria-label={`${p.name} 入庫`} title="入庫"><ArrowDownToLine /></button><button className="out-icon" onClick={() => openStock('out', p.id)} aria-label={`${p.name} 出庫`} title="出庫"><ArrowUpFromLine /></button></>}<button className="history-icon" onClick={() => viewHistory(p)} aria-label={`${p.name} 歷史價格`} title="歷史價格"><History /></button>{!readOnly && <><button onClick={() => edit(p)} aria-label={`編輯 ${p.name}`} title="編輯"><Pencil /></button><button className="danger-icon" onClick={() => onDelete(p)} aria-label={`刪除 ${p.name}`} title="刪除"><Trash2 /></button></>}</div></td></tr>
+        const purchaseRecord = prices.find((entry) => entry.movement_date === p.purchased_at)
+        const recordedAt = purchaseRecord?.created_at || p.created_at
+        return <tr key={p.id}><td className="code">{p.code}</td><td className="product-name">{p.name}{p.barcode && <small className="product-barcode"><ScanBarcode />{p.barcode}</small>}</td><td><strong>{p.brand || '—'}</strong></td><td className="muted"><strong>{p.supplier || '—'}</strong></td><td><span className="tag neutral">{p.category}</span></td><td className="number quantity"><strong>{formatNumber(p.stock_quantity)}</strong> <small>{p.unit}</small></td><td className="number price-cell"><span>{formatMoney(p.unit_price)}</span><span className={`mobile-price-change ${percentClass}`}>{percentLabel}</span></td><td className="number price-change-cell"><span className={percentClass}>{percentLabel}</span></td><td className="muted nowrap"><span className="product-purchase-datetime"><span>{p.purchased_at ? formatDate(p.purchased_at) : '—'}</span><span>{formatTaipeiRecordTime(recordedAt, false, true)}</span></span></td><td><div className={`row-actions product-actions ${readOnly ? 'guest-view-actions' : ''}`}>{!readOnly && <><button className="in-icon" onClick={() => openStock('in', p.id)} aria-label={`${p.name} 入庫`} title="入庫"><ArrowDownToLine /></button><button className="out-icon" onClick={() => openStock('out', p.id)} aria-label={`${p.name} 出庫`} title="出庫"><ArrowUpFromLine /></button></>}<button className="history-icon" onClick={() => viewHistory(p)} aria-label={`${p.name} 歷史價格`} title="歷史價格"><History /></button>{!readOnly && <><button onClick={() => edit(p)} aria-label={`編輯 ${p.name}`} title="編輯"><Pencil /></button><button className="danger-icon" onClick={() => onDelete(p)} aria-label={`刪除 ${p.name}`} title="刪除"><Trash2 /></button></>}</div></td></tr>
       })}
     </tbody></table></div>}
   </section>

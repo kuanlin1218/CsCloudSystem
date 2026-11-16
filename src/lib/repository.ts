@@ -220,7 +220,7 @@ export async function createProduct(input: ProductInput): Promise<void> {
     const product: Product = { id: id(), code: `${prefix}${String(nextNumber).padStart(4, '0')}`, name: composeProductName(input.category, input.specification, input.size, input.chipbreaker, input.material), ...input, barcode: input.barcode.trim(), stock_quantity: input.initial_quantity || 0, unit_price: input.initial_unit_price || 0, purchased_at: input.purchased_at || null, created_at: now, updated_at: now }
     const { initial_quantity, initial_unit_price, ...stored } = product as Product & { initial_quantity?: number; initial_unit_price?: number }
     writeLocal(PRODUCT_KEY, [...products, stored])
-    if (input.initial_quantity > 0) movements.unshift({ id: id(), product_id: product.id, movement_type: 'in', quantity: input.initial_quantity, movement_date: input.purchased_at, unit_price: input.initial_unit_price, supplier: input.supplier, notes: '建立商品時的期初庫存', stock_after: input.initial_quantity, request_key: id(), created_at: now, product: { code: product.code, name: product.name, unit: product.unit, brand: product.brand } })
+    if (input.initial_quantity > 0) movements.unshift({ id: id(), product_id: product.id, movement_type: 'in', quantity: input.initial_quantity, movement_date: input.purchased_at, unit_price: input.initial_unit_price, supplier: input.supplier, notes: '建立時初庫存', stock_after: input.initial_quantity, request_key: id(), created_at: now, product: { code: product.code, name: product.name, unit: product.unit, brand: product.brand } })
     writeLocal(MOVEMENT_KEY, movements)
     return
   }

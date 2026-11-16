@@ -341,7 +341,7 @@ begin
       supplier, notes, stock_after, request_key
     ) values (
       v_user_id, v_product_id, 'in', p_initial_quantity, coalesce(p_purchased_at, current_date),
-      p_initial_unit_price, btrim(coalesce(p_supplier, '')), '建立商品時的期初庫存',
+      p_initial_unit_price, btrim(coalesce(p_supplier, '')), '建立時初庫存',
       p_initial_quantity, p_request_key
     );
   end if;
