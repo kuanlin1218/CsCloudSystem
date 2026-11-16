@@ -1214,7 +1214,10 @@ function StocktakePage({ products, loading, add, openScanner, focusProductId, cl
       clearFocusProduct()
     }
   }, [focusProductId, products])
-  const filtered = products.filter((product) => `${product.code} ${product.barcode || ''} ${product.name} ${product.brand} ${product.supplier}`.toLowerCase().includes(query.toLowerCase()) && (category === '全部分類' || product.category === category))
+  /* 「庫存盤點」的「表格資料順序」：依刀具最後更新時間由新到舊排列；時間相同時再依編號由新到舊。 */
+  const filtered = products
+    .filter((product) => `${product.code} ${product.barcode || ''} ${product.name} ${product.brand} ${product.supplier}`.toLowerCase().includes(query.toLowerCase()) && (category === '全部分類' || product.category === category))
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at) || b.code.localeCompare(a.code))
   const actualFor = (product: Product) => drafts[product.id] ?? String(product.stock_quantity)
   const differenceFor = (product: Product) => {
     const actual = Number(actualFor(product))
@@ -1255,7 +1258,7 @@ function StocktakePage({ products, loading, add, openScanner, focusProductId, cl
           <td className="code">{product.code}</td>
           <td className="product-name">{product.name}</td>
           <td><span className="tag neutral">{product.category}</span></td>
-          <td className="number">{product.unit_price > 0 ? <span className="known-price">{formatMoney(product.unit_price)}</span> : <span className="unknown-price">未設定價格</span>}</td>
+          <td className="number">{product.unit_price > 0 ? <span className="known-price">{formatMoney(product.unit_price)}</span> : <span className="unknown-price">未設定</span>}</td>
           <td className="number quantity">{formatNumber(product.stock_quantity)} <small>{product.unit}</small></td>
           <td><label className={`stocktake-quantity ${invalid ? 'invalid' : ''}`}><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={actualFor(product)} onFocus={(event) => event.currentTarget.select()} onChange={(event) => { setDrafts((current) => ({ ...current, [product.id]: event.target.value })); setPageError('') }} aria-label={`${product.name} 實際盤點數量`}/><span>{product.unit}</span></label></td>
           <td className={`number stocktake-difference ${difference === null ? 'invalid' : difference > 0 ? 'positive' : difference < 0 ? 'negative' : ''}`}>{difference === null ? '格式錯誤' : difference === 0 ? '0' : `${difference > 0 ? '+' : ''}${formatNumber(difference)}`}</td>

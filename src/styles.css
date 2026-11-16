@@ -4661,7 +4661,7 @@ textarea:focus-visible {
       font-weight: 750;
       font-size: 18px;
       display: inline;
-      margin-right: 5px;
+      margin-right: 7px;
       color: #82929a;
       font: 750 18px/1.35 var(--font-family-site);
     }
@@ -4671,7 +4671,7 @@ textarea:focus-visible {
       font-weight: 750;
       font-size: 18px;
       display: inline;
-      margin-right: 5px;
+      margin-right: 12px;
       color: #82929a;
       font: 750 18px/1.35 var(--font-family-site);
     }
@@ -5856,7 +5856,6 @@ textarea:focus-visible {
 /* 庫存管理系統－庫存盤點｜各欄內的標籤、數字、輸入框與按鈕沿用該欄文字設定。 */
 .stocktake-table td:nth-child(3) .tag,
 .stocktake-table td:nth-child(4) .known-price,
-.stocktake-table td:nth-child(4) .unknown-price,
 .stocktake-table td:nth-child(5) small,
 .stocktake-table td:nth-child(6) input,
 .stocktake-table td:nth-child(6) span,
@@ -5864,6 +5863,12 @@ textarea:focus-visible {
 .stocktake-table td:nth-child(9) input {
   font-size: inherit !important;
   font-weight: inherit;
+}
+
+/* 庫存管理系統－庫存盤點｜各欄內的標籤、數字、輸入框與按鈕沿用該欄文字設定。 */
+.stocktake-table td:nth-child(4) .unknown-price {
+  font-size: 14px;
+  font-weight: 700;
 }
 
 @media (max-width: 620px) {
