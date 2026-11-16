@@ -149,38 +149,39 @@ textarea:focus-visible {
 }
 
 /* 全站基本元件｜「送出登記」按鈕 */
-.save-action {
+.production-action.save-action {
   border: 1px solid #d6a62d;
+  color: #08110e;
   background: #ffc23a;
 }
 
 /* 全站基本元件｜「送出登記」按鈕（滑鼠移入狀態） */
-.save-action:hover {
+.production-action.save-action:hover:not(:disabled) {
   background: #ffd44d;
 }
 
 /* 全站基本元件｜「刪除最後一筆」按鈕 */
-.delete-action {
+.production-action.delete-action {
   border: 1px solid rgba(255,121,92,.45);
   color: #ff795c;
   background: rgba(255,121,92,.06);
 }
 
 /* 全站基本元件｜「刪除最後一筆」按鈕（滑鼠移入狀態） */
-.delete-action:hover {
+.production-action.delete-action:hover:not(:disabled) {
   border-color: #ff795c;
   background: rgba(255,121,92,.11);
 }
 
 /* 全站基本元件｜「加工時間計算」按鈕 */
-.time-tool-action {
+.production-action.time-tool-action {
   border: 1px solid rgba(255,194,58,.4);
   color: #ffc23a;
   background: rgba(255,194,58,.055);
 }
 
 /* 全站基本元件｜「加工時間計算」按鈕（滑鼠移入狀態） */
-.time-tool-action:hover {
+.production-action.time-tool-action:hover:not(:disabled) {
   border-color: #ffc23a;
   background: rgba(255,194,58,.11);
 }
@@ -2688,7 +2689,8 @@ textarea:focus-visible {
   margin-top: 10px;
   border: 0;
   border-radius: 8px;
-  color: #08110e;
+  color: #e80606;
+  /* color: #08110e; */
   font-size: 19px;
   font-weight: 900;
   cursor: pointer;
@@ -3774,6 +3776,7 @@ textarea:focus-visible {
 /* 加工管理系統｜管理產品編號或管理機台功能卡片內的主要標題或數值 */
 .production-setting-card strong {
   display: block;
+  font-size: 20px;
 }
 
 /* 加工管理系統｜管理產品編號或管理機台功能卡片內的補充說明文字 */
@@ -3782,6 +3785,7 @@ textarea:focus-visible {
   margin-top: 7px;
   color: #8d9ca4;
   line-height: 1.5;
+  font-size: 14px;
 }
 
 /* 加工管理系統｜「管理機台」功能卡片 */

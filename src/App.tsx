@@ -609,6 +609,7 @@ function ProductionDashboard({ records, productCodes, loading }: { records: Prod
 }
 
 function ProductionQuantityChart({ productCode, days, total }: { productCode: string; days: { date: string; quantity: number }[]; total: number }) {
+  const chartScrollRef = useRef<HTMLDivElement>(null)
   const maximum = Math.max(1, ...days.map((day) => day.quantity))
   const roundedMaximum = Math.ceil(maximum / 10) * 10 || 10
   /* 「加工管理系統總覽」的「全部日期長條圖寬度」：日期越多，圖表越寬並由外層提供左右捲動。 */
@@ -616,9 +617,18 @@ function ProductionQuantityChart({ productCode, days, total }: { productCode: st
   const step = (chartWidth - 82) / Math.max(days.length, 1)
   const barWidth = Math.min(42, Math.max(20, step * .48))
   const dateRange = days.length ? ` ${formatProductionChartDate(days[0].date, true)} ～ ${formatProductionChartDate(days[days.length - 1].date, true)}` : '尚無加工日期'
+  const latestChartDate = days[days.length - 1]?.date || ''
+  /* 「加工總覽」的「每個產品長條圖」：初次顯示或新增日期後，自動捲到最右側的最新一筆。 */
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const chart = chartScrollRef.current
+      if (chart) chart.scrollLeft = chart.scrollWidth
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [days.length, latestChartDate])
   return <article className="chart-card production-chart-card">
     <div className="chart-head production-chart-head"><span>{dateRange}</span><div><strong>{productCode}</strong><small className="production-chart-total"><span>總加工數量</span><b>{formatNumber(total)}</b></small></div></div>
-    {days.length ? <div className="chart-wrap production-chart-wrap">
+    {days.length ? <div ref={chartScrollRef} className="chart-wrap production-chart-wrap">
       <svg viewBox={`0 0 ${chartWidth} 270`} style={{ width: `${chartWidth}px`, minWidth: '100%' }} role="img" aria-label={`${productCode} 依日期統計的加工數量長條圖`}>
         {[0, 1, 2, 3, 4].map((index) => { const y = 22 + index * 44; const value = Math.round(roundedMaximum * (1 - index / 4)); return <g key={index}><line x1="52" x2={chartWidth - 18} y1={y} y2={y}/><text x="43" y={y + 5} textAnchor="end">{formatNumber(value)}</text></g> })}
         {days.map((day, index) => {
