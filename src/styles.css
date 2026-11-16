@@ -2856,12 +2856,37 @@ textarea:focus-visible {
   line-height: 1.5;
 }
 
-/* 加工管理系統｜「訂單交期」、「計算方式」、「預計使用機台數」與「每日工時」四欄排列區 */
-.forecast-config-grid {
+/* 加工管理系統｜訂單完工預估的「歷史產能依據」選單 */
+.forecast-capacity-controls {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 13px;
+}
+
+/* 加工管理系統｜只有一個「歷史產能依據」選單時的欄寬 */
+.forecast-capacity-controls.forecast-single-control {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* 加工管理系統｜訂單完工預估的機台數設定區 */
+.forecast-future-config {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 13px;
+}
+
+/* 加工管理系統｜訂單完工預估的「指定歷史日期區間」開始與結束日期排列區 */
+.forecast-history-range {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255,194,58,.28);
+  border-radius: 6px;
+  background: rgba(255,194,58,.045);
 }
 
 /* 加工管理系統｜單一估算設定欄位的標題與輸入元件 */
@@ -2872,13 +2897,13 @@ textarea:focus-visible {
   color: #93a3ab;
 }
 
-/* 加工管理系統｜「訂單交期」、「計算方式」、「預計使用機台數」與「每日工時」欄位標題 */
+/* 加工管理系統｜歷史日期、產能依據與預計使用機台數的欄位標題 */
 .forecast-setting > span {
   font-size: 14px;
   font-weight: 750;
 }
 
-/* 加工管理系統｜「訂單交期」、「預計使用機台數」與「每日工時」輸入框 */
+/* 加工管理系統｜歷史日期與預計使用機台數輸入框 */
 .forecast-setting input {
   width: 100%;
   min-width: 0;
@@ -2932,13 +2957,48 @@ textarea:focus-visible {
   color: #d5b45f;
 }
 
-/* 加工管理系統｜六張預估結果卡的排列區 */
+/* 加工管理系統｜預估結果卡的排列區 */
 .forecast-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-top: 16px;
 }
+
+/* 加工管理系統｜剩餘數量、預估日產量、加工日與完工日期四張結果卡 */
+.forecast-grid.forecast-result-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* 加工管理系統｜訂單交期是否能完成的評估區 */
+.forecast-deadline-assessment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid #344148;
+  border-radius: 8px;
+  background: #101619;
+}
+
+/* 加工管理系統｜交期評估圖示 */
+.forecast-deadline-assessment > svg {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+}
+
+/* 加工管理系統｜交期評估標題與數量說明 */
+.forecast-deadline-assessment > div {
+  display: grid;
+  gap: 4px;
+}
+
+.forecast-deadline-assessment strong { color: #e9eef1; font-size: 15px; }
+.forecast-deadline-assessment span { color: #8fa0a8; font-size: 13px; line-height: 1.5; }
+.forecast-deadline-assessment.can-meet { border-color: rgba(61,204,179,.48); background: rgba(61,204,179,.08); color: #3dccb3; }
+.forecast-deadline-assessment.will-be-late { border-color: rgba(255,121,92,.48); background: rgba(255,121,92,.08); color: #ff795c; }
 
 /* 加工管理系統｜單張預估結果卡 */
 .forecast-grid > div {
@@ -2959,13 +3019,13 @@ textarea:focus-visible {
   background: rgba(255,194,58,.045);
 }
 
-/* 加工管理系統｜六張預估結果卡的欄位標題 */
+/* 加工管理系統｜預估結果卡的欄位標題 */
 .forecast-grid span {
   color: #84949c;
   font-size: 12px;
 }
 
-/* 加工管理系統｜六張預估結果卡的主要數值 */
+/* 加工管理系統｜預估結果卡的主要數值 */
 .forecast-grid strong {
   margin-top: 7px;
   color: #e4ecef;
@@ -2986,61 +3046,6 @@ textarea:focus-visible {
 /* 加工管理系統｜結果卡主要數值下方的補充文字間距 */
 .forecast-grid > div > small {
   margin-top: 4px;
-}
-
-/* 加工管理系統｜「可以在交期內完成」或「預估無法在交期內完成」判斷卡 */
-.forecast-deadline-status {
-  display: flex;
-  align-items: flex-start;
-  gap: 13px;
-  margin-top: 10px;
-  padding: 14px 16px;
-  border: 1px solid;
-  border-radius: 7px;
-}
-
-/* 加工管理系統｜交期判斷卡左側的盾牌圖示 */
-.forecast-deadline-status > svg {
-  width: 24px;
-  flex: 0 0 auto;
-}
-
-/* 加工管理系統｜交期判斷卡的完成狀態標題 */
-.forecast-deadline-status strong {
-  display: block;
-  font-size: 18px;
-}
-
-/* 加工管理系統｜訂單交期、可加工日與提前或延後天數說明 */
-.forecast-deadline-status span {
-  display: block;
-  margin-top: 4px;
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-/* 加工管理系統｜「可以在交期內完成」綠色狀態卡 */
-.forecast-deadline-status.can-meet {
-  border-color: rgba(61,204,179,.38);
-  background: rgba(61,204,179,.07);
-  color: #3dccb3;
-}
-
-/* 加工管理系統｜「可以在交期內完成」狀態卡的交期說明文字 */
-.forecast-deadline-status.can-meet span {
-  color: #8bbab1;
-}
-
-/* 加工管理系統｜「預估無法在交期內完成」紅色狀態卡 */
-.forecast-deadline-status.will-be-late {
-  border-color: rgba(255,121,92,.42);
-  background: rgba(255,121,92,.065);
-  color: #ff795c;
-}
-
-/* 加工管理系統｜「預估無法在交期內完成」狀態卡的交期說明文字 */
-.forecast-deadline-status.will-be-late span {
-  color: #c29085;
 }
 
 /* 加工管理系統｜最下方的產能、排程與完工日期計算公式說明 */
@@ -4049,7 +4054,7 @@ textarea:focus-visible {
       flex-direction: column;
     }
 
-  /* 加工管理系統｜六張預估結果卡改為兩欄排列 */
+  /* 手機版｜加工管理系統｜預估結果卡改為兩欄排列 */
   .forecast-grid {
       grid-template-columns: 1fr 1fr;
     }
@@ -4218,12 +4223,12 @@ textarea:focus-visible {
       font-size: 20px;
     }
 
-  /* 加工管理系統｜「訂單交期」、「計算方式」、「預計使用機台數」與「每日工時」欄位標題字體 */
+  /* 手機版｜加工管理系統｜歷史日期、產能依據與預計使用機台數的欄位標題字體 */
   .forecast-setting > span {
       font-size: 16px;
     }
 
-  /* 加工管理系統｜「訂單交期」、「預計使用機台數」與「每日工時」輸入框字體 */
+  /* 手機版｜加工管理系統｜歷史日期與預計使用機台數輸入框字體 */
   .forecast-setting input {
       font-size: 18px;
     }
@@ -4238,27 +4243,17 @@ textarea:focus-visible {
       font-size: 13px;
     }
 
-  /* 加工管理系統｜交期判斷卡的完成狀態標題字體 */
-  .forecast-deadline-status strong {
-      font-size: 18px;
-    }
-
-  /* 加工管理系統｜交期判斷卡的訂單交期、可加工日與提前或延後說明字體 */
-  .forecast-deadline-status span {
-      font-size: 14px;
-    }
-
   /* 加工管理系統｜未輸入訂單數量或資料不足提示文字 */
   .forecast-placeholder {
       font-size: 16px;
     }
 
-  /* 加工管理系統｜六張預估結果卡的欄位標題字體 */
+  /* 手機版｜加工管理系統｜預估結果卡的欄位標題字體 */
   .forecast-grid span {
       font-size: 12px;
     }
 
-  /* 加工管理系統｜六張預估結果卡的主要數值字體 */
+  /* 手機版｜加工管理系統｜預估結果卡的主要數值字體 */
   .forecast-grid strong {
       font-size: 21px;
     }
@@ -4355,8 +4350,19 @@ textarea:focus-visible {
       font-size: 24px;
     }
 
-  /* 加工管理系統｜「訂單交期」、「計算方式」、「預計使用機台數」與「每日工時」改為單欄排列 */
-  .forecast-config-grid {
+  /* 手機版｜加工管理系統｜歷史產能選單與機台數設定改為單欄 */
+  .forecast-capacity-controls,
+  .forecast-future-config {
+      grid-template-columns: 1fr;
+    }
+
+  /* 手機版｜加工管理系統｜四張預估結果卡改為兩欄 */
+  .forecast-grid.forecast-result-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+  /* 手機版｜加工管理系統｜訂單完工預估的「指定歷史日期區間」改為單欄排列 */
+  .forecast-history-range {
       grid-template-columns: 1fr;
     }
 
