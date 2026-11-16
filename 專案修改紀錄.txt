@@ -1156,6 +1156,16 @@ GitHub Summary：簡化完工預估為歷史產能自動排程。
 SQL：不需要執行 SQL。
 GitHub Summary：修正整數機台產能並恢復交期評估。
 
+2026-11-16
+修改內容：調整登入畫面的「忘記密碼或尚未設定密碼」流程。點擊後先顯示管理員 Email 輸入區，不再直接寄信；未輸入 Email 或輸入內容與系統設定的管理員 Email 不符時不會呼叫寄信功能，只有完全符合後才會透過 Supabase 寄出重設密碼郵件。寄送成功、Email 不符及寄送失敗會在重設區內分別顯示提示。
+修改檔案：
+- src/App.tsx：新增重設密碼展開狀態、Email 輸入與驗證，通過後才呼叫 resetPasswordForEmail。
+- src/styles.css：新增登入畫面管理員 Email 驗證區與寄送按鈕樣式。
+- README.md：更新首次設定或忘記密碼的操作說明。
+- 專案修改紀錄.txt：新增本次重設密碼 Email 驗證流程紀錄。
+SQL：不需要執行 SQL。
+GitHub Summary：重設密碼前先驗證管理員 Email。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

@@ -2224,6 +2224,28 @@ textarea:focus-visible {
   cursor: pointer;
 }
 
+/* 登入畫面｜點選「忘記密碼」後顯示的管理員 Email 驗證區 */
+.auth-reset-form {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid rgba(61,204,179,.3);
+  border-radius: 8px;
+  background: rgba(61,204,179,.045);
+}
+
+/* 登入畫面｜管理員 Email 驗證區內的輸入欄位間距 */
+.auth-card .auth-reset-form .field.wide {
+  margin-bottom: 12px;
+}
+
+/* 登入畫面｜「寄送重設密碼郵件」按鈕 */
+.auth-reset-submit {
+  width: 100%;
+  border-color: rgba(61,204,179,.48);
+  background: rgba(61,204,179,.1);
+  color: #8ee3d3;
+}
+
 @media (max-width: 620px) {
   /* 登入畫面與系統首頁｜系統首頁整頁內容在手機主畫面中的寬度與位置 */
   .portal-panel > .home-page {

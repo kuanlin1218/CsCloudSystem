@@ -199,11 +199,14 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState(initialMessage || '')
-  const [success, setSuccess] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetMessage, setResetMessage] = useState('')
+  const [resetSuccess, setResetSuccess] = useState(false)
 
   const submit = async (event: FormEvent) => {
-    event.preventDefault(); setMessage(''); setSuccess(false)
+    event.preventDefault(); setMessage('')
     const normalizedUsername = username.trim().toLowerCase()
     if (!/^[a-z0-9]+$/.test(normalizedUsername) || normalizedUsername !== OWNER_USERNAME) { setMessage('登入名稱或密碼不正確'); return }
     if (!/^\d{4,}$/.test(password)) { setMessage('密碼必須是至少 4 位數字'); return }
@@ -213,15 +216,20 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
     finally { setBusy(false) }
   }
 
-  const sendPasswordEmail = async () => {
+  const sendPasswordEmail = async (event: FormEvent) => {
+    event.preventDefault()
     if (!supabase) return
-    setBusy(true); setMessage(''); setSuccess(false)
+    const normalizedEmail = resetEmail.trim().toLowerCase()
+    setResetMessage(''); setResetSuccess(false)
+    if (!normalizedEmail) { setResetMessage('請先輸入管理員 Email'); return }
+    if (normalizedEmail !== OWNER_EMAIL.toLowerCase()) { setResetMessage('Email 與後台管理員帳號不符'); return }
+    setBusy(true)
     try {
       const redirectTo = `${window.location.origin}${import.meta.env.BASE_URL}`
-      const { error } = await supabase.auth.resetPasswordForEmail(OWNER_EMAIL, { redirectTo })
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo })
       if (error) throw error
-      setSuccess(true); setMessage('設定密碼郵件已寄出，請使用最新一封郵件中的連結。')
-    } catch (error) { setMessage(messageFor(error)) }
+      setResetSuccess(true); setResetMessage('重設密碼郵件已寄出，請使用最新一封郵件中的連結。')
+    } catch (error) { setResetMessage(messageFor(error)) }
     finally { setBusy(false) }
   }
 
@@ -238,12 +246,17 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         {/* 「登入畫面」的「登入名稱輸入框」：允許桌面中文輸入法正常組字，送出時再驗證只能使用英文字母與數字。 */}
         <Field label="登入名稱" wide><input autoFocus type="text" inputMode="email" pattern="[A-Za-z0-9]*" lang="en" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" enterKeyHint="next" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入英文或數字登入名稱" disabled={busy}/></Field>
         <Field label="密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={busy}/></Field>
-        {message && <p className={success ? 'admin-success' : 'form-error'}>{message}</p>}
+        {message && <p className="form-error">{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
       <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客查看</button>
       <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
-      <button className="auth-switch" type="button" onClick={() => void sendPasswordEmail()} disabled={busy}>忘記密碼或尚未設定密碼</button>
+      <button className="auth-switch" type="button" onClick={() => { setResetOpen((value) => !value); setResetMessage(''); setResetSuccess(false) }} disabled={busy}>{resetOpen ? '取消重設密碼' : '忘記密碼或尚未設定密碼'}</button>
+      {resetOpen && <form className="auth-reset-form" onSubmit={sendPasswordEmail}>
+        <Field label="管理員 Email" wide><input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="email" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} placeholder="輸入後台設定的 Email" disabled={busy}/></Field>
+        {resetMessage && <p className={resetSuccess ? 'admin-success' : 'form-error'}>{resetMessage}</p>}
+        <button className="button auth-reset-submit" type="submit" disabled={busy}>{busy ? '正在寄送…' : '寄送重設密碼郵件'}</button>
+      </form>}
       <p className="auth-guest-note">© 2026 KUAN LIN CHEN. All rights reserved.</p>
     </section>
   </main>
