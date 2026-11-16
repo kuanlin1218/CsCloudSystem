@@ -259,7 +259,7 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         <h1>登入雲端系統</h1>
         <p className="auth-eyebrow">2026</p>
       </div>
-      <form onSubmit={submit}>
+    <form onSubmit={submit}>
         {/* 「登入畫面」的「登入名稱輸入框」：允許桌面中文輸入法正常組字，送出時再驗證只能使用英文字母與數字。 */}
         <Field label="登入名稱" wide><input autoFocus type="text" inputMode="email" pattern="[A-Za-z0-9]*" lang="en" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" enterKeyHint="next" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入英文或數字登入名稱" disabled={busy}/></Field>
         <Field label="密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{4,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={busy}/></Field>
@@ -1358,7 +1358,7 @@ function StockModal({ type, initialProductId, products, close, switchType, save 
     catch (err) { setFormError(messageFor(err)); setBusy(false) }
   }
   return <Modal close={close} title={`登記${type === 'in' ? '入庫' : '出庫'}`}>
-    <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
+    <form className="stock-movement-form" onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="segmented"><button type="button" className={type === 'in' ? 'selected-in' : ''} onClick={() => switchType('in')}>入庫</button><button type="button" className={type === 'out' ? 'selected-out' : ''} onClick={() => switchType('out')}>出庫</button></div>
       <Field label="刀具" wide><ProductPicker products={products} value={productId} onChange={setProductId}/></Field>
       {selected && <div className="stock-hint">目前庫存 <strong>{formatNumber(selected.stock_quantity)} {selected.unit}</strong></div>}

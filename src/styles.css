@@ -1564,6 +1564,24 @@ textarea:focus-visible {
 }
 
 @media (max-width: 620px) {
+  /* 手機版｜庫存管理系統－出入庫｜入庫／出庫彈出視窗的「購入日期／出庫日期」輸入框：
+     限制 iPhone 原生日期元件跟隨彈窗寬度，避免向右超出畫面。 */
+  .stock-movement-form input[type="date"] {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      inline-size: 100%;
+      min-inline-size: 0;
+    }
+
+  /* 手機版｜庫存管理系統－出入庫｜入庫／出庫彈出視窗的日期文字：
+     讓 Safari／Chrome 使用的 iOS 日期文字區可以縮小，不再撐開輸入框。 */
+  .stock-movement-form input[type="date"]::-webkit-date-and-time-value {
+      min-width: 0;
+      text-align: left;
+    }
+
   /* 網站共用按鈕、表單與彈出視窗｜工時計算內容外框 */
   .modal-calculation {
       padding: 11px;
