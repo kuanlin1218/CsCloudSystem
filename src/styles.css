@@ -6259,20 +6259,20 @@ textarea:focus-visible {
   ============================================================================ */
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 庫存盤點表格 + 第 1 欄「編號」。 */
-  .stocktake-table th:nth-child(1) { width: 9%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: left; }
-  .stocktake-table td:nth-child(1) { width: 9%; font-size: 16px; color: #ffc23a; font-weight: 700; text-align: left; }
+  .stocktake-table th:nth-child(1) { width: 8%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: left; }
+  .stocktake-table td:nth-child(1) { width: 8%; font-size: 16px; color: #ffc23a; font-weight: 700; text-align: left; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 庫存盤點表格 + 第 2 欄「品名」。 */
-  .stocktake-table th:nth-child(2) { width: 23%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: left; }
-  .stocktake-table td:nth-child(2) { width: 23%; font-size: 16px; color: #e9eef1; font-weight: 700; text-align: left; }
+  .stocktake-table th:nth-child(2) { width: 26%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: left; }
+  .stocktake-table td:nth-child(2) { width: 26%; font-size: 16px; color: #e9eef1; font-weight: 700; text-align: left; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 庫存盤點表格 + 第 3 欄「分類」。 */
-  .stocktake-table th:nth-child(3) { width: 8%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
-  .stocktake-table td:nth-child(3) { width: 8%; font-size: 14px; color: #e9eef1; font-weight: 600; text-align: center; }
+  .stocktake-table th:nth-child(3) { width: 7%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
+  .stocktake-table td:nth-child(3) { width: 7%; font-size: 14px; color: #e9eef1; font-weight: 600; text-align: center; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 庫存盤點表格 + 第 4 欄「單價」。 */
-  .stocktake-table th:nth-child(4) { width: 9%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
-  .stocktake-table td:nth-child(4) { width: 9%; font-size: 16px; color: #e9eef1; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+  .stocktake-table th:nth-child(4) { width: 8%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
+  .stocktake-table td:nth-child(4) { width: 8%; font-size: 16px; color: #e9eef1; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 庫存盤點表格 + 第 5 欄「庫存」。 */
   .stocktake-table th:nth-child(5) { width: 8%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
@@ -6283,8 +6283,8 @@ textarea:focus-visible {
   .stocktake-table td:nth-child(6) { width: 12%; font-size: 16px; color: #e9eef1; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 庫存盤點表格 + 第 7 欄「差異」。 */
-  .stocktake-table th:nth-child(7) { width: 8%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
-  .stocktake-table td:nth-child(7) { width: 8%; font-size: 15px; color: #e9eef1; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+  .stocktake-table th:nth-child(7) { width: 5%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
+  .stocktake-table td:nth-child(7) { width: 5%; font-size: 14px; color: #e9eef1; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
 
   /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 庫存盤點表格 + 第 8 欄「更新數量」。 */
   .stocktake-table th:nth-child(8) { width: 9%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
