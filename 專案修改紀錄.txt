@@ -1280,6 +1280,15 @@ GitHub Summary：加強手機相機的 QR Code 辨識。
 SQL：不需要執行 SQL。
 GitHub Summary：新增相機中央裁切的 QR Code 補充辨識。
 
+2026-11-17
+修改內容：全畫面 ZXing 未解碼時，改用獨立的 jsQR 解讀中央裁切影像，嘗試黑白與反相 QR Code。
+修改檔案：
+- src/App.tsx：接上 jsQR 補充解碼。
+- package.json、package-lock.json：加入 jsQR 依賴。
+- README.md、工作交接紀錄.md、專案修改紀錄.txt：同步操作說明與實測待辦。
+SQL：不需要執行 SQL。
+GitHub Summary：加入獨立 QR 解碼器改善手機掃描。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

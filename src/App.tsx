@@ -1566,9 +1566,10 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
     stopCamera()
     try {
       await prepareScanAudio()
-      const [{ BrowserMultiFormatReader, BrowserQRCodeReader }, { DecodeHintType }] = await Promise.all([
+      const [{ BrowserMultiFormatReader }, { DecodeHintType }, { default: decodeQr }] = await Promise.all([
         import('@zxing/browser'),
         import('@zxing/library'),
+        import('jsqr'),
       ])
       const video = videoRef.current
       if (!video) return
@@ -1578,13 +1579,12 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
         hints,
         { delayBetweenScanAttempts: 250 },
       )
-      const qrReader = new BrowserQRCodeReader(hints)
       const qrCanvas = document.createElement('canvas')
       const qrContext = qrCanvas.getContext('2d', { willReadFrequently: true })
       // 刀具掃碼視窗｜全畫面未解碼時，只取黃框中央附近的影像，降低周圍印刷圖案的干擾。
       const readCenteredQr = () => {
         const { videoWidth, videoHeight, clientWidth, clientHeight } = video
-        if (!qrContext || !videoWidth || !videoHeight || !clientWidth || !clientHeight) return ''
+        if (!qrContext || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !videoWidth || !videoHeight || !clientWidth || !clientHeight) return ''
         const previewScale = Math.max(clientWidth / videoWidth, clientHeight / videoHeight)
         const side = Math.floor(Math.min(clientWidth, clientHeight) * .65 / previewScale)
         if (side < 32) return ''
@@ -1596,11 +1596,13 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
           qrCanvas.width = canvasSize
           qrCanvas.height = canvasSize
         }
-        qrContext.fillStyle = '#fff'
-        qrContext.fillRect(0, 0, canvasSize, canvasSize)
-        qrContext.drawImage(video, (videoWidth - side) / 2, (videoHeight - side) / 2, side, side, padding, padding, size, size)
-        try { return qrReader.decodeFromCanvas(qrCanvas).getText().trim() }
-        catch { return '' }
+        try {
+          qrContext.fillStyle = '#fff'
+          qrContext.fillRect(0, 0, canvasSize, canvasSize)
+          qrContext.drawImage(video, (videoWidth - side) / 2, (videoHeight - side) / 2, side, side, padding, padding, size, size)
+          const { data, width, height } = qrContext.getImageData(0, 0, canvasSize, canvasSize)
+          return decodeQr(data, width, height, { inversionAttempts: 'attemptBoth' })?.data.trim() || ''
+        } catch { return '' }
       }
       let decoded = false
       const controls = await reader.decodeFromConstraints(
