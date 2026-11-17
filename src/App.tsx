@@ -1566,17 +1566,42 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
     stopCamera()
     try {
       await prepareScanAudio()
-      const [{ BrowserMultiFormatReader }, { DecodeHintType }] = await Promise.all([
+      const [{ BrowserMultiFormatReader, BrowserQRCodeReader }, { DecodeHintType }] = await Promise.all([
         import('@zxing/browser'),
         import('@zxing/library'),
       ])
       const video = videoRef.current
       if (!video) return
       // 刀具掃碼視窗｜更密集地搜尋 QR 定位圖案，並縮短失敗後等待下一次取像的時間。
+      const hints = new Map([[DecodeHintType.TRY_HARDER, true]])
       const reader = new BrowserMultiFormatReader(
-        new Map([[DecodeHintType.TRY_HARDER, true]]),
+        hints,
         { delayBetweenScanAttempts: 250 },
       )
+      const qrReader = new BrowserQRCodeReader(hints)
+      const qrCanvas = document.createElement('canvas')
+      const qrContext = qrCanvas.getContext('2d', { willReadFrequently: true })
+      // 刀具掃碼視窗｜全畫面未解碼時，只取黃框中央附近的影像，降低周圍印刷圖案的干擾。
+      const readCenteredQr = () => {
+        const { videoWidth, videoHeight, clientWidth, clientHeight } = video
+        if (!qrContext || !videoWidth || !videoHeight || !clientWidth || !clientHeight) return ''
+        const previewScale = Math.max(clientWidth / videoWidth, clientHeight / videoHeight)
+        const side = Math.floor(Math.min(clientWidth, clientHeight) * .65 / previewScale)
+        if (side < 32) return ''
+
+        const size = Math.min(side, 640)
+        const padding = Math.ceil(size / 16)
+        const canvasSize = size + padding * 2
+        if (qrCanvas.width !== canvasSize || qrCanvas.height !== canvasSize) {
+          qrCanvas.width = canvasSize
+          qrCanvas.height = canvasSize
+        }
+        qrContext.fillStyle = '#fff'
+        qrContext.fillRect(0, 0, canvasSize, canvasSize)
+        qrContext.drawImage(video, (videoWidth - side) / 2, (videoHeight - side) / 2, side, side, padding, padding, size, size)
+        try { return qrReader.decodeFromCanvas(qrCanvas).getText().trim() }
+        catch { return '' }
+      }
       let decoded = false
       const controls = await reader.decodeFromConstraints(
         {
@@ -1591,7 +1616,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
         },
         video,
         (result, _scanError, scannerControls) => {
-          const value = result?.getText().trim()
+          const value = result?.getText().trim() || readCenteredQr()
           if (!value) return
           decoded = true
           scannerControls.stop()
