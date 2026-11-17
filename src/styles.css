@@ -5254,6 +5254,16 @@ textarea:focus-visible {
       padding: 16px 14px;
     }
 
+  /* 手機版｜庫存管理系統－庫存總覽｜四張統計卡片的上下留白與數字間距 */
+  .stats-grid > .stat-card {
+      min-height: 0;
+      padding-block: 8px;
+    }
+
+  .stats-grid > .stat-card strong {
+      margin-block: 5px 3px;
+    }
+
   /* 庫存管理系統－庫存總覽｜「近 14 天出入庫」圖表卡片 */
   .chart-card {
       margin-top: 18px;

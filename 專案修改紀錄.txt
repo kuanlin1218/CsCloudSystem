@@ -1395,6 +1395,12 @@ GitHub Summary：移除掃描槍的掃描模式設定碼。
 SQL：不需要執行 SQL。
 GitHub Summary：手機版庫存總覽統計卡改為單欄排列。
 
+2026-11-17
+修改內容：縮減手機版庫存總覽四張統計卡片的上下留白與數字間距。
+修改檔案：src/styles.css、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行 SQL。
+GitHub Summary：縮小手機版庫存總覽統計卡高度。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
