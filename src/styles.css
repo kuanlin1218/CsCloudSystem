@@ -2215,8 +2215,8 @@ textarea:focus-visible {
   width: 100%;
   margin-top: 12px;
   border-color: rgb(4, 107, 252);
-  background: rgba(34, 122, 172, 0.251);
-  color: #77b8f6;
+  background: rgba(34, 90, 174, 0.251);
+  color: #6fc3ff;
 }
 
 /* 登入畫面與系統首頁｜「訪客查看」按鈕 */
