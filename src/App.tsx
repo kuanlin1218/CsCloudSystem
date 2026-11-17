@@ -548,6 +548,13 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         setProductModal(null); setPendingBarcode('')
       }} save={async (input) => {
         if (productModal === 'new') await createProduct(input); else await updateProduct(productModal.id, input)
+        if (productModal === 'new' && pendingBarcode) {
+          // 從掃碼建立刀具時，先更新刀具清單，讓返回的掃描結果可以配對剛建立的刀具。
+          await afterSave('商品已建立')
+          setScannerBarcode(input.barcode.trim())
+          setProductModal(null); setPendingBarcode('')
+          return
+        }
         setProductModal(null); setPendingBarcode(''); await afterSave(productModal === 'new' ? '商品已建立' : '商品已更新')
       }} />}
       {!guestMode && scannerBarcode !== null && <BarcodeScannerModal products={products} initialBarcode={scannerBarcode} close={() => setScannerBarcode(null)} createWithBarcode={(barcode) => {
