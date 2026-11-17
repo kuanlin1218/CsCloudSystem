@@ -1407,6 +1407,12 @@ GitHub Summary：縮小手機版庫存總覽統計卡高度。
 SQL：需在已啟用單一管理員模式的專案套用 supabase/enable-operation-log.sql。
 GitHub Summary：新增管理員操作紀錄與操作者顯示。
 
+2026-11-17
+修改內容：電腦版管理員首頁的四張功能卡排成兩欄兩列，資料備份／還原與操作紀錄放在第二列。
+修改檔案：src/styles.css、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：本次版面調整不需要執行 SQL。
+GitHub Summary：調整電腦版首頁功能卡為兩欄兩列。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

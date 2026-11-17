@@ -2063,6 +2063,13 @@ textarea:focus-visible {
   gap: 14px;
 }
 
+@media (min-width: 621px) {
+  /* 電腦版｜系統首頁－功能選擇｜有「操作紀錄」時四張卡片排成兩欄兩列 */
+  .portal-functions:has(> .function-card:nth-child(4)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* 登入畫面與系統首頁｜單張功能卡（加工管理系統、庫存管理系統或資料備份／還原） */
 .function-card {
   position: relative;
