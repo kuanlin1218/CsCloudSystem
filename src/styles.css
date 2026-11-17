@@ -7699,14 +7699,15 @@ textarea:focus-visible {
   color: #47636c;
 }
 
-/* 庫存管理系統－條碼掃描與產生｜提示條碼對準位置的黃色掃描框 */
+/* 庫存管理系統－條碼掃描與產生｜相機預覽中央的黃色正方形掃描框 */
 .barcode-target {
   position: absolute;
   z-index: 2;
-  left: 9%;
-  right: 9%;
-  top: 35%;
-  height: 30%;
+  left: 50%;
+  top: 50%;
+  width: min(72%, 208px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
   border: 2px solid #ffc23a;
   border-radius: 7px;
   box-shadow: 0 0 0 999px rgba(0, 0, 0, .22);
@@ -8240,12 +8241,9 @@ textarea:focus-visible {
       height: 175px;
     }
 
-  /* 庫存管理系統－條碼掃描與產生｜提示條碼對準位置的黃色掃描框 */
+  /* 手機版｜庫存管理系統－條碼掃描與產生｜黃色正方形掃描框與上方掃描狀態留距 */
   .barcode-target {
-      left: 6%;
-      right: 6%;
-      top: 34%;
-      height: 32%;
+      width: min(72%, 170px);
     }
 
   /* 庫存管理系統－條碼掃描與產生｜停止相機後顯示的掃描成功或尚未綁定回饋區 */
