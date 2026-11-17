@@ -706,14 +706,14 @@ function OperationLogPage({ goHome }: { goHome: () => void }) {
   }
 
   return <section className="page-content operation-log-page">
-    <PageTitle eyebrow="OPERATION LOG" title="操作紀錄" actions={<button className="button scan-button" type="button" onClick={goHome}><Home/>返回首頁</button>} />
-    <div className="operation-log-header"><span>台灣時間・最新在上</span><button className="button scan-button" type="button" disabled={loading} onClick={() => setRefreshKey((key) => key + 1)}>重新整理</button></div>
+    <PageTitle eyebrow="OPERATION LOG" title="操作紀錄" actions={<button className="button operation-log-button" type="button" onClick={goHome}><Home/>返回首頁</button>} />
+    <div className="operation-log-header"><span>台灣時間・最新在上</span><button className="button operation-log-button operation-log-refresh" type="button" disabled={loading} onClick={() => setRefreshKey((key) => key + 1)}>重新整理</button></div>
     {error && <p className="form-error" role="alert">{error}</p>}
     {authIncluded === false && <p className="form-error">尚未接入登入登出紀錄，請套用 enable-operation-log-auth.sql。</p>}
     {loading && !entries.length && <p role="status">讀取中…</p>}
     {!loading && !error && !entries.length && <p>尚無操作紀錄。</p>}
     {entries.length > 0 && <ol className="operation-log-list">{entries.map((entry) => <OperationLogItem key={entry.id} entry={entry}/>)}</ol>}
-    {hasMore && <button className="button scan-button" type="button" disabled={loading} onClick={() => void loadMore()}>{loading ? '讀取中…' : '載入較早紀錄'}</button>}
+    {hasMore && <button className="button operation-log-button" type="button" disabled={loading} onClick={() => void loadMore()}>{loading ? '讀取中…' : '載入較早紀錄'}</button>}
   </section>
 }
 

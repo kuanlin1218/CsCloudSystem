@@ -122,11 +122,6 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* 全站基本元件｜無側邊欄時的寬版內容區 */
-.wide-panel {
-  margin-left: 0;
-}
-
 /* 全站基本元件｜備註欄整列 */
 .note-row {
   align-items: stretch;
@@ -695,6 +690,11 @@ textarea:focus-visible {
   background-color: #080c0e;
   background-image: linear-gradient(rgba(113, 132, 143, .13) 1px, transparent 1px), linear-gradient(90deg, rgba(113, 132, 143, .13) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+/* 網站共用版面｜首頁與操作紀錄沒有側欄，主內容使用視窗全寬 */
+.main-panel.wide-panel {
+  margin-left: 0;
 }
 
 /* 網站共用版面｜整頁主內容區 */
@@ -1996,6 +1996,31 @@ textarea:focus-visible {
   justify-content: space-between;
   gap: 10px;
   color: #afbdc3;
+}
+
+/* 系統首頁－操作紀錄｜返回首頁、重新整理及載入較早紀錄的共用外觀 */
+.operation-log-button {
+  min-height: 40px;
+  padding: 0 14px;
+  border-color: #3a464d;
+  background: #161e23;
+  color: #dce5ea;
+  font-size: 14px;
+}
+
+.operation-log-button:hover:not(:disabled) {
+  border-color: #778992;
+}
+
+/* 系統首頁－操作紀錄｜重新整理按鈕使用與首頁入口相同的金色 */
+.operation-log-button.operation-log-refresh {
+  border-color: #8b6832;
+  background: #2a2113;
+  color: var(--accent-gold);
+}
+
+.operation-log-button.operation-log-refresh:hover:not(:disabled) {
+  border-color: var(--accent-gold);
 }
 
 /* 系統首頁－操作紀錄｜按時間由新到舊排列的異動清單 */
