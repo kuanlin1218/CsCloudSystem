@@ -346,7 +346,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   const [toast, setToast] = useState('')
   const [stockModal, setStockModal] = useState<StockModalState | null>(null)
   const [productModal, setProductModal] = useState<Product | 'new' | null>(null)
-  const [barcodeScanner, setBarcodeScanner] = useState(false)
+  const [scannerBarcode, setScannerBarcode] = useState<string | null>(null)
   const [pendingBarcode, setPendingBarcode] = useState('')
   const [stocktakeFocusProductId, setStocktakeFocusProductId] = useState('')
   const [priceHistoryProduct, setPriceHistoryProduct] = useState<Product | null>(null)
@@ -399,7 +399,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
       setPage(nextPage)
       if (nextPage !== 'stocktake') setStocktakeFocusProductId('')
       setMobileNav(false)
-      setStockModal(null); setProductModal(null); setBarcodeScanner(false); setPendingBarcode(''); setPriceHistoryProduct(null)
+      setStockModal(null); setProductModal(null); setScannerBarcode(null); setPendingBarcode(''); setPriceHistoryProduct(null)
       setProductionOptionModal(null); setAdminDataModal(false)
       setAdminDelete((request) => { request?.resolve(false); return null })
       void refresh()
@@ -513,13 +513,13 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
           if (deleted) await afterSave(`${productCode} 的產品編號與全部加工紀錄已永久刪除`)
           return deleted
         }} />}
-        {activePage === 'dashboard' && <Dashboard products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} openScanner={() => setBarcodeScanner(true)} readOnly={guestMode} />}
-        {activePage === 'movements' && <MovementsPage products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} openScanner={() => setBarcodeScanner(true)} readOnly={guestMode} onDelete={async (movement) => {
+        {activePage === 'dashboard' && <Dashboard products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} openScanner={() => setScannerBarcode('')} readOnly={guestMode} />}
+        {activePage === 'movements' && <MovementsPage products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} openScanner={() => setScannerBarcode('')} readOnly={guestMode} onDelete={async (movement) => {
           const product = movement.product || products.find((item) => item.id === movement.product_id)
           const deleted = await requestAdminDelete('刪除出入庫紀錄', `${formatDate(movement.movement_date)} 的${movement.movement_type === 'in' ? '入庫' : '出庫'}紀錄「${product?.name || ''}」。庫存會自動重新計算。`, () => deleteMovement(movement.id))
           if (deleted) await afterSave('出入庫紀錄已刪除，庫存已重新計算')
         }} />}
-        {activePage === 'stocktake' && !guestMode && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} openScanner={() => setBarcodeScanner(true)} focusProductId={stocktakeFocusProductId} clearFocusProduct={() => setStocktakeFocusProductId('')} onAdjust={async (product, actualQuantity, notes) => {
+        {activePage === 'stocktake' && !guestMode && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} openScanner={() => setScannerBarcode('')} focusProductId={stocktakeFocusProductId} clearFocusProduct={() => setStocktakeFocusProductId('')} onAdjust={async (product, actualQuantity, notes) => {
           if (actualQuantity === product.stock_quantity) return true
           if (!window.confirm(`確定將 ${product.code}「${product.name}」的庫存由 ${product.stock_quantity} ${product.unit}調整為 ${actualQuantity} ${product.unit}？`)) return false
           try {
@@ -528,7 +528,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
             return true
           } catch (e) { setError(messageFor(e)); return false }
         }} />}
-        {activePage === 'products' && <ProductsPage products={products} movements={movements} loading={loading} add={() => setProductModal('new')} edit={setProductModal} openStock={(type, productId) => setStockModal({ type, productId })} openScanner={() => setBarcodeScanner(true)} viewHistory={setPriceHistoryProduct} readOnly={guestMode} onDelete={async (p) => {
+        {activePage === 'products' && <ProductsPage products={products} movements={movements} loading={loading} add={() => setProductModal('new')} edit={setProductModal} openStock={(type, productId) => setStockModal({ type, productId })} openScanner={() => setScannerBarcode('')} viewHistory={setPriceHistoryProduct} readOnly={guestMode} onDelete={async (p) => {
           const deleted = await requestAdminDelete('刪除刀具資料', `將刪除 ${p.code}「${p.name}」及其全部出入庫紀錄。`, () => deleteProduct(p.id))
           if (deleted) await afterSave('商品已刪除')
         }} />}
@@ -539,20 +539,23 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
       {!guestMode && stockModal && <StockModal type={stockModal.type} initialProductId={stockModal.productId} products={products} close={() => setStockModal(null)} switchType={(type) => setStockModal((current) => current ? { ...current, type } : null)} save={async (input) => {
         await registerMovement(input); setStockModal(null); await afterSave(input.movement_type === 'in' ? '入庫完成' : '出庫完成')
       }} />}
-      {!guestMode && productModal && <ProductModal product={productModal === 'new' ? null : productModal} products={products} initialBarcode={productModal === 'new' ? pendingBarcode : ''} close={() => { setProductModal(null); setPendingBarcode('') }} save={async (input) => {
+      {!guestMode && productModal && <ProductModal product={productModal === 'new' ? null : productModal} products={products} initialBarcode={productModal === 'new' ? pendingBarcode : ''} close={() => {
+        if (productModal === 'new' && pendingBarcode) setScannerBarcode(pendingBarcode)
+        setProductModal(null); setPendingBarcode('')
+      }} save={async (input) => {
         if (productModal === 'new') await createProduct(input); else await updateProduct(productModal.id, input)
         setProductModal(null); setPendingBarcode(''); await afterSave(productModal === 'new' ? '商品已建立' : '商品已更新')
       }} />}
-      {!guestMode && barcodeScanner && <BarcodeScannerModal products={products} close={() => setBarcodeScanner(false)} createWithBarcode={(barcode) => {
-        setBarcodeScanner(false); setPendingBarcode(barcode); setProductModal('new')
+      {!guestMode && scannerBarcode !== null && <BarcodeScannerModal products={products} initialBarcode={scannerBarcode} close={() => setScannerBarcode(null)} createWithBarcode={(barcode) => {
+        setScannerBarcode(null); setPendingBarcode(barcode); setProductModal('new')
       }} linkBarcode={async (productId, barcode) => {
         await updateProductBarcode(productId, barcode); await afterSave('條碼已綁定刀具')
       }} openStock={(type, productId) => {
-        setBarcodeScanner(false); setStockModal({ type, productId })
+        setScannerBarcode(null); setStockModal({ type, productId })
       }} openStocktake={(productId) => {
-        setBarcodeScanner(false); setStocktakeFocusProductId(productId); nav('stocktake')
+        setScannerBarcode(null); setStocktakeFocusProductId(productId); nav('stocktake')
       }} editProduct={(product) => {
-        setBarcodeScanner(false); setProductModal(product)
+        setScannerBarcode(null); setProductModal(product)
       }} />}
       {priceHistoryProduct && <PriceHistoryModal product={priceHistoryProduct} movements={movements} close={() => setPriceHistoryProduct(null)} />}
       {!guestMode && productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={(productionOptionModal === 'product' ? productionEntryProductCodes : productionMachines)} close={() => setProductionOptionModal(null)} save={async (value) => {
@@ -1218,6 +1221,12 @@ function MovementChart({ movements }: { movements: Movement[] }) {
   </article>
 }
 
+// 庫存管理的品名搜尋可省略連字號，條碼與其他欄位沿用原本的比對方式。
+function matchesProductName(name: string | undefined, query: string) {
+  const withoutHyphens = query.replaceAll('-', '')
+  return Boolean(withoutHyphens && name?.toLowerCase().replaceAll('-', '').includes(withoutHyphens))
+}
+
 function MovementsPage({ products, movements, loading, openStock, openScanner, readOnly, onDelete }: { products: Product[]; movements: Movement[]; loading: boolean; openStock: (t: MovementType) => void; openScanner: () => void; readOnly: boolean; onDelete: (movement: Movement) => void }) {
   const [query, setQuery] = useState('')
   const [type, setType] = useState<'all' | MovementType>('all')
@@ -1228,7 +1237,7 @@ function MovementsPage({ products, movements, loading, openStock, openScanner, r
     const product = products.find((p) => p.id === m.product_id) || m.product
     /* 「出入庫」的「搜尋輸入框」：條碼掃描或手動輸入後，同時比對條碼、編號、品名、廠牌、供應商與備註。 */
     const haystack = `${product?.barcode || ''} ${product?.code || ''} ${product?.name || ''} ${product?.brand || ''} ${m.supplier || ''} ${m.notes || ''} ${isInitialStockNote(m.notes) ? INITIAL_STOCK_NOTE : ''}`.toLowerCase()
-    return (!normalizedQuery || haystack.includes(normalizedQuery)) && (type === 'all' || m.movement_type === type) && (!from || m.movement_date >= from) && (!to || m.movement_date <= to)
+    return (haystack.includes(normalizedQuery) || matchesProductName(product?.name, normalizedQuery)) && (type === 'all' || m.movement_type === type) && (!from || m.movement_date >= from) && (!to || m.movement_date <= to)
   })
   const inQty = filtered.filter((m) => m.movement_type === 'in').reduce((s, m) => s + m.quantity, 0)
   const outQty = filtered.filter((m) => m.movement_type === 'out').reduce((s, m) => s + m.quantity, 0)
@@ -1278,9 +1287,13 @@ function StocktakePage({ products, loading, add, openScanner, focusProductId, cl
       clearFocusProduct()
     }
   }, [focusProductId, products])
+  const normalizedQuery = query.toLowerCase()
   /* 「庫存盤點」的「表格資料順序」：依刀具最後更新時間由新到舊排列；時間相同時再依編號由新到舊。 */
   const filtered = products
-    .filter((product) => `${product.code} ${product.barcode || ''} ${product.name} ${product.brand} ${product.supplier}`.toLowerCase().includes(query.toLowerCase()) && (category === '全部分類' || product.category === category))
+    .filter((product) => {
+      const haystack = `${product.code} ${product.barcode || ''} ${product.name} ${product.brand} ${product.supplier}`.toLowerCase()
+      return (haystack.includes(normalizedQuery) || matchesProductName(product.name, normalizedQuery)) && (category === '全部分類' || product.category === category)
+    })
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at) || b.code.localeCompare(a.code))
   const actualFor = (product: Product) => drafts[product.id] ?? String(product.stock_quantity)
   const differenceFor = (product: Product) => {
@@ -1338,8 +1351,12 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, open
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('全部分類')
   const categories = ['全部分類', ...PRODUCT_CATEGORIES]
+  const normalizedQuery = query.toLowerCase()
   const filtered = products
-    .filter((p) => `${p.code} ${p.barcode || ''} ${p.name} ${p.brand} ${p.supplier}`.toLowerCase().includes(query.toLowerCase()) && (category === '全部分類' || p.category === category))
+    .filter((product) => {
+      const haystack = `${product.code} ${product.barcode || ''} ${product.name} ${product.brand} ${product.supplier}`.toLowerCase()
+      return (haystack.includes(normalizedQuery) || matchesProductName(product.name, normalizedQuery)) && (category === '全部分類' || product.category === category)
+    })
     .sort((a, b) => `${b.purchased_at || '0000-00-00'}-${b.updated_at}-${b.code}`.localeCompare(`${a.purchased_at || '0000-00-00'}-${a.updated_at}-${a.code}`))
   return <section className="page-content">
     <PageTitle eyebrow="TOOLS" title="刀具資料" actions={!readOnly ? <><ScanButton openScanner={openScanner}/><button className="button primary" onClick={add}><Plus />新增刀具</button></> : undefined} />
@@ -1441,20 +1458,28 @@ function StockModal({ type, initialProductId, products, close, switchType, save 
   </Modal>
 }
 
-function ProductPicker({ products, value, onChange }: { products: Product[]; value: string; onChange: (value: string) => void }) {
+function ProductPicker({ products, value, onChange, inline = false, disabled = false }: { products: Product[]; value: string; onChange: (value: string) => void; inline?: boolean; disabled?: boolean }) {
   const selected = products.find((product) => product.id === value)
   const display = (product: Product) => `${product.code}｜${product.name}`
   const [query, setQuery] = useState(selected ? display(selected) : '')
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(inline && !selected)
   const inputRef = useRef<HTMLInputElement>(null)
   useEffect(() => { const product = products.find((item) => item.id === value); if (product) setQuery(display(product)) }, [value, products])
   const normalized = query.trim().toLowerCase()
-  const filtered = products.filter((product) => `${product.code} ${product.name} ${product.brand} ${product.supplier} ${product.category}`.toLowerCase().includes(normalized)).slice(0, 10)
+  const filtered = products.filter((product) => {
+    const haystack = `${product.code} ${product.name} ${product.brand} ${product.supplier} ${product.category}`.toLowerCase()
+    return haystack.includes(normalized) || matchesProductName(product.name, normalized)
+  }).slice(0, 10)
   const choose = (product: Product) => { onChange(product.id); setQuery(display(product)); setOpen(false); inputRef.current?.blur() }
-  return <div className="product-picker" onBlur={() => window.setTimeout(() => setOpen(false), 120)}>
-    <div className="product-picker-input"><Search/><input ref={inputRef} required role="combobox" aria-expanded={open} aria-controls="product-picker-options" value={query} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onChange={(event) => { setQuery(event.target.value); onChange(''); setOpen(true) }} placeholder="輸入編號、品名、廠牌或供應商搜尋"/><ChevronDown/></div>
+  const openPicker = () => {
+    if (inline && selected && !open) setQuery('')
+    setOpen(true)
+  }
+  return <div className={`product-picker${inline ? ' product-picker-inline' : ''}`} onBlur={inline ? undefined : () => window.setTimeout(() => setOpen(false), 120)}>
+    <div className="product-picker-input"><Search/><input ref={inputRef} required disabled={disabled} role="combobox" aria-expanded={open} aria-controls="product-picker-options" value={query} onFocus={openPicker} onClick={openPicker} onChange={(event) => { setQuery(event.target.value); onChange(''); setOpen(true) }} placeholder="輸入編號、品名、廠牌或供應商搜尋"/><ChevronDown/></div>
+    {inline && !open && selected && <p className="barcode-binding-selection"><strong>{selected.code}</strong><span>{selected.name}</span></p>}
     {open && <div className="product-picker-menu" id="product-picker-options" role="listbox">
-      {filtered.length === 0 ? <div className="product-picker-empty">找不到符合的刀具</div> : filtered.map((product) => <button type="button" role="option" aria-selected={product.id === value} key={product.id} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(product)}><span><b>{product.code}</b>{product.name}</span><small>庫存 {formatNumber(product.stock_quantity)} {product.unit}</small></button>)}
+      {filtered.length === 0 ? <div className="product-picker-empty">找不到符合的刀具</div> : filtered.map((product) => <button type="button" role="option" disabled={disabled} aria-selected={product.id === value} key={product.id} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(product)}><span><b>{product.code}</b>{product.name}</span><small>庫存 {formatNumber(product.stock_quantity)} {product.unit}</small></button>)}
     </div>}
   </div>
 }
@@ -1463,8 +1488,9 @@ function TotalPreview({ quantity, unitPrice, total }: { quantity: number; unitPr
   return <div className="total-preview"><span>採購總價</span><strong>${formatMoney(total)}</strong><small>{formatNumber(quantity)} × ${formatMoney(unitPrice)}</small></div>
 }
 
-function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, openStock, openStocktake, editProduct }: {
+function BarcodeScannerModal({ products, initialBarcode, close, createWithBarcode, linkBarcode, openStock, openStocktake, editProduct }: {
   products: Product[]
+  initialBarcode: string
   close: () => void
   createWithBarcode: (barcode: string) => void
   linkBarcode: (productId: string, barcode: string) => Promise<void>
@@ -1478,11 +1504,13 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
   const controlsRef = useRef<{ stop: () => void } | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const [cameraActive, setCameraActive] = useState(false)
-  const [barcode, setBarcode] = useState('')
+  const [barcode, setBarcode] = useState(initialBarcode)
   const [manualBarcode, setManualBarcode] = useState('')
   const [selectedProductId, setSelectedProductId] = useState('')
   const [error, setError] = useState('')
   const [linking, setLinking] = useState(false)
+  const [bindingOpen, setBindingOpen] = useState(false)
+  const bindingRef = useRef<HTMLElement>(null)
   const [keyboardQrOpen, setKeyboardQrOpen] = useState(false)
   const normalizedBarcode = barcode.trim().toLowerCase()
   const matchedProduct = products.find((product) => product.barcode?.trim().toLowerCase() === normalizedBarcode)
@@ -1554,10 +1582,14 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
   }, [])
 
   useEffect(() => {
+    if (bindingOpen) {
+      bindingRef.current?.closest('.modal')?.scrollTo(0, 0)
+      return
+    }
     if (!barcode) return
     const frame = window.requestAnimationFrame(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
     return () => window.cancelAnimationFrame(frame)
-  }, [barcode])
+  }, [barcode, bindingOpen])
 
   const startCamera = async () => {
     setError(''); setBarcode(''); setSelectedProductId('')
@@ -1701,12 +1733,30 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
   const bindExistingProduct = async () => {
     if (!selectedProductId || !barcode) { setError('請先選擇要綁定的刀具'); return }
     setLinking(true); setError('')
-    try { await linkBarcode(selectedProductId, barcode) }
+    try {
+      await linkBarcode(selectedProductId, barcode)
+      setBindingOpen(false)
+    }
     catch (linkError) { setError(messageFor(linkError)) }
     finally { setLinking(false) }
   }
 
-  return <Modal title="掃描刀具條碼" close={() => { stopCamera(); close() }} size="barcode-scanner-modal">
+  const returnToScan = () => {
+    if (linking) return
+    setError('')
+    setBindingOpen(false)
+  }
+
+  return <Modal title={bindingOpen ? '綁定現有刀具' : '掃描刀具條碼'} close={bindingOpen ? returnToScan : () => { stopCamera(); close() }} size="barcode-scanner-modal">
+    {bindingOpen ? <section ref={bindingRef} className="barcode-binding-step">
+      <p className="barcode-binding-code">待綁定條碼 <strong>{barcode}</strong></p>
+      <Field label="搜尋刀具" wide><ProductPicker products={products} value={selectedProductId} onChange={setSelectedProductId} inline disabled={linking} /></Field>
+      {error && <p className="form-error barcode-scanner-error" role="alert">{error}</p>}
+      <div className="barcode-binding-actions">
+        <button className="button" type="button" disabled={linking} onClick={returnToScan}>返回掃描結果</button>
+        <button className="button scan-button" type="button" disabled={!selectedProductId || linking} onClick={() => void bindExistingProduct()}><Save/>{linking ? '綁定中…' : '確認綁定'}</button>
+      </div>
+    </section> : <>
     <p className="barcode-scanner-intro">將條碼放在框線中央，建議先保持約 20～30 公分再慢慢靠近。第一次使用時，請允許網站使用 iPhone 相機。</p>
     <button className="ios-keyboard-toggle-inline" type="button" onClick={() => setKeyboardQrOpen((current) => !current)} aria-expanded={keyboardQrOpen}>
       <Keyboard/><span>XB-6208-RB：顯示／隱藏 iOS 鍵盤</span>{keyboardQrOpen ? <ChevronUp/> : <ChevronDown/>}
@@ -1737,7 +1787,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
       <div><input value={manualBarcode} onChange={(event) => setManualBarcode(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), void useManualBarcode())} placeholder="輸入條碼後按查詢" autoComplete="off"/><button type="button" onClick={() => void useManualBarcode()}><Search/>查詢</button></div>
     </div>
 
-    {error && <p className="form-error barcode-scanner-error">{error}</p>}
+    {error && <p className="form-error barcode-scanner-error" role="alert">{error}</p>}
     {barcode && <section ref={resultRef} className={`barcode-result ${matchedProduct ? 'matched' : 'unmatched'}`}>
       <div className="barcode-result-code"><span>掃描結果</span><strong>{barcode}</strong></div>
       {matchedProduct ? <>
@@ -1754,12 +1804,10 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
       </> : <>
         <div className="barcode-unmatched-message"><ScanBarcode/><div><strong>尚未綁定任何刀具</strong><span>可以建立新刀具，或從現有刀具中選擇一筆綁定。</span></div></div>
         <button className="button primary barcode-create-product" type="button" onClick={() => createWithBarcode(barcode)}><Plus/>以此條碼建立新刀具</button>
-        <div className="barcode-link-existing">
-          <Field label="綁定現有刀具" wide><ProductPicker products={products} value={selectedProductId} onChange={setSelectedProductId}/></Field>
-          <button className="button scan-button" type="button" disabled={!selectedProductId || linking} onClick={() => void bindExistingProduct()}><Save/>{linking ? '綁定中…' : '儲存條碼綁定'}</button>
-        </div>
+        <button className="button scan-button barcode-link-existing" type="button" onClick={() => { setError(''); setBindingOpen(true) }}>綁定現有刀具</button>
       </>}
     </section>}
+    </>}
   </Modal>
 }
 
@@ -1815,7 +1863,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
     setBusy(true)
     try { await save(data) } catch (err) { setFormError(messageFor(err)); setBusy(false) }
   }
-  return <Modal close={close} title={product ? '編輯刀具' : '新增刀具'} size="large">
+  return <Modal close={() => { if (!busy) close() }} title={product ? '編輯刀具' : '新增刀具'} size="large">
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="form-grid">
         <Field label="編號"><input disabled value={product?.code || '儲存後自動產生'} /></Field>
@@ -1850,6 +1898,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
       <Field label="備註" wide><textarea value={data.notes} onChange={(e) => set('notes', e.target.value)} placeholder="選填"/></Field>
       {formError && <p className="form-error">{formError}</p>}
       <button disabled={busy} className="button modal-submit primary">{busy ? '儲存中…' : '儲存'}</button>
+      {initialBarcode && <button disabled={busy} className="button modal-submit scan-button" type="button" onClick={close}>返回條碼掃描</button>}
     </form>
   </Modal>
 }

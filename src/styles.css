@@ -7477,12 +7477,12 @@ textarea:focus-visible {
   right: 24px;
   bottom: 24px;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  gap: 2px 10px;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 2px 8px;
   align-items: center;
   max-width: min(460px, calc(100vw - 48px));
-  min-height: 62px;
-  padding: 10px 16px;
+  min-height: 48px;
+  padding: 6px 10px;
   border: 1px solid;
   border-radius: 7px;
   background: #101719;
@@ -7492,8 +7492,8 @@ textarea:focus-visible {
 /* 庫存管理系統－條碼掃描與產生｜條碼掃描成功或失敗提示內的圖示 */
 .search-scan-status > svg {
   grid-row: 1 / 3;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 
 /* 庫存管理系統－條碼掃描與產生｜條碼掃描成功或失敗提示內的主要標題或數值 */
@@ -7665,17 +7665,26 @@ textarea:focus-visible {
   border-color: rgba(255, 194, 58, .62);
 }
 
+/* 庫存管理系統－條碼掃描與產生｜掃描結果依提示內容調整高度 */
+.barcode-camera:is(.is-success, .is-unmatched) {
+  height: auto;
+}
+
 /* 庫存管理系統－條碼掃描與產生｜掃描到已綁定刀具後的綠色相機區 */
 .barcode-camera.is-success {
-  height: 200px;
   border-color: rgba(61, 204, 179, .72);
   background: radial-gradient(circle at 50% 42%, rgba(61, 204, 179, .13), #07100f 72%);
   box-shadow: inset 0 0 35px rgba(61, 204, 179, .08);
 }
 
+/* 庫存管理系統－條碼掃描與產生｜顯示結果時隱藏相機預覽 */
+.barcode-camera.is-success video,
+.barcode-camera.is-unmatched video {
+  display: none;
+}
+
 /* 庫存管理系統－條碼掃描與產生｜掃描到未綁定條碼後的橘色相機區 */
 .barcode-camera.is-unmatched {
-  height: 200px;
   border-color: rgba(255, 194, 58, .72);
   background: radial-gradient(circle at 50% 42%, rgba(255, 194, 58, .12), #110e06 72%);
   box-shadow: inset 0 0 35px rgba(255, 194, 58, .07);
@@ -7755,21 +7764,18 @@ textarea:focus-visible {
 
 /* 庫存管理系統－條碼掃描與產生｜停止相機後顯示的掃描成功或尚未綁定回饋區 */
 .barcode-scan-feedback {
-  position: absolute;
-  inset: 0;
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 7px;
-  padding: 22px;
+  gap: 4px;
+  padding: 12px 16px;
   text-align: center;
 }
 
 /* 庫存管理系統－條碼掃描與產生｜回饋區最上方的成功或警告圖示 */
 .barcode-scan-feedback > svg {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 3px;
+  width: 38px;
+  height: 38px;
 }
 
 /* 庫存管理系統－條碼掃描與產生｜「掃描成功」上方的成功圖示 */
@@ -7794,7 +7800,7 @@ textarea:focus-visible {
 
 /* 庫存管理系統－條碼掃描與產生｜「掃描成功／已掃到條碼」狀態標題 */
 .barcode-scan-feedback > strong {
-  font-size: 27px;
+  font-size: 21px;
   letter-spacing: .03em;
 }
 
@@ -7886,7 +7892,9 @@ textarea:focus-visible {
 
 /* 庫存管理系統－條碼掃描與產生｜相機、條碼查詢或條碼綁定失敗時的錯誤訊息 */
 .barcode-scanner-error {
-  margin-top: 12px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  overflow-wrap: anywhere;
 }
 
 /* 庫存管理系統－條碼掃描與產生｜條碼掃描結果整區 */
@@ -8046,25 +8054,69 @@ textarea:focus-visible {
   width: 100%;
 }
 
-/* 庫存管理系統－條碼掃描與產生｜「綁定現有刀具」選單與「儲存條碼綁定」按鈕整區 */
+/* 庫存管理系統－條碼掃描與產生｜未綁定掃描結果的「綁定現有刀具」按鈕 */
 .barcode-link-existing {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* 庫存管理系統－條碼掃描與產生｜綁定畫面的待綁定條碼與已選刀具 */
+.barcode-binding-code {
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+
+.barcode-binding-code strong,
+.barcode-binding-selection strong {
+  color: var(--accent-gold);
+}
+
+.barcode-binding-selection {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 10px;
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid #293238;
+  overflow-wrap: anywhere;
+  padding: 10px 12px;
+  background: #151c21;
+  border-radius: 6px;
+  margin: 8px 0 0;
 }
 
-/* 庫存管理系統－條碼掃描與產生｜「綁定現有刀具」刀具選擇欄位 */
-.barcode-link-existing .field {
-  margin: 0;
+/* 庫存管理系統－條碼掃描與產生｜綁定畫面搜尋欄下方的刀具清單、編號與品名 */
+.product-picker-inline .product-picker-menu {
+  position: static;
+  margin-top: 6px;
+  max-height: clamp(145px, 36dvh, 280px);
+  box-shadow: none;
 }
 
-/* 庫存管理系統－條碼掃描與產生｜「儲存條碼綁定／綁定中…」按鈕 */
-.barcode-link-existing > .button {
-  min-width: 160px;
+.product-picker-inline .product-picker-menu button span {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.product-picker-inline .product-picker-menu button b {
+  display: block;
+}
+
+/* 庫存管理系統－條碼掃描與產生｜綁定畫面底部的返回與確認按鈕 */
+.barcode-binding-actions {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 0 2px;
+  background: #0b1013;
+}
+
+.barcode-binding-actions .button {
+  padding-inline: 8px;
+  font-size: 14px;
+}
+
+.barcode-binding-actions .button:first-child {
+  border-color: #39444b;
+  background: #151c21;
+  color: #c9d4da;
 }
 
 /* 庫存管理系統－條碼掃描與產生｜顯示或隱藏 iPhone 鍵盤的按鈕 */
@@ -8231,36 +8283,20 @@ textarea:focus-visible {
       height: clamp(260px, 68vw, 340px);
     }
 
-  /* 庫存管理系統－條碼掃描與產生｜掃描到已綁定刀具後的手機綠色相機區 */
-  .barcode-camera.is-success {
-      height: 175px;
-    }
-
-  /* 庫存管理系統－條碼掃描與產生｜掃描到未綁定條碼後的手機橘色相機區 */
-  .barcode-camera.is-unmatched {
-      height: 175px;
-    }
-
   /* 手機版｜庫存管理系統－條碼掃描與產生｜黃色正方形掃描框與上方掃描狀態留距 */
   .barcode-target {
       width: min(72%, 170px);
     }
 
-  /* 庫存管理系統－條碼掃描與產生｜停止相機後顯示的掃描成功或尚未綁定回饋區 */
-  .barcode-scan-feedback {
-      padding: 16px;
-      gap: 5px;
-    }
-
   /* 庫存管理系統－條碼掃描與產生｜回饋區最上方的成功或警告圖示 */
   .barcode-scan-feedback > svg {
-      width: 54px;
-      height: 54px;
+      width: 32px;
+      height: 32px;
     }
 
   /* 庫存管理系統－條碼掃描與產生｜「掃描成功／已掃到條碼」狀態標題 */
   .barcode-scan-feedback > strong {
-      font-size: 23px;
+      font-size: 19px;
     }
 
   /* 庫存管理系統－條碼掃描與產生｜剛掃描到的條碼號碼 */
@@ -8327,16 +8363,6 @@ textarea:focus-visible {
   .barcode-result-actions .button {
       min-height: 43px;
       font-size: 15px;
-    }
-
-  /* 庫存管理系統－條碼掃描與產生｜「綁定現有刀具」選單與「儲存條碼綁定」按鈕整區 */
-  .barcode-link-existing {
-      grid-template-columns: 1fr;
-    }
-
-  /* 庫存管理系統－條碼掃描與產生｜「儲存條碼綁定／綁定中…」滿版按鈕 */
-  .barcode-link-existing > .button {
-      width: 100%;
     }
 
   /* 庫存管理系統－條碼掃描與產生｜品名下方條碼號碼 */
