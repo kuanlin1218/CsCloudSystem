@@ -1548,6 +1548,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
 
   useEffect(() => () => {
     controlsRef.current?.stop()
+    controlsRef.current = null
     if (videoRef.current?.srcObject instanceof MediaStream) videoRef.current.srcObject.getTracks().forEach((track) => track.stop())
     if (audioContextRef.current) void audioContextRef.current.close().catch(() => undefined)
   }, [])
@@ -1565,6 +1566,15 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
       return
     }
     stopCamera()
+    let stream: MediaStream | undefined
+    let timer: number | undefined
+    const controls = {
+      stop: () => {
+        window.clearTimeout(timer)
+        stream?.getTracks().forEach((track) => track.stop())
+      },
+    }
+    controlsRef.current = controls
     try {
       await prepareScanAudio()
       const [{ BrowserMultiFormatReader }, { DecodeHintType }, { default: decodeQr }] = await Promise.all([
@@ -1573,13 +1583,13 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
         import('jsqr'),
       ])
       const video = videoRef.current
-      if (!video) return
+      if (!video || controlsRef.current !== controls) return
       // 刀具掃碼視窗｜更密集地搜尋 QR 定位圖案，並縮短失敗後等待下一次取像的時間。
       const hints = new Map([[DecodeHintType.TRY_HARDER, true]])
-      const reader = new BrowserMultiFormatReader(
-        hints,
-        { delayBetweenScanAttempts: 250 },
-      )
+      const reader = new BrowserMultiFormatReader(hints)
+      const fullCanvas = document.createElement('canvas')
+      const fullContext = fullCanvas.getContext('2d', { willReadFrequently: true })
+      if (!fullContext) throw new Error('無法讀取相機影像')
       const qrCanvas = document.createElement('canvas')
       const qrContext = qrCanvas.getContext('2d', { willReadFrequently: true })
       // 刀具掃碼視窗｜將可見黃框換算成原始影像座標，包含 object-fit: cover 裁掉的畫面偏移。
@@ -1617,40 +1627,55 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
           return decodeQr(data, width, height, { inversionAttempts: 'attemptBoth' })?.data.trim() || ''
         } catch { return '' }
       }
-      let decoded = false
-      const controls = await reader.decodeFromConstraints(
-        {
-          audio: false,
-          video: {
-            facingMode: { ideal: 'environment' },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-            frameRate: { ideal: 30, max: 30 },
-            aspectRatio: { ideal: 16 / 9 },
-          },
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          frameRate: { ideal: 30, max: 30 },
+          aspectRatio: { ideal: 16 / 9 },
         },
-        video,
-        (result, _scanError, scannerControls) => {
-          const value = result?.getText().trim() || readTargetQr()
-          if (!value) return
-          decoded = true
-          scannerControls.stop()
-          controlsRef.current = null
-          setCameraActive(false)
-          setBarcode(value)
-          setManualBarcode('')
-          playScanFeedback()
-        },
-      )
-      if (decoded) return
-      if (videoRef.current !== video) {
+      })
+      if (videoRef.current !== video || controlsRef.current !== controls) {
         controls.stop()
         return
       }
-      controlsRef.current = controls
+      video.srcObject = stream
+      await video.play()
+      if (controlsRef.current !== controls) return
       await optimizeBarcodeCamera()
-      if (controlsRef.current === controls) setCameraActive(true)
+      if (controlsRef.current !== controls) return
+      setCameraActive(true)
+
+      // 刀具掃碼視窗｜每次依目前影像尺寸取像，單一解碼器失敗時仍繼續掃描。
+      const scanFrame = () => {
+        if (controlsRef.current !== controls) return
+        const { videoWidth, videoHeight } = video
+        let value = ''
+        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && videoWidth && videoHeight) {
+          if (fullCanvas.width !== videoWidth || fullCanvas.height !== videoHeight) {
+            fullCanvas.width = videoWidth
+            fullCanvas.height = videoHeight
+          }
+          try {
+            fullContext.drawImage(video, 0, 0)
+            value = reader.decodeFromCanvas(fullCanvas).getText().trim()
+          } catch { /* 全畫面未解碼，改試黃框內的 QR Code。 */ }
+          value ||= readTargetQr()
+        }
+        if (!value) {
+          timer = window.setTimeout(scanFrame, 250)
+          return
+        }
+        stopCamera()
+        setBarcode(value)
+        setManualBarcode('')
+        playScanFeedback()
+      }
+      timer = window.setTimeout(scanFrame, 250)
     } catch (cameraError) {
+      if (controlsRef.current !== controls) return
       stopCamera()
       const name = (cameraError as { name?: string })?.name
       setError(name === 'NotAllowedError'
