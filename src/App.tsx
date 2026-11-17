@@ -279,7 +279,7 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         {message && <p className="form-error">{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
-      {supportsPasskeys() && <button className="button auth-guest-button" type="button" onClick={() => void submitPasskey()} disabled={busy}><LockKeyhole />使用通行密鑰登入（Face ID）</button>}
+      {supportsPasskeys() && <button className="button auth-passkey-button" type="button" onClick={() => void submitPasskey()} disabled={busy}><LockKeyhole />使用通行密鑰登入(Face ID)</button>}
       <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客查看</button>
       <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
       <button className="auth-switch" type="button" onClick={() => { setResetOpen((value) => !value); setResetMessage(''); setResetSuccess(false) }} disabled={busy}>{resetOpen ? '取消重設密碼' : '忘記密碼或尚未設定密碼'}</button>
@@ -473,6 +473,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         <div className="sidebar-foot">
           <span className="status-line">{guestMode ? <ShieldCheck /> : isDemoMode ? <ShieldCheck /> : <Database />} {guestMode ? '訪客唯讀模式' : isDemoMode ? '示範模式' : realtimeConnected ? '雲端即時同步' : '雲端連線中'}</span>
           <span className="status-line"><UserRound /> {guestMode ? '僅供查看' : isDemoMode ? '本機示範資料' : session?.user.user_metadata?.username || OWNER_USERNAME}</span>
+          {!guestMode && isOwnerUser(session?.user.id) && supportsPasskeys() && <PasskeySetup />}
           {!isDemoMode && <button className="sidebar-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出系統'}</button>}
         </div>
       </aside>}
@@ -489,7 +490,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         {guestMode && <div className="guest-banner"><ShieldCheck /> 訪客模式僅供查看，無法新增、修改、刪除、盤點、匯出或還原資料。</div>}
         {error && <div className="error-banner">{error}<button onClick={() => void refresh()}>重試</button></div>}
 
-        {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} showPasskeySetup={isOwnerUser(session?.user.id) && supportsPasskeys()} />}
+        {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} />}
         {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
         {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} onSave={async (input) => {
           await createProductionRecord(input); await afterSave('加工數量已登記')
@@ -579,7 +580,7 @@ function NavItem({ active, icon, onClick, children }: { active: boolean; icon: R
   return <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>{icon}<span>{children}</span></button>
 }
 
-function HomePage({ navigate, openAdmin, guestMode, showPasskeySetup }: { navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean; showPasskeySetup: boolean }) {
+function HomePage({ navigate, openAdmin, guestMode }: { navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean }) {
   return <section className="page-content home-page">
     <div className="home-hero">
       <img
@@ -592,11 +593,10 @@ function HomePage({ navigate, openAdmin, guestMode, showPasskeySetup }: { naviga
       <p>加工資訊與庫存管理整合平台</p>
     </div>
     <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div><small className="home-eyebrow"></small></div>
-    <div className={`function-grid portal-functions${showPasskeySetup ? ' has-passkey' : ''}`}>
+    <div className="function-grid portal-functions">
       <FunctionCard icon={<Layers/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
       <FunctionCard icon={<DatabaseBackup/>} title="資料備份／還原" description={guestMode ? '訪客模式無法匯出或還原資料' : '匯出或整批匯入 Supabase Excel'} tone="purple" onClick={openAdmin} disabled={guestMode} disabledLabel="管理員限定"/>
-      {showPasskeySetup && <PasskeySetup />}
     </div>
   </section>
 }
@@ -619,16 +619,10 @@ function PasskeySetup() {
   }
 
   return <>
-    <FunctionCard
-      icon={<LockKeyhole aria-hidden="true" />}
-      title={busy ? '正在設定通行密鑰…' : '設定通行密鑰（Face ID）'}
-      description="設定後可用 iPhone 快速登入"
-      tone="yellow"
-      onClick={() => void register()}
-      disabled={busy}
-      disabledLabel=""
-    />
-    {feedback.text && <p role={feedback.success ? 'status' : 'alert'} className={`home-passkey-feedback ${feedback.success ? 'admin-success' : 'form-error'}`}>{feedback.text}</p>}
+    <button className="sidebar-passkey" type="button" onClick={() => void register()} disabled={busy}>
+      <LockKeyhole aria-hidden="true" />{busy ? '正在設定通行密鑰…' : '設定通行密鑰(Face ID)'}
+    </button>
+    {feedback.text && <p role={feedback.success ? 'status' : 'alert'} className={`sidebar-passkey-feedback ${feedback.success ? 'form-message' : 'form-error'}`}>{feedback.text}</p>}
   </>
 }
 

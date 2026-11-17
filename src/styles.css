@@ -607,7 +607,8 @@ textarea:focus-visible {
   width: 18px;
 }
 
-/* 網站共用版面｜左側選單（系統首頁、總覽、功能分頁、雲端同步、使用者與登出） */
+/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、登出與返回登入按鈕 */
+.sidebar-passkey,
 .sidebar-logout {
   min-height: 42px;
   display: flex;
@@ -624,15 +625,30 @@ textarea:focus-visible {
   cursor: pointer;
 }
 
-/* 網站共用版面｜左側選單（系統首頁、總覽、功能分頁、雲端同步、使用者與登出） */
+/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、登出與返回登入按鈕的滑鼠移入樣式 */
+.sidebar-passkey:not(:disabled):hover,
 .sidebar-logout:hover {
   border-color: #55636b;
   color: #fff;
 }
 
-/* 網站共用版面｜左側選單（系統首頁、總覽、功能分頁、雲端同步、使用者與登出） */
+/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定與登出按鈕圖示 */
+.sidebar-passkey svg,
 .sidebar-logout svg {
   width: 18px;
+}
+
+/* 加工與庫存管理系統｜側欄底部 → 正在設定通行密鑰時的停用樣式 */
+.sidebar-passkey:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定結果 */
+.sidebar-foot .sidebar-passkey-feedback {
+  margin: 0 8px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 /* 網站共用版面｜登出或返回登入按鈕 */
@@ -1972,18 +1988,6 @@ textarea:focus-visible {
   gap: 14px;
 }
 
-@media (min-width: 621px) {
-  /* 電腦版｜系統首頁 → 管理員的四張功能卡以兩欄排列 */
-  .portal-functions.has-passkey {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* 系統首頁｜「設定通行密鑰（Face ID）」卡片下方的操作結果 */
-.home-passkey-feedback {
-  grid-column: 1 / -1;
-}
-
 /* 登入畫面與系統首頁｜單張功能卡（加工管理系統、庫存管理系統或資料備份／還原） */
 .function-card {
   position: relative;
@@ -2204,6 +2208,15 @@ textarea:focus-visible {
 .auth-submit {
   width: 100%;
   margin-top: 4px;
+}
+
+/* 登入畫面｜「使用通行密鑰登入（Face ID）」按鈕 */
+.auth-passkey-button {
+  width: 100%;
+  margin-top: 12px;
+  border-color: rgb(4, 107, 252);
+  background: rgba(34, 122, 172, 0.251);
+  color: #77b8f6;
 }
 
 /* 登入畫面與系統首頁｜「訪客查看」按鈕 */
