@@ -7,7 +7,7 @@ import {
   ScanBarcode,Factory,LayoutDashboard,Layers,DatabaseBackup,Combine,ChartColumnBig,CalendarClock,LaptopMinimal
 } from 'lucide-react'
 import { isDemoMode, supabase } from './lib/supabase'
-import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, verifyOwnerPassword } from './lib/auth'
+import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, registerOwnerPasskey, signInWithPasskey, supportsPasskeys, verifyOwnerPassword } from './lib/auth'
 import { composeProductName, formatDate, formatMoney, formatNumber, today } from './lib/format'
 import { hasTaiwanHolidayCalendar, isTaiwanPublicHoliday, TAIWAN_HOLIDAY_CALENDAR_YEARS } from './lib/taiwanHolidays'
 import { exportProductionXlsx } from './lib/exportProductionXlsx'
@@ -180,6 +180,11 @@ export default function App() {
     void client.auth.getSession().then(({ data }) => acceptSession(data.session))
     const { data: listener } = client.auth.onAuthStateChange((event, nextSession) => {
       if (event === 'PASSWORD_RECOVERY') setForcePasswordSetup(true)
+      if (nextSession && !isOwnerUser(nextSession.user.id)) {
+        // Supabase releases its auth lock after the callback returns.
+        window.setTimeout(() => { void acceptSession(nextSession) }, 0)
+        return
+      }
       void acceptSession(nextSession)
     })
     return () => listener.subscription.unsubscribe()
@@ -219,6 +224,16 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
   const [resetEmail, setResetEmail] = useState('')
   const [resetMessage, setResetMessage] = useState('')
   const [resetSuccess, setResetSuccess] = useState(false)
+
+  useEffect(() => { setMessage(initialMessage || '') }, [initialMessage])
+
+  const submitPasskey = async () => {
+    setMessage('')
+    setBusy(true)
+    try { await signInWithPasskey() }
+    catch (error) { setMessage(messageFor(error)) }
+    finally { setBusy(false) }
+  }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setMessage('')
@@ -264,6 +279,7 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         {message && <p className="form-error">{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
+      {supportsPasskeys() && <button className="button auth-guest-button" type="button" onClick={() => void submitPasskey()} disabled={busy}><LockKeyhole />使用通行密鑰登入（Face ID）</button>}
       <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客查看</button>
       <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
       <button className="auth-switch" type="button" onClick={() => { setResetOpen((value) => !value); setResetMessage(''); setResetSuccess(false) }} disabled={busy}>{resetOpen ? '取消重設密碼' : '忘記密碼或尚未設定密碼'}</button>
@@ -473,7 +489,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         {guestMode && <div className="guest-banner"><ShieldCheck /> 訪客模式僅供查看，無法新增、修改、刪除、盤點、匯出或還原資料。</div>}
         {error && <div className="error-banner">{error}<button onClick={() => void refresh()}>重試</button></div>}
 
-        {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} />}
+        {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} showPasskeySetup={isOwnerUser(session?.user.id) && supportsPasskeys()} />}
         {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
         {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} onSave={async (input) => {
           await createProductionRecord(input); await afterSave('加工數量已登記')
@@ -563,7 +579,7 @@ function NavItem({ active, icon, onClick, children }: { active: boolean; icon: R
   return <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>{icon}<span>{children}</span></button>
 }
 
-function HomePage({ navigate, openAdmin, guestMode }: { navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean }) {
+function HomePage({ navigate, openAdmin, guestMode, showPasskeySetup }: { navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean; showPasskeySetup: boolean }) {
   return <section className="page-content home-page">
     <div className="home-hero">
       <img
@@ -581,7 +597,33 @@ function HomePage({ navigate, openAdmin, guestMode }: { navigate: (page: Page) =
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
       <FunctionCard icon={<DatabaseBackup/>} title="資料備份／還原" description={guestMode ? '訪客模式無法匯出或還原資料' : '匯出或整批匯入 Supabase Excel'} tone="purple" onClick={openAdmin} disabled={guestMode} disabledLabel="管理員限定"/>
     </div>
+    {showPasskeySetup && <PasskeySetup />}
   </section>
+}
+
+function PasskeySetup() {
+  const [busy, setBusy] = useState(false)
+  const [feedback, setFeedback] = useState({ text: '', success: false })
+
+  const register = async () => {
+    setBusy(true)
+    setFeedback({ text: '', success: false })
+    try {
+      await registerOwnerPasskey()
+      setFeedback({ text: '通行密鑰已建立。下次可在登入頁選擇「使用通行密鑰登入」。', success: true })
+    } catch (error) {
+      setFeedback({ text: messageFor(error), success: false })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return <div className="home-passkey-setup">
+    <button className="button" type="button" onClick={() => void register()} disabled={busy}>
+      <LockKeyhole />{busy ? '正在設定…' : '設定通行密鑰（Face ID）'}
+    </button>
+    {feedback.text && <p role={feedback.success ? 'status' : 'alert'} className={feedback.success ? 'admin-success' : 'form-error'}>{feedback.text}</p>}
+  </div>
 }
 
 function ProductionDashboard({ records, productCodes, loading }: { records: ProductionRecord[]; productCodes: string[]; loading: boolean }) {

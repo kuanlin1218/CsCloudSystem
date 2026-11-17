@@ -190,6 +190,15 @@ VITE_SUPABASE_ANON_KEY=你的_anon_key
 
 Supabase 專案本身也有密碼最短長度設定。請在 Auth 的 Password Security 設定中把 minimum password length 改成 `6`；否則前端與雲端的密碼規則可能不一致。
 
+### 啟用通行密鑰登入（Face ID）
+
+1. 到 Supabase Dashboard → Authentication → Passkeys，開啟 **Enable Passkey authentication**。
+2. 以使用者實際開啟的 HTTPS 網址設定 WebAuthn。假設網址是 `https://your-account.github.io/cnc/`，Relying Party Display Name 可填「詮栩雲端系統」，Relying Party ID 填 `your-account.github.io`，Relying Party Origins 填 `https://your-account.github.io`。兩欄都不包含 `/cnc/`。
+3. 部署新版後，用 iPhone 開啟正式網址，先用管理員帳密登入，在系統首頁點「設定通行密鑰（Face ID）」，依裝置提示完成設定。
+4. 登出後，點「使用通行密鑰登入（Face ID）」測試。iPhone 會依裝置設定提供 Face ID 或其他驗證方式，原有帳密也可繼續登入。
+
+通行密鑰綁定 Relying Party ID，日後變更此設定須重新註冊。
+
 ## 部署到 GitHub Pages
 
 專案已包含 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)，推送到 `main` 後會自動建置與部署。

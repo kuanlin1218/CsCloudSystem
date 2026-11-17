@@ -14,6 +14,7 @@ if (!isDemoMode && typeof window !== 'undefined') {
 
 export const supabase = isDemoMode ? null : createClient(url!, key!, {
   auth: {
+    experimental: { passkey: true },
     persistSession: true,
     storage: window.sessionStorage,
     storageKey: sessionStorageKey,

@@ -746,6 +746,10 @@ textarea:focus-visible {
 }
 
 /* 網站共用版面｜功能選擇卡片排列區 */
+.home-passkey-setup {
+  margin-top: 1rem;
+}
+
 .portal-functions {
   grid-template-columns: repeat(2, 1fr);
 }
