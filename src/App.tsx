@@ -1503,10 +1503,6 @@ const SCANNER_SETTINGS = [
     { id: 'pair-1', label: '配對碼 I' },
     { id: 'pair-2', label: '配對碼 II' },
   ] },
-  { title: '掃描模式', options: [
-    { id: 'mode-sensing', label: '感應模式' },
-    { id: 'mode-continuous', label: '連續模式' },
-  ] },
   { title: '休眠時間設定', options: [
     { id: 'sleep-1', label: '1 分鐘' },
     { id: 'sleep-5', label: '5 分鐘' },

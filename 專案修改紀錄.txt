@@ -1383,6 +1383,12 @@ GitHub Summary：拆分 GitHub Pages 建置與發布流程。
 SQL：不需要執行 SQL。
 GitHub Summary：新增掃描槍設定頁與原廠 QR 設定碼。
 
+2026-11-17
+修改內容：移除掃描槍設定頁的掃描模式分類與感應、連續模式的 QR Code。
+修改檔案：src/App.tsx、README.md、工作交接紀錄.md、專案修改紀錄.txt，刪除 public/scanner-settings/mode-sensing.png 與 mode-continuous.png。
+SQL：不需要執行 SQL。
+GitHub Summary：移除掃描槍的掃描模式設定碼。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
