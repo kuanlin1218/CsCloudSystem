@@ -2,6 +2,17 @@ import { supabase, isDemoMode } from './supabase'
 import { composeProductName, today } from './format'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord, type StocktakeInput } from '../types'
 import { requireAuthenticatedUserId } from './auth'
+import type { OperationLogEntry } from '../types'
+
+export async function loadOperationLog(cursor?: Pick<OperationLogEntry, 'id' | 'occurred_at'>) {
+  if (!supabase) throw new Error('請連線至 Supabase 後查看操作紀錄')
+  let query = supabase.from('operation_log').select('*')
+  if (cursor) query = query.or(`occurred_at.lt.${cursor.occurred_at},and(occurred_at.eq.${cursor.occurred_at},id.lt.${cursor.id})`)
+  const { data, error } = await query.order('occurred_at', { ascending: false }).order('id', { ascending: false }).limit(51)
+  if (error?.code === 'PGRST205' || error?.code === '42P01') throw new Error('操作紀錄尚未啟用，請先套用 enable-operation-log.sql。')
+  if (error) throw error
+  return { entries: (data as OperationLogEntry[]).slice(0, 50), hasMore: data.length > 50 }
+}
 
 const PRODUCT_KEY = 'blade_inventory_products_v3'
 const MOVEMENT_KEY = 'blade_inventory_movements_v3'

@@ -85,7 +85,9 @@ export async function exportAllAdminData(): Promise<Required<Pick<AdminExportRes
 
 export async function importAllAdminData(payload: AdminDataPayload): Promise<AdminImportResult['counts']> {
   const client = requireCloud()
-  const { data, error } = await client.rpc('admin_import_all', { p_payload: payload })
+  const args = { p_payload: payload }
+  let { data, error } = await client.rpc('admin_import_all_with_operation_log', args)
+  if (error?.code === 'PGRST202') ({ data, error } = await client.rpc('admin_import_all', args))
   if (error) throw error
   const result = data as AdminImportResult
   if (!result?.ok || !result.counts) throw new Error(result?.error || '無法匯入雲端資料')

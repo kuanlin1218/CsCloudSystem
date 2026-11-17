@@ -72,6 +72,12 @@
 - 無 Supabase 設定時自動使用可操作的瀏覽器示範資料
 - GitHub Actions / Pages 部署設定
 
+## 操作紀錄
+
+管理員登入後，從首頁「功能選擇」開啟「操作紀錄」。庫存與加工異動依台灣時間由新到舊放在同一張清單，每筆顯示操作者，點開可看欄位詳情。
+
+已啟用單一管理員模式的 Supabase 專案，先備份資料，再從 SQL Editor 執行 [`supabase/enable-operation-log.sql`](supabase/enable-operation-log.sql)。啟用後才會記錄刀具、出入庫、加工紀錄與加工選項的異動。使用新版網站執行 Excel 整批還原時，紀錄會顯示還原筆數。操作紀錄由資料庫寫入，只開放指定管理員查閱。
+
 ## 先在本機執行
 
 需要 Node.js 20 以上版本（建議 Node.js 22）。

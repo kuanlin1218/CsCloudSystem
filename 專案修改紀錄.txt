@@ -1401,6 +1401,12 @@ GitHub Summary：手機版庫存總覽統計卡改為單欄排列。
 SQL：不需要執行 SQL。
 GitHub Summary：縮小手機版庫存總覽統計卡高度。
 
+2026-11-17
+修改內容：管理員首頁新增全站資料操作時間表，顯示操作者與資料變更。Supabase 自動記錄異動，從新版網站還原 Excel 時記錄各類資料筆數。
+修改檔案：src/App.tsx、src/types.ts、src/styles.css、src/lib/repository.ts、src/lib/adminData.ts、supabase/enable-operation-log.sql、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：需在已啟用單一管理員模式的專案套用 supabase/enable-operation-log.sql。
+GitHub Summary：新增管理員操作紀錄與操作者顯示。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

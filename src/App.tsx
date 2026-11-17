@@ -14,8 +14,8 @@ import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
 import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
 import type { WorkbookPreview } from './lib/adminDataWorkbook'
-import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, loadInventory, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
-import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
+import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, loadInventory, loadOperationLog, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
+import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type OperationLogEntry, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
 
 const blankProduct = (): ProductInput => ({
   barcode: '', specification: '', size: '', chipbreaker: '', material: '', brand: '', supplier: '',
@@ -119,7 +119,7 @@ const countForecastCalendarDays = (start: string, end: string) => {
   return count
 }
 
-const PAGE_VALUES: Page[] = ['home', 'production-dashboard', 'production-entry', 'production-query', 'production-forecast', 'production-settings', 'production-delete', 'dashboard', 'movements', 'stocktake', 'products', 'scanner-settings']
+const PAGE_VALUES: Page[] = ['home', 'production-dashboard', 'production-entry', 'production-query', 'production-forecast', 'production-settings', 'production-delete', 'dashboard', 'movements', 'stocktake', 'products', 'scanner-settings', 'operation-log']
 const preventInputEnterSubmit = (event: ReactKeyboardEvent<HTMLFormElement>) => {
   if (event.key !== 'Enter' || event.nativeEvent.isComposing || !(event.target instanceof HTMLInputElement)) return
   event.preventDefault()
@@ -432,7 +432,8 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   const requestAdminDelete = (title: string, description: string, execute: () => Promise<void>) => new Promise<boolean>((resolve) => {
     setAdminDelete({ title, description, execute, resolve })
   })
-  const activePage: Page = guestMode && (page === 'production-entry' || page === 'production-settings' || page === 'production-delete') ? 'production-dashboard' : guestMode && page === 'stocktake' ? 'dashboard' : page
+  const canReadOperationLog = !guestMode && isOwnerUser(session?.user.id)
+  const activePage: Page = page === 'operation-log' && !canReadOperationLog ? 'home' : guestMode && (page === 'production-entry' || page === 'production-settings' || page === 'production-delete') ? 'production-dashboard' : guestMode && page === 'stocktake' ? 'dashboard' : page
   const isHome = activePage === 'home'
   const isInventory = activePage === 'dashboard' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products' || activePage === 'scanner-settings'
   const isProduction = activePage === 'production-dashboard' || activePage === 'production-entry' || activePage === 'production-query' || activePage === 'production-forecast' || activePage === 'production-settings' || activePage === 'production-delete'
@@ -491,7 +492,8 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         {guestMode && <div className="guest-banner"><ShieldCheck /> 訪客模式僅供查看，無法新增、修改、刪除、盤點、匯出或還原資料。</div>}
         {error && <div className="error-banner">{error}<button onClick={() => void refresh()}>重試</button></div>}
 
-        {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} />}
+        {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} showOperationLog={canReadOperationLog} />}
+        {activePage === 'operation-log' && <OperationLogPage goHome={() => nav('home')} />}
         {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
         {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} onSave={async (input) => {
           await createProductionRecord(input); await afterSave('加工數量已登記')
@@ -585,7 +587,7 @@ function NavItem({ active, icon, onClick, children }: { active: boolean; icon: R
   return <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>{icon}<span>{children}</span></button>
 }
 
-function HomePage({ navigate, openAdmin, guestMode }: { navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean }) {
+function HomePage({ navigate, openAdmin, guestMode, showOperationLog }: { navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean; showOperationLog: boolean }) {
   return <section className="page-content home-page">
     <div className="home-hero">
       <img
@@ -602,8 +604,95 @@ function HomePage({ navigate, openAdmin, guestMode }: { navigate: (page: Page) =
       <FunctionCard icon={<Layers/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
       <FunctionCard icon={<DatabaseBackup/>} title="資料備份／還原" description={guestMode ? '訪客模式無法匯出或還原資料' : '匯出或整批匯入 Supabase Excel'} tone="purple" onClick={openAdmin} disabled={guestMode} disabledLabel="管理員限定"/>
+      {showOperationLog && <FunctionCard icon={<History/>} title="操作紀錄" description="查看庫存與加工資料異動" tone="yellow" onClick={() => navigate('operation-log')}/>}
     </div>
   </section>
+}
+
+const operationEntities: Record<string, string> = {
+  products: '刀具', stock_movements: '出入庫紀錄', production_records: '加工紀錄', production_options: '加工選項',
+}
+
+const operationFields: Record<string, string> = {
+  code: '編號', barcode: '條碼', name: '品名', specification: '規格', size: '尺寸', chipbreaker: '斷屑槽', material: '材質',
+  brand: '廠牌', supplier: '供應商', category: '分類', unit: '單位', stock_quantity: '庫存', unit_price: '單價',
+  purchased_at: '購入日期', notes: '備註', movement_type: '出入庫類型', quantity: '數量', movement_date: '出入庫日期',
+  stock_after: '庫存餘額', work_date: '加工日期', product_code: '產品編號', machine: '機台', hours: '小時', minutes: '分鐘',
+  option_type: '選項類型', value: '選項', products: '刀具', movements: '出入庫紀錄', production_records: '加工紀錄', production_options: '加工選項',
+}
+
+function OperationLogPage({ goHome }: { goHome: () => void }) {
+  const [entries, setEntries] = useState<OperationLogEntry[]>([])
+  const [hasMore, setHasMore] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError('')
+    void loadOperationLog().then((result) => {
+      if (cancelled) return
+      setEntries(result.entries)
+      setHasMore(result.hasMore)
+    }).catch((err) => {
+      if (!cancelled) setError(messageFor(err))
+    }).finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [refreshKey])
+
+  const loadMore = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const result = await loadOperationLog(entries.at(-1))
+      setEntries((current) => [...current, ...result.entries])
+      setHasMore(result.hasMore)
+    } catch (err) { setError(messageFor(err)) }
+    finally { setLoading(false) }
+  }
+
+  return <section className="page-content operation-log-page">
+    <PageTitle eyebrow="OPERATION LOG" title="操作紀錄" actions={<button className="button scan-button" type="button" onClick={goHome}><Home/>返回首頁</button>} />
+    <div className="operation-log-header"><span>台灣時間・最新在上</span><button className="button scan-button" type="button" disabled={loading} onClick={() => setRefreshKey((key) => key + 1)}>重新整理</button></div>
+    {error && <p className="form-error" role="alert">{error}</p>}
+    {loading && !entries.length && <p role="status">讀取中…</p>}
+    {!loading && !error && !entries.length && <p>尚無操作紀錄。</p>}
+    {entries.length > 0 && <ol className="operation-log-list">{entries.map((entry) => <OperationLogItem key={entry.id} entry={entry}/>)}</ol>}
+    {hasMore && <button className="button scan-button" type="button" disabled={loading} onClick={() => void loadMore()}>{loading ? '讀取中…' : '載入較早紀錄'}</button>}
+  </section>
+}
+
+function OperationLogItem({ entry }: { entry: OperationLogEntry }) {
+  const before = entry.before_data || {}
+  const after = entry.after_data || {}
+  const fields = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((key) => before[key] !== after[key])
+  const display = (value: string | number | boolean | null | undefined) => value == null || value === '' ? '—' : String(value)
+  const action = { INSERT: '新增', UPDATE: '修改', DELETE: '刪除', RESTORE: '還原' }[entry.operation]
+  const entity = operationEntities[entry.entity] || entry.entity
+  const title = entry.operation === 'RESTORE' ? 'Excel 整批還原' : `${action}${entity}・${entry.target}`
+  const actor = isOwnerUser(entry.actor_id ?? undefined) ? OWNER_USERNAME : entry.actor_id || '系統／未識別'
+  const movement = after.movement_type ?? before.movement_type
+  const change = fields.find((key) => ['quantity', 'stock_quantity', 'unit_price', 'name', 'barcode', 'product_code', 'value'].includes(key)) || fields[0]
+  const preview = entry.operation === 'UPDATE' && change
+    ? `${operationFields[change] || change} ${display(before[change])} → ${display(after[change])}`
+    : movement === 'in' || movement === 'out'
+      ? `${movement === 'in' ? '入庫' : '出庫'} ${display(after.quantity ?? before.quantity)}`
+      : ''
+
+  return <li className="operation-log-item">
+    <details>
+      <summary>
+        <span className="operation-log-meta"><time dateTime={entry.occurred_at}>{formatTaipeiRecordTime(entry.occurred_at, true, true)}</time><span>操作者 {actor}</span></span>
+        <strong>{title}</strong>
+        {preview && <span className="operation-log-preview">{preview}</span>}
+      </summary>
+      <dl className="operation-log-details">{fields.map((key) => <div key={key}>
+        <dt>{operationFields[key] || key}</dt><dd>{entry.operation === 'UPDATE' ? `${display(before[key])} → ${display(after[key])}` : display((entry.operation === 'DELETE' ? before : after)[key])}</dd>
+      </div>)}</dl>
+    </details>
+  </li>
 }
 
 function PasskeySetup() {

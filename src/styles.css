@@ -1981,7 +1981,82 @@ textarea:focus-visible {
   color: #75838c;
 }
 
-/* 登入畫面與系統首頁｜「加工管理系統、庫存管理系統、資料備份／還原」三張功能卡的排列區 */
+/* 系統首頁－操作紀錄｜頁面與右上角登出按鈕留距 */
+.operation-log-page {
+  max-width: 1000px;
+  margin-inline: auto;
+  padding-top: 64px;
+}
+
+/* 系統首頁－操作紀錄｜時間排序說明與重新整理按鈕 */
+.operation-log-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #afbdc3;
+}
+
+/* 系統首頁－操作紀錄｜按時間由新到舊排列的異動清單 */
+.operation-log-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.operation-log-item {
+  border: 1px solid #303940;
+  border-radius: 7px;
+  background: #13181c;
+  overflow-wrap: anywhere;
+}
+
+.operation-log-item summary {
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.operation-log-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-bottom: 4px;
+  color: #a7bdcb;
+  font-size: 13px;
+}
+
+.operation-log-preview {
+  display: block;
+  color: #afbdc3;
+}
+
+/* 系統首頁－操作紀錄｜展開後的欄位內容與變更前後值 */
+.operation-log-details {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 14px;
+  border-top: 1px solid #303940;
+}
+
+.operation-log-details > div {
+  display: grid;
+  grid-template-columns: minmax(70px, 20%) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.operation-log-details dt {
+  color: #a7bdcb;
+}
+
+.operation-log-details dd {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* 登入畫面與系統首頁｜功能選擇卡片的排列區 */
 .function-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

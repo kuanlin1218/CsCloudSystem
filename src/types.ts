@@ -1,5 +1,16 @@
 export type MovementType = 'in' | 'out'
-export type Page = 'home' | 'production-dashboard' | 'production-entry' | 'production-query' | 'production-forecast' | 'production-settings' | 'production-delete' | 'dashboard' | 'movements' | 'stocktake' | 'products' | 'scanner-settings'
+export type Page = 'home' | 'production-dashboard' | 'production-entry' | 'production-query' | 'production-forecast' | 'production-settings' | 'production-delete' | 'dashboard' | 'movements' | 'stocktake' | 'products' | 'scanner-settings' | 'operation-log'
+
+export interface OperationLogEntry {
+  id: number
+  occurred_at: string
+  actor_id: string | null
+  entity: string
+  operation: 'INSERT' | 'UPDATE' | 'DELETE' | 'RESTORE'
+  target: string
+  before_data: Record<string, string | number | boolean | null> | null
+  after_data: Record<string, string | number | boolean | null> | null
+}
 export type ProductCategory = '刀片' | '鑽銑刀' | '刀柄' | '其他'
 export const PRODUCT_CATEGORIES: ProductCategory[] = ['刀片', '鑽銑刀', '刀柄', '其他']
 
