@@ -1313,6 +1313,15 @@ GitHub Summary：將黃色條碼掃描框改為置中正方形。
 SQL：不需要執行 SQL。
 GitHub Summary：修正手機相機取像尺寸與掃描重試流程。
 
+2026-11-17
+修改內容：以實際讀出住友 QR 照片的 ZXing-C++ WebAssembly 取代 jsQR，作為全畫面掃描失敗後的框內 QR 補充辨識。
+修改檔案：
+- src/App.tsx、src/lib/scanQr.ts：接入 QR 備用解碼與掃描取消判斷。
+- package.json、package-lock.json：加入 zxing-wasm 並移除 jsQR。
+- README.md、工作交接紀錄.md、專案修改紀錄.txt：更新掃描流程及實機待辦。
+SQL：不需要執行 SQL。
+GitHub Summary：接入 ZXing-C++ 解碼住友刀具 QR Code。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

@@ -15,12 +15,12 @@
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
     "exceljs": "^4.4.0",
-    "jsqr": "1.4.0",
     "lucide-react": "^0.468.0",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "zxing-wasm": "3.1.7"
   },
   "devDependencies": {
     "@types/qrcode": "^1.5.6",

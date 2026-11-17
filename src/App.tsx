@@ -1577,10 +1577,9 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
     controlsRef.current = controls
     try {
       await prepareScanAudio()
-      const [{ BrowserMultiFormatReader }, { DecodeHintType }, { default: decodeQr }] = await Promise.all([
+      const [{ BrowserMultiFormatReader }, { DecodeHintType }] = await Promise.all([
         import('@zxing/browser'),
         import('@zxing/library'),
-        import('jsqr'),
       ])
       const video = videoRef.current
       if (!video || controlsRef.current !== controls) return
@@ -1593,7 +1592,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
       const qrCanvas = document.createElement('canvas')
       const qrContext = qrCanvas.getContext('2d', { willReadFrequently: true })
       // 刀具掃碼視窗｜將可見黃框換算成原始影像座標，包含 object-fit: cover 裁掉的畫面偏移。
-      const readTargetQr = () => {
+      const readTargetQr = async () => {
         const target = targetRef.current
         const { videoWidth, videoHeight } = video
         if (!target || !qrContext || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !videoWidth || !videoHeight) return ''
@@ -1623,8 +1622,10 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
           qrContext.fillStyle = '#fff'
           qrContext.fillRect(0, 0, canvasWidth, canvasHeight)
           qrContext.drawImage(video, left, top, sourceWidth, sourceHeight, padding, padding, outputWidth, outputHeight)
-          const { data, width, height } = qrContext.getImageData(0, 0, canvasWidth, canvasHeight)
-          return decodeQr(data, width, height, { inversionAttempts: 'attemptBoth' })?.data.trim() || ''
+          const image = qrContext.getImageData(0, 0, canvasWidth, canvasHeight)
+          const { scanQr } = await import('./lib/scanQr')
+          if (controlsRef.current !== controls) return ''
+          return await scanQr(image)
         } catch { return '' }
       }
       stream = await navigator.mediaDevices.getUserMedia({
@@ -1649,7 +1650,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
       setCameraActive(true)
 
       // 刀具掃碼視窗｜每次依目前影像尺寸取像，單一解碼器失敗時仍繼續掃描。
-      const scanFrame = () => {
+      const scanFrame = async () => {
         if (controlsRef.current !== controls) return
         const { videoWidth, videoHeight } = video
         let value = ''
@@ -1662,8 +1663,9 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
             fullContext.drawImage(video, 0, 0)
             value = reader.decodeFromCanvas(fullCanvas).getText().trim()
           } catch { /* 全畫面未解碼，改試黃框內的 QR Code。 */ }
-          value ||= readTargetQr()
+          value ||= await readTargetQr()
         }
+        if (controlsRef.current !== controls) return
         if (!value) {
           timer = window.setTimeout(scanFrame, 250)
           return
