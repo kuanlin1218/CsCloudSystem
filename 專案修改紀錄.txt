@@ -1371,6 +1371,12 @@ GitHub Summary：修正手機綁定刀具的下拉選單操作。
 SQL：不需要執行 SQL。
 GitHub Summary：暫停顯示手機彈窗的收起選單按鈕。
 
+2026-11-17
+修改內容：GitHub Pages 的建置上傳與發布拆成兩個工作，發布等待建置與上傳成功後才開始。
+修改檔案：.github/workflows/deploy.yml、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行 SQL。
+GitHub Summary：拆分 GitHub Pages 建置與發布流程。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
