@@ -2056,6 +2056,17 @@ textarea:focus-visible {
   white-space: pre-wrap;
 }
 
+/* 系統首頁－操作紀錄｜展開後分行顯示每個欄位的修改前與修改後 */
+.operation-log-value {
+  display: block;
+}
+
+.operation-log-value b {
+  margin-right: 6px;
+  color: #a7bdcb;
+  font-size: 13px;
+}
+
 /* 登入畫面與系統首頁｜功能選擇卡片的排列區 */
 .function-grid {
   display: grid;

@@ -2,11 +2,11 @@ export type MovementType = 'in' | 'out'
 export type Page = 'home' | 'production-dashboard' | 'production-entry' | 'production-query' | 'production-forecast' | 'production-settings' | 'production-delete' | 'dashboard' | 'movements' | 'stocktake' | 'products' | 'scanner-settings' | 'operation-log'
 
 export interface OperationLogEntry {
-  id: number
+  id: string
   occurred_at: string
   actor_id: string | null
   entity: string
-  operation: 'INSERT' | 'UPDATE' | 'DELETE' | 'RESTORE'
+  operation: 'INSERT' | 'UPDATE' | 'DELETE' | 'RESTORE' | 'LOGIN' | 'LOGOUT'
   target: string
   before_data: Record<string, string | number | boolean | null> | null
   after_data: Record<string, string | number | boolean | null> | null

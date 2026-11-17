@@ -74,9 +74,11 @@
 
 ## 操作紀錄
 
-管理員登入後，從首頁「功能選擇」開啟「操作紀錄」。庫存與加工異動依台灣時間由新到舊放在同一張清單，每筆顯示操作者，點開可看欄位詳情。
+管理員登入後，從首頁「功能選擇」開啟「操作紀錄」。庫存、加工異動與登入登出依台灣時間由新到舊放在同一張清單。每筆顯示操作者，點開可看修改前後的欄位值、新增與刪除的資料，或登入登出的驗證事件編號。
 
 已啟用單一管理員模式的 Supabase 專案，先備份資料，再從 SQL Editor 執行 [`supabase/enable-operation-log.sql`](supabase/enable-operation-log.sql)。啟用後才會記錄刀具、出入庫、加工紀錄與加工選項的異動。使用新版網站執行 Excel 整批還原時，紀錄會顯示還原筆數。操作紀錄由資料庫寫入，只開放指定管理員查閱。
+
+登入登出需接著執行 [`supabase/enable-operation-log-auth.sql`](supabase/enable-operation-log-auth.sql)，並在 Supabase Dashboard 的 **Authentication → Configuration → Audit Logs** 開啟 **Write audit logs to the database**。網站讀取資料庫已存留的管理員登入登出事件。若之前未開啟資料庫儲存，先前只留在 Supabase 後台的事件不會回填到網站。關閉網頁分頁本身不會產生登出事件。
 
 ## 先在本機執行
 

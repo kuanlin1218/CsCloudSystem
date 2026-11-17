@@ -6,12 +6,27 @@ import type { OperationLogEntry } from '../types'
 
 export async function loadOperationLog(cursor?: Pick<OperationLogEntry, 'id' | 'occurred_at'>) {
   if (!supabase) throw new Error('請連線至 Supabase 後查看操作紀錄')
+  const timeline = await supabase.rpc('read_operation_timeline', cursor
+    ? { p_before_time: cursor.occurred_at, p_before_id: cursor.id }
+    : {})
+  if (!timeline.error) {
+    const data = timeline.data as OperationLogEntry[]
+    return { entries: data.slice(0, 50), hasMore: data.length > 50, authIncluded: true }
+  }
+  if (timeline.error.code !== 'PGRST202') throw timeline.error
+
+  // 先上傳網站時，仍可查看舊版資料異動紀錄，直到套用登入登出 SQL。
   let query = supabase.from('operation_log').select('*')
-  if (cursor) query = query.or(`occurred_at.lt.${cursor.occurred_at},and(occurred_at.eq.${cursor.occurred_at},id.lt.${cursor.id})`)
+  if (cursor?.id.startsWith('data:')) {
+    const legacyId = cursor.id.slice(5)
+    query = query.or(`occurred_at.lt.${cursor.occurred_at},and(occurred_at.eq.${cursor.occurred_at},id.lt.${legacyId})`)
+  }
   const { data, error } = await query.order('occurred_at', { ascending: false }).order('id', { ascending: false }).limit(51)
   if (error?.code === 'PGRST205' || error?.code === '42P01') throw new Error('操作紀錄尚未啟用，請先套用 enable-operation-log.sql。')
   if (error) throw error
-  return { entries: (data as OperationLogEntry[]).slice(0, 50), hasMore: data.length > 50 }
+  const legacyEntries = data as (Omit<OperationLogEntry, 'id'> & { id: number })[]
+  const entries = legacyEntries.slice(0, 50).map((entry) => ({ ...entry, id: `data:${String(entry.id).padStart(19, '0')}` }))
+  return { entries, hasMore: data.length > 50, authIncluded: false }
 }
 
 const PRODUCT_KEY = 'blade_inventory_products_v3'
