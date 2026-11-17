@@ -2064,7 +2064,15 @@ function Modal({ title, close, size = '', children }: { title: string; close: ()
     const target = event.target as HTMLElement
     if (!target.closest('input, select, textarea, button, a, label, [role="option"]')) dismissInput()
   }
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && close()}><section className={`modal ${size}`} role="dialog" aria-modal="true" aria-label={title} onPointerDown={dismissFromBlankArea}><div className="modal-head"><h2>{title}</h2><button className="icon-button" onClick={close} aria-label="關閉"><X /></button></div><button type="button" className="modal-input-dismiss" onClick={dismissInput}><ChevronDown />完成輸入／收起選單</button>{children}</section></div>
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && close()}>
+    <section className={`modal ${size}`} role="dialog" aria-modal="true" aria-label={title} onPointerDown={dismissFromBlankArea}>
+      <div className="modal-head"><h2>{title}</h2><button className="icon-button" onClick={close} aria-label="關閉"><X /></button></div>
+      {/* 暫停顯示手機彈窗的鍵盤收合按鈕，待確認是否恢復。
+      <button type="button" className="modal-input-dismiss" onClick={dismissInput}><ChevronDown />完成輸入／收起選單</button>
+      */}
+      {children}
+    </section>
+  </div>
 }
 
 function PageSkeleton() { return <div className="skeleton"><i/><i/><i/></div> }
