@@ -1264,6 +1264,14 @@ GitHub Summary：調整 Face ID 登入配色並將通行密鑰設定移至側欄
 SQL：不需要執行 SQL。
 GitHub Summary：統一側欄通行密鑰設定與登出按鈕樣式。
 
+2026-11-17
+修改內容：網站相機更密集地搜尋 QR Code 定位圖案，縮短失敗後的重試等待，並避免立即辨識成功後又顯示掃描中。
+修改檔案：
+- src/App.tsx：調整 ZXing 掃描設定與相機狀態。
+- README.md、工作交接紀錄.md、專案修改紀錄.txt：更新掃描行為及 iPhone 實測待辦。
+SQL：不需要執行 SQL。
+GitHub Summary：加強手機相機的 QR Code 辨識。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

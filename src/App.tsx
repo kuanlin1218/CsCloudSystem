@@ -1524,7 +1524,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
     const stream = videoRef.current?.srcObject
     if (!(stream instanceof MediaStream)) return
     const track = stream.getVideoTracks()[0]
-    if (!track) return
+    if (!track?.getCapabilities) return
     const capabilities = track.getCapabilities() as BarcodeCameraCapabilities
     const applyOptionalConstraint = async (constraint: BarcodeCameraConstraintSet) => {
       try { await track.applyConstraints({ advanced: [constraint] }) }
@@ -1566,8 +1566,18 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
     stopCamera()
     try {
       await prepareScanAudio()
-      const { BrowserMultiFormatReader } = await import('@zxing/browser')
-      const reader = new BrowserMultiFormatReader()
+      const [{ BrowserMultiFormatReader }, { DecodeHintType }] = await Promise.all([
+        import('@zxing/browser'),
+        import('@zxing/library'),
+      ])
+      const video = videoRef.current
+      if (!video) return
+      // 刀具掃碼視窗｜更密集地搜尋 QR 定位圖案，並縮短失敗後等待下一次取像的時間。
+      const reader = new BrowserMultiFormatReader(
+        new Map([[DecodeHintType.TRY_HARDER, true]]),
+        { delayBetweenScanAttempts: 250 },
+      )
+      let decoded = false
       const controls = await reader.decodeFromConstraints(
         {
           audio: false,
@@ -1579,10 +1589,11 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
             aspectRatio: { ideal: 16 / 9 },
           },
         },
-        videoRef.current || undefined,
+        video,
         (result, _scanError, scannerControls) => {
           const value = result?.getText().trim()
           if (!value) return
+          decoded = true
           scannerControls.stop()
           controlsRef.current = null
           setCameraActive(false)
@@ -1591,9 +1602,14 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
           playScanFeedback()
         },
       )
+      if (decoded) return
+      if (videoRef.current !== video) {
+        controls.stop()
+        return
+      }
       controlsRef.current = controls
       await optimizeBarcodeCamera()
-      setCameraActive(true)
+      if (controlsRef.current === controls) setCameraActive(true)
     } catch (cameraError) {
       stopCamera()
       const name = (cameraError as { name?: string })?.name

@@ -194,7 +194,7 @@ Supabase 專案本身也有密碼最短長度設定。請在 Auth 的 Password S
 
 1. 到 Supabase Dashboard → Authentication → Passkeys，開啟 **Enable Passkey authentication**。
 2. 以使用者實際開啟的 HTTPS 網址設定 WebAuthn。假設網址是 `https://your-account.github.io/cnc/`，Relying Party Display Name 可填「詮栩雲端系統」，Relying Party ID 填 `your-account.github.io`，Relying Party Origins 填 `https://your-account.github.io`。兩欄都不包含 `/cnc/`。
-3. 部署新版後，用 iPhone 開啟正式網址，先用管理員帳密登入，在系統首頁點「設定通行密鑰（Face ID）」，依裝置提示完成設定。
+3. 部署新版後，用 iPhone 開啟正式網址，先用管理員帳密登入，進入加工管理或庫存管理系統並打開左側選單。在帳號下方、「登出系統」上方點「設定通行密鑰（Face ID）」，依裝置提示完成設定。
 4. 登出後，點「使用通行密鑰登入（Face ID）」測試。iPhone 會依裝置設定提供 Face ID 或其他驗證方式，原有帳密也可繼續登入。
 
 通行密鑰綁定 Relying Party ID，日後變更此設定須重新註冊。
@@ -350,6 +350,8 @@ blade-inventory/
 確認使用的是 `https://` 正式網址，並到 iPhone 的 Chrome／網站相機權限允許使用相機。若相機暫時無法使用，可先在掃描視窗的「電腦測試／相機無法辨識時」欄位手動輸入條碼，測試查詢、建立與綁定流程。
 
 相機掃描預設使用後鏡頭、1080p、30fps，並在瀏覽器支援時啟用連續對焦與約 1.35 倍變焦。掃描時先讓手機與條碼保持約 20～30 公分，將條碼置於框線中央後再慢慢靠近；避免手機貼得太近或燈光直接反射條碼貼紙。
+
+網站相機掃描會更密集地搜尋 QR Code 的定位圖案，未解碼時等待約 250 毫秒再嘗試，並繼續支援一維條碼。
 
 ### iPhone 連接 XB-6208-RB 後，手機鍵盤不會顯示
 
