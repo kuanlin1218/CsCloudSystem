@@ -622,6 +622,47 @@ const operationFields: Record<string, string> = {
   auth_event_id: '驗證事件編號',
 }
 
+function displayOperationValue(value: string | number | boolean | null | undefined) {
+  return value == null || value === '' ? '—' : String(value)
+}
+
+function describeOperation(entry: OperationLogEntry, fields: string[]) {
+  const before = entry.before_data || {}
+  const after = entry.after_data || {}
+  const row = entry.operation === 'DELETE' ? before : after
+  const value = (key: string) => displayOperationValue(row[key])
+  const action = { INSERT: '新增', UPDATE: '修改', DELETE: '刪除', RESTORE: '還原', LOGIN: '登入', LOGOUT: '登出' }[entry.operation]
+  const changes = fields.map((key) => `${operationFields[key] || key}：${displayOperationValue(before[key])} → ${displayOperationValue(after[key])}`)
+
+  if (entry.entity === 'auth') return { title: `${action}系統`, lines: [] }
+  if (entry.operation === 'RESTORE') {
+    return { title: '從 Excel 整批還原資料', lines: [fields.map((key) => `${operationFields[key] || key} ${value(key)} 筆`).join('、')].filter(Boolean) }
+  }
+  if (entry.entity === 'stock_movements') {
+    const stocktake = typeof row.notes === 'string' ? row.notes.match(/^庫存盤點調整：\s*(\d+)\s*→\s*(\d+)/) : null
+    const movement = stocktake ? '庫存盤點' : row.movement_type === 'in' ? '入庫' : row.movement_type === 'out' ? '出庫' : '出入庫'
+    const title = entry.operation === 'INSERT' ? `為 ${entry.target} 登記${movement}` : `${action} ${entry.target} 的${movement}紀錄`
+    const quantity = stocktake
+      ? `盤點庫存：${stocktake[1]} → ${stocktake[2]}`
+      : `${movement}數量：${value('quantity')}${row.stock_after == null ? '' : `・當時庫存餘額：${value('stock_after')}`}`
+    return { title, lines: entry.operation === 'UPDATE' ? changes : [`${quantity}・紀錄日期 ${value('movement_date')}`] }
+  }
+  if (entry.entity === 'production_records') {
+    return {
+      title: `${action} ${entry.target} 的加工紀錄`,
+      lines: [`加工日期 ${value('work_date')}・機台 ${value('machine')}`, ...(entry.operation === 'UPDATE' ? changes : [`加工數量：${value('quantity')}`])],
+    }
+  }
+  if (entry.entity === 'production_options') {
+    const kind = row.option_type === 'machine' ? '機台' : '產品編號'
+    return { title: `${action}加工${kind}選項 ${entry.target}`, lines: entry.operation === 'UPDATE' ? changes : [] }
+  }
+  const entity = operationEntities[entry.entity] || entry.entity
+  const name = entry.entity === 'products' && row.name ? `｜${value('name')}` : ''
+  const details = entry.operation === 'UPDATE' ? changes : [row.stock_quantity == null ? '' : `庫存：${value('stock_quantity')} ${row.unit || ''}\u3000單價：${value('unit_price')}`].filter(Boolean)
+  return { title: `${action}${entity} ${entry.target}${name}`, lines: details }
+}
+
 function OperationLogPage({ goHome }: { goHome: () => void }) {
   const [entries, setEntries] = useState<OperationLogEntry[]>([])
   const [hasMore, setHasMore] = useState(false)
@@ -673,33 +714,23 @@ function OperationLogItem({ entry }: { entry: OperationLogEntry }) {
   const before = entry.before_data || {}
   const after = entry.after_data || {}
   const fields = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((key) => before[key] !== after[key])
-  const display = (value: string | number | boolean | null | undefined) => value == null || value === '' ? '—' : String(value)
-  const action = { INSERT: '新增', UPDATE: '修改', DELETE: '刪除', RESTORE: '還原', LOGIN: '登入', LOGOUT: '登出' }[entry.operation]
-  const entity = operationEntities[entry.entity] || entry.entity
-  const title = entry.operation === 'RESTORE' ? 'Excel 整批還原' : entry.entity === 'auth' ? `${action}系統` : `${action}${entity}・${entry.target}`
+  const { title, lines } = describeOperation(entry, fields)
   const actor = isOwnerUser(entry.actor_id ?? undefined) ? OWNER_USERNAME : entry.actor_id || '系統／未識別'
-  const movement = after.movement_type ?? before.movement_type
-  const change = fields.find((key) => ['quantity', 'stock_quantity', 'unit_price', 'name', 'barcode', 'product_code', 'value'].includes(key)) || fields[0]
-  const preview = entry.operation === 'UPDATE' && change
-    ? `${operationFields[change] || change} ${display(before[change])} → ${display(after[change])}`
-    : movement === 'in' || movement === 'out'
-      ? `${movement === 'in' ? '入庫' : '出庫'} ${display(after.quantity ?? before.quantity)}`
-      : ''
 
   return <li className="operation-log-item">
     <details>
       <summary>
         <span className="operation-log-meta"><time dateTime={entry.occurred_at}>{formatTaipeiRecordTime(entry.occurred_at, true, true)}</time><span>操作者 {actor}</span></span>
         <strong>{title}</strong>
-        {preview && <span className="operation-log-preview">{preview}</span>}
+        {lines.length > 0 && <span className="operation-log-preview">{lines.join('\n')}</span>}
       </summary>
       <dl className="operation-log-details">
         {entry.actor_id && <div><dt>操作者 ID</dt><dd>{entry.actor_id}</dd></div>}
         {fields.map((key) => <div key={key}>
           <dt>{operationFields[key] || key}</dt>
           <dd>{entry.operation === 'UPDATE'
-            ? <><span className="operation-log-value"><b>修改前</b> {display(before[key])}</span><span className="operation-log-value"><b>修改後</b> {display(after[key])}</span></>
-            : display((entry.operation === 'DELETE' ? before : after)[key])}</dd>
+            ? <><span className="operation-log-value"><b>修改前</b> {displayOperationValue(before[key])}</span><span className="operation-log-value"><b>修改後</b> {displayOperationValue(after[key])}</span></>
+            : displayOperationValue((entry.operation === 'DELETE' ? before : after)[key])}</dd>
         </div>)}
       </dl>
     </details>

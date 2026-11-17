@@ -2030,6 +2030,7 @@ textarea:focus-visible {
 .operation-log-preview {
   display: block;
   color: #afbdc3;
+  white-space: pre-wrap;
 }
 
 /* 系統首頁－操作紀錄｜展開後的欄位內容與變更前後值 */

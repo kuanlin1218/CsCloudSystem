@@ -1419,6 +1419,12 @@ GitHub Summary：調整電腦版首頁功能卡為兩欄兩列。
 SQL：需執行 supabase/enable-operation-log-auth.sql，並開啟 Supabase Auth 稽核寫入資料庫。
 GitHub Summary：操作紀錄加入登入登出及欄位變更詳情。
 
+2026-11-17
+修改內容：操作紀錄主列直接列出操作者的具體操作、出入庫或盤點數量、所有修改欄位的前後值及 Excel 還原筆數。
+修改檔案：src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：本次顯示調整不需要執行 SQL。
+GitHub Summary：在操作紀錄清單直接顯示具體操作與變更。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
