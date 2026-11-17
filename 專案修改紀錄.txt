@@ -1225,6 +1225,28 @@ GitHub Summary：相容期初庫存新舊文字並修正顯示。
 SQL：不需要執行 SQL。
 GitHub Summary：修正電腦版加工備註文字大小設定。
 
+2026-11-17
+修改內容：新增 Supabase 通行密鑰登入。管理員用帳密登入後，可在系統首頁建立通行密鑰，再從登入頁用 iPhone Face ID 或裝置支援的方式驗證。保留原有帳密登入。
+修改檔案：
+- src/App.tsx：新增首頁的通行密鑰設定入口與登入頁按鈕。
+- src/lib/auth.ts、src/lib/supabase.ts：接上 Supabase 通行密鑰註冊與登入。
+- src/styles.css：調整首頁設定按鈕的間距。
+- package.json、package-lock.json：鎖定支援通行密鑰的 Supabase 套件版本。
+- README.md：補上 Supabase 設定與 iPhone 測試步驟。
+- 專案修改紀錄.txt、工作交接紀錄.md：記錄修改及上線待辦。
+SQL：不需要執行 SQL。需在 Supabase 後台啟用 Passkeys 並設定正式網站的 RP ID 與 HTTPS 來源。
+驗證：CSS 檢查、TypeScript 編譯及正式建置通過；建置有大型 chunk 警告。正式部署和 iPhone 實機登入尚未驗證。
+GitHub Summary：新增通行密鑰登入與 iPhone Face ID 支援。
+
+2026-11-17
+修改內容：把系統首頁的「設定通行密鑰（Face ID）」灰色按鈕改為與其他入口同款的深色功能卡，使用金色圖示和底線。管理員首頁有四張卡片時，電腦版採兩欄排列，手機版採單欄排列。
+修改檔案：
+- src/App.tsx：將通行密鑰設定整合進首頁功能卡。
+- src/styles.css：調整管理員首頁卡片排列與通行密鑰提示位置。
+- 專案修改紀錄.txt、工作交接紀錄.md：記錄本次外觀調整。
+SQL：不需要執行 SQL。
+GitHub Summary：將通行密鑰設定整合至首頁功能卡。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
