@@ -1289,6 +1289,14 @@ GitHub Summary：新增相機中央裁切的 QR Code 補充辨識。
 SQL：不需要執行 SQL。
 GitHub Summary：加入獨立 QR 解碼器改善手機掃描。
 
+2026-11-17
+修改內容：將 jsQR 補充辨識的裁切範圍對準畫面上的黃色掃描框，換算相機預覽的縮放與裁切偏移。
+修改檔案：
+- src/App.tsx：以掃描框座標裁切原始相機影像。
+- README.md、工作交接紀錄.md、專案修改紀錄.txt：同步掃描說明與實測待辦。
+SQL：不需要執行 SQL。
+GitHub Summary：讓 QR 補充辨識範圍對準黃色掃描框。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

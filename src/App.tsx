@@ -1473,6 +1473,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
   editProduct: (product: Product) => void
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const targetRef = useRef<HTMLSpanElement>(null)
   const resultRef = useRef<HTMLElement>(null)
   const controlsRef = useRef<{ stop: () => void } | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -1581,26 +1582,38 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
       )
       const qrCanvas = document.createElement('canvas')
       const qrContext = qrCanvas.getContext('2d', { willReadFrequently: true })
-      // 刀具掃碼視窗｜全畫面未解碼時，只取黃框中央附近的影像，降低周圍印刷圖案的干擾。
-      const readCenteredQr = () => {
-        const { videoWidth, videoHeight, clientWidth, clientHeight } = video
-        if (!qrContext || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !videoWidth || !videoHeight || !clientWidth || !clientHeight) return ''
-        const previewScale = Math.max(clientWidth / videoWidth, clientHeight / videoHeight)
-        const side = Math.floor(Math.min(clientWidth, clientHeight) * .65 / previewScale)
-        if (side < 32) return ''
+      // 刀具掃碼視窗｜將可見黃框換算成原始影像座標，包含 object-fit: cover 裁掉的畫面偏移。
+      const readTargetQr = () => {
+        const target = targetRef.current
+        const { videoWidth, videoHeight } = video
+        if (!target || !qrContext || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !videoWidth || !videoHeight) return ''
+        const preview = video.getBoundingClientRect()
+        if (!preview.width || !preview.height) return ''
+        const frame = target.getBoundingClientRect()
+        const scale = Math.max(preview.width / videoWidth, preview.height / videoHeight)
+        const imageLeft = preview.left + (preview.width - videoWidth * scale) / 2
+        const imageTop = preview.top + (preview.height - videoHeight * scale) / 2
+        const left = Math.max(0, Math.floor((frame.left - imageLeft) / scale))
+        const top = Math.max(0, Math.floor((frame.top - imageTop) / scale))
+        const sourceWidth = Math.min(videoWidth, Math.ceil((frame.right - imageLeft) / scale)) - left
+        const sourceHeight = Math.min(videoHeight, Math.ceil((frame.bottom - imageTop) / scale)) - top
+        if (sourceWidth < 32 || sourceHeight < 32) return ''
 
-        const size = Math.min(side, 640)
-        const padding = Math.ceil(size / 16)
-        const canvasSize = size + padding * 2
-        if (qrCanvas.width !== canvasSize || qrCanvas.height !== canvasSize) {
-          qrCanvas.width = canvasSize
-          qrCanvas.height = canvasSize
+        const outputScale = Math.min(1, 960 / Math.max(sourceWidth, sourceHeight))
+        const outputWidth = Math.round(sourceWidth * outputScale)
+        const outputHeight = Math.round(sourceHeight * outputScale)
+        const padding = Math.ceil(Math.min(outputWidth, outputHeight) / 16)
+        const canvasWidth = outputWidth + padding * 2
+        const canvasHeight = outputHeight + padding * 2
+        if (qrCanvas.width !== canvasWidth || qrCanvas.height !== canvasHeight) {
+          qrCanvas.width = canvasWidth
+          qrCanvas.height = canvasHeight
         }
         try {
           qrContext.fillStyle = '#fff'
-          qrContext.fillRect(0, 0, canvasSize, canvasSize)
-          qrContext.drawImage(video, (videoWidth - side) / 2, (videoHeight - side) / 2, side, side, padding, padding, size, size)
-          const { data, width, height } = qrContext.getImageData(0, 0, canvasSize, canvasSize)
+          qrContext.fillRect(0, 0, canvasWidth, canvasHeight)
+          qrContext.drawImage(video, left, top, sourceWidth, sourceHeight, padding, padding, outputWidth, outputHeight)
+          const { data, width, height } = qrContext.getImageData(0, 0, canvasWidth, canvasHeight)
           return decodeQr(data, width, height, { inversionAttempts: 'attemptBoth' })?.data.trim() || ''
         } catch { return '' }
       }
@@ -1618,7 +1631,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
         },
         video,
         (result, _scanError, scannerControls) => {
-          const value = result?.getText().trim() || readCenteredQr()
+          const value = result?.getText().trim() || readTargetQr()
           if (!value) return
           decoded = true
           scannerControls.stop()
@@ -1681,7 +1694,7 @@ function BarcodeScannerModal({ products, close, createWithBarcode, linkBarcode, 
     </section>}
     <div className={`barcode-camera ${cameraActive ? 'is-active' : ''} ${barcode && !cameraActive ? matchedProduct ? 'is-success' : 'is-unmatched' : ''}`}>
       <video ref={videoRef} muted playsInline aria-label="條碼掃描相機畫面" />
-      {cameraActive && <><span className="barcode-target" aria-hidden="true"/><span className="barcode-scanning-label"><ScanBarcode/>掃描中</span></>}
+      {cameraActive && <><span ref={targetRef} className="barcode-target" aria-hidden="true"/><span className="barcode-scanning-label"><ScanBarcode/>掃描中</span></>}
       {!cameraActive && barcode && <div className={`barcode-scan-feedback ${matchedProduct ? 'success' : 'unmatched'}`}>
         {matchedProduct ? <ShieldCheck/> : <Triangle/>}
         <strong>{matchedProduct ? '掃描成功' : '已掃到條碼'}</strong>
