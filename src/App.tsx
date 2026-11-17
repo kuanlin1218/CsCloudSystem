@@ -1476,10 +1476,17 @@ function ProductPicker({ products, value, onChange, inline = false, disabled = f
     setOpen(true)
   }
   return <div className={`product-picker${inline ? ' product-picker-inline' : ''}`} onBlur={inline ? undefined : () => window.setTimeout(() => setOpen(false), 120)}>
-    <div className="product-picker-input"><Search/><input ref={inputRef} required disabled={disabled} role="combobox" aria-expanded={open} aria-controls="product-picker-options" value={query} onFocus={openPicker} onClick={openPicker} onChange={(event) => { setQuery(event.target.value); onChange(''); setOpen(true) }} placeholder="輸入編號、品名、廠牌或供應商搜尋"/><ChevronDown/></div>
+    <div className="product-picker-input">
+      <Search/>
+      <input ref={inputRef} id={inline ? 'barcode-binding-product' : undefined} required disabled={disabled} role="combobox" aria-expanded={open} aria-controls="product-picker-options" value={query} onFocus={openPicker} onClick={openPicker} onChange={(event) => { setQuery(event.target.value); onChange(''); setOpen(true) }} placeholder="輸入編號、品名、廠牌或供應商搜尋"/>
+      {inline ? <button className="product-picker-toggle" type="button" disabled={disabled} aria-expanded={open} aria-controls="product-picker-options" aria-label={open ? '收起刀具清單' : '展開刀具清單'} onClick={() => {
+        if (open) { setOpen(false); inputRef.current?.blur() }
+        else openPicker()
+      }}>{open ? <ChevronUp/> : <ChevronDown/>}</button> : <ChevronDown/>}
+    </div>
     {inline && !open && selected && <p className="barcode-binding-selection"><strong>{selected.code}</strong><span>{selected.name}</span></p>}
     {open && <div className="product-picker-menu" id="product-picker-options" role="listbox">
-      {filtered.length === 0 ? <div className="product-picker-empty">找不到符合的刀具</div> : filtered.map((product) => <button type="button" role="option" disabled={disabled} aria-selected={product.id === value} key={product.id} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(product)}><span><b>{product.code}</b>{product.name}</span><small>庫存 {formatNumber(product.stock_quantity)} {product.unit}</small></button>)}
+      {filtered.length === 0 ? <div className="product-picker-empty">找不到符合的刀具</div> : filtered.map((product) => <button type="button" role="option" disabled={disabled} aria-selected={product.id === value} key={product.id} onMouseDown={inline ? undefined : (event) => event.preventDefault()} onClick={() => choose(product)}><span><b>{product.code}</b>{product.name}</span><small>庫存 {formatNumber(product.stock_quantity)} {product.unit}</small></button>)}
     </div>}
   </div>
 }
@@ -1750,14 +1757,17 @@ function BarcodeScannerModal({ products, initialBarcode, close, createWithBarcod
   return <Modal title={bindingOpen ? '綁定現有刀具' : '掃描刀具條碼'} close={bindingOpen ? returnToScan : () => { stopCamera(); close() }} size="barcode-scanner-modal">
     {bindingOpen ? <section ref={bindingRef} className="barcode-binding-step">
       <p className="barcode-binding-code">待綁定條碼 <strong>{barcode}</strong></p>
-      <Field label="搜尋刀具" wide><ProductPicker products={products} value={selectedProductId} onChange={setSelectedProductId} inline disabled={linking} /></Field>
+      <div className="field wide">
+        <span><label htmlFor="barcode-binding-product">搜尋刀具</label></span>
+        <ProductPicker products={products} value={selectedProductId} onChange={setSelectedProductId} inline disabled={linking} />
+      </div>
       {error && <p className="form-error barcode-scanner-error" role="alert">{error}</p>}
       <div className="barcode-binding-actions">
         <button className="button" type="button" disabled={linking} onClick={returnToScan}>返回掃描結果</button>
         <button className="button scan-button" type="button" disabled={!selectedProductId || linking} onClick={() => void bindExistingProduct()}><Save/>{linking ? '綁定中…' : '確認綁定'}</button>
       </div>
     </section> : <>
-    <p className="barcode-scanner-intro">將條碼放在框線中央，建議先保持約 20～30 公分再慢慢靠近。第一次使用時，請允許網站使用 iPhone 相機。</p>
+    {/* <p className="barcode-scanner-intro">將條碼放在框線中央，建議先保持約 20～30 公分再慢慢靠近。第一次使用時，請允許網站使用 iPhone 相機。</p> */}
     <button className="ios-keyboard-toggle-inline" type="button" onClick={() => setKeyboardQrOpen((current) => !current)} aria-expanded={keyboardQrOpen}>
       <Keyboard/><span>XB-6208-RB：顯示／隱藏 iOS 鍵盤</span>{keyboardQrOpen ? <ChevronUp/> : <ChevronDown/>}
     </button>

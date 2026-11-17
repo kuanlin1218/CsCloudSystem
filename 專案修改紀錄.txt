@@ -1359,6 +1359,12 @@ GitHub Summary：統一縮小所有條碼掃描結果提示。
 SQL：不需要執行 SQL。
 GitHub Summary：縮小條碼掃描失敗與浮動提示。
 
+2026-11-17
+修改內容：讓綁定現有刀具的下拉箭頭可以獨立點按，並分開搜尋欄標籤和候選按鈕，讓手機可點選刀具。
+修改檔案：src/App.tsx、src/styles.css、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行 SQL。
+GitHub Summary：修正手機綁定刀具的下拉選單操作。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

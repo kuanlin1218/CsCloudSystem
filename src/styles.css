@@ -8080,6 +8080,27 @@ textarea:focus-visible {
   margin: 8px 0 0;
 }
 
+/* 庫存管理系統－條碼掃描與產生｜綁定搜尋欄右側的展開與收合按鈕 */
+.product-picker-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #a7b5bc;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.product-picker-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* 庫存管理系統－條碼掃描與產生｜綁定畫面搜尋欄下方的刀具清單、編號與品名 */
 .product-picker-inline .product-picker-menu {
   position: static;
