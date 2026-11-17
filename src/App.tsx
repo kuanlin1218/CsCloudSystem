@@ -119,7 +119,7 @@ const countForecastCalendarDays = (start: string, end: string) => {
   return count
 }
 
-const PAGE_VALUES: Page[] = ['home', 'production-dashboard', 'production-entry', 'production-query', 'production-forecast', 'production-settings', 'production-delete', 'dashboard', 'movements', 'stocktake', 'products']
+const PAGE_VALUES: Page[] = ['home', 'production-dashboard', 'production-entry', 'production-query', 'production-forecast', 'production-settings', 'production-delete', 'dashboard', 'movements', 'stocktake', 'products', 'scanner-settings']
 const preventInputEnterSubmit = (event: ReactKeyboardEvent<HTMLFormElement>) => {
   if (event.key !== 'Enter' || event.nativeEvent.isComposing || !(event.target instanceof HTMLInputElement)) return
   event.preventDefault()
@@ -279,7 +279,7 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         {message && <p className="form-error">{message}</p>}
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
-      {supportsPasskeys() && <button className="button auth-passkey-button" type="button" onClick={() => void submitPasskey()} disabled={busy}><LockKeyhole />使用通行密鑰登入(Face ID)</button>}
+      {supportsPasskeys() && <button className="button auth-passkey-button" type="button" onClick={() => void submitPasskey()} disabled={busy}><LockKeyhole />使用通行密鑰登入 Face ID</button>}
       <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客查看</button>
       <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
       <button className="auth-switch" type="button" onClick={() => { setResetOpen((value) => !value); setResetMessage(''); setResetSuccess(false) }} disabled={busy}>{resetOpen ? '取消重設密碼' : '忘記密碼或尚未設定密碼'}</button>
@@ -434,7 +434,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   })
   const activePage: Page = guestMode && (page === 'production-entry' || page === 'production-settings' || page === 'production-delete') ? 'production-dashboard' : guestMode && page === 'stocktake' ? 'dashboard' : page
   const isHome = activePage === 'home'
-  const isInventory = activePage === 'dashboard' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
+  const isInventory = activePage === 'dashboard' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products' || activePage === 'scanner-settings'
   const isProduction = activePage === 'production-dashboard' || activePage === 'production-entry' || activePage === 'production-query' || activePage === 'production-forecast' || activePage === 'production-settings' || activePage === 'production-delete'
   const isSystem = isInventory || isProduction
   const showTableScrollControls = activePage === 'production-query' || activePage === 'production-delete' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
@@ -468,6 +468,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
             <NavItem active={activePage === 'movements'} icon={<ArrowLeftRight />} onClick={() => nav('movements')}>出入庫</NavItem>
             {!guestMode && <NavItem active={activePage === 'stocktake'} icon={<ClipboardCheck />} onClick={() => nav('stocktake')}>庫存盤點</NavItem>}
             <NavItem active={activePage === 'products'} icon={<LaptopMinimal />} onClick={() => nav('products')}>刀具資料</NavItem>
+            <NavItem active={activePage === 'scanner-settings'} icon={<ScanBarcode />} onClick={() => nav('scanner-settings')}>掃描槍設定</NavItem>
           </>}
         </nav>
         <div className="sidebar-foot">
@@ -532,6 +533,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
           const deleted = await requestAdminDelete('刪除刀具資料', `將刪除 ${p.code}「${p.name}」及其全部出入庫紀錄。`, () => deleteProduct(p.id))
           if (deleted) await afterSave('商品已刪除')
         }} />}
+        {activePage === 'scanner-settings' && <ScannerSettingsPage />}
       </main>
 
       {showTableScrollControls && <TableScrollControls />}
@@ -623,7 +625,7 @@ function PasskeySetup() {
 
   return <>
     <button className="sidebar-passkey" type="button" onClick={() => void register()} disabled={busy}>
-      <LockKeyhole aria-hidden="true" />{busy ? '正在設定通行密鑰…' : '設定通行密鑰(Face ID)'}
+      <LockKeyhole aria-hidden="true" />{busy ? '正在設定通行密鑰…' : '設定通行密鑰 Face ID'}
     </button>
     {feedback.text && <p role={feedback.success ? 'status' : 'alert'} className={`sidebar-passkey-feedback ${feedback.success ? 'form-message' : 'form-error'}`}>{feedback.text}</p>}
   </>
@@ -1493,6 +1495,60 @@ function ProductPicker({ products, value, onChange, inline = false, disabled = f
 
 function TotalPreview({ quantity, unitPrice, total }: { quantity: number; unitPrice: number; total: number }) {
   return <div className="total-preview"><span>採購總價</span><strong>${formatMoney(total)}</strong><small>{formatNumber(quantity)} × ${formatMoney(unitPrice)}</small></div>
+}
+
+// 設定碼取自 XB-6208RB 說明書。頁面一次只顯示一張，避免掃到相鄰選項。
+const SCANNER_SETTINGS = [
+  { title: '藍牙配對操作', options: [
+    { id: 'pair-1', label: '配對碼 I' },
+    { id: 'pair-2', label: '配對碼 II' },
+  ] },
+  { title: '掃描模式', options: [
+    { id: 'mode-sensing', label: '感應模式' },
+    { id: 'mode-continuous', label: '連續模式' },
+  ] },
+  { title: '休眠時間設定', options: [
+    { id: 'sleep-1', label: '1 分鐘' },
+    { id: 'sleep-5', label: '5 分鐘' },
+    { id: 'sleep-10', label: '10 分鐘' },
+    { id: 'sleep-off', label: '不休眠' },
+  ] },
+  { title: '聲音設定', options: [
+    { id: 'sound-on', label: '開啟聲音' },
+    { id: 'sound-off', label: '關閉聲音' },
+    { id: 'sound-high', label: '高音' },
+    { id: 'sound-medium', label: '中音' },
+    { id: 'sound-low', label: '低音' },
+  ] },
+]
+
+function ScannerSettingsPage() {
+  const [selection, setSelection] = useState({ groupIndex: 0, optionIndex: 0 })
+  const group = SCANNER_SETTINGS[selection.groupIndex]
+  const option = group.options[selection.optionIndex]
+
+  return <section className="page-content">
+    <PageTitle eyebrow="XB-6208-RB" title="掃描槍設定" />
+    <div className="scanner-settings-card">
+      <div>
+        <div className="scanner-settings-buttons" role="group" aria-label="設定類別">
+          {SCANNER_SETTINGS.map(({ title }, groupIndex) => <button key={title} type="button" className="button" aria-pressed={selection.groupIndex === groupIndex} onClick={() => setSelection({ groupIndex, optionIndex: 0 })}>{title}</button>)}
+        </div>
+        {selection.groupIndex === 0 && <ol className="scanner-pairing-steps">
+          <li>用掃描槍依序掃描「配對碼 I」和「配對碼 II」，直到藍燈閃爍。</li>
+          <li>手機或平板請到藍牙設定選擇「R&amp;B40」。若使用 USB 接收器，此時插上接收器。藍燈恆亮表示配對完成。</li>
+        </ol>}
+        <div className="scanner-settings-buttons" role="group" aria-label={group.title}>
+          {group.options.map(({ id, label }, optionIndex) => <button key={id} type="button" className="button" aria-pressed={selection.optionIndex === optionIndex} onClick={() => setSelection({ ...selection, optionIndex })}>{label}</button>)}
+        </div>
+      </div>
+      <figure className="scanner-settings-code">
+        <img src={`${import.meta.env.BASE_URL}scanner-settings/${option.id}.png`} width={256} height={256} alt={`${option.label} QR Code`} />
+        <figcaption aria-live="polite">{option.label}</figcaption>
+        <small>請用 XB-6208-RB 掃描畫面上的設定碼</small>
+      </figure>
+    </div>
+  </section>
 }
 
 function BarcodeScannerModal({ products, initialBarcode, close, createWithBarcode, linkBarcode, openStock, openStocktake, editProduct }: {

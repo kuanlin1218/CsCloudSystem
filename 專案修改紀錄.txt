@@ -1377,6 +1377,12 @@ GitHub Summary：暫停顯示手機彈窗的收起選單按鈕。
 SQL：不需要執行 SQL。
 GitHub Summary：拆分 GitHub Pages 建置與發布流程。
 
+2026-11-17
+修改內容：庫存管理導覽列新增「掃描槍設定」，提供 XB-6208-RB 的藍牙配對、掃描模式、休眠時間與聲音 QR Code，每次只顯示選取的設定碼。
+修改檔案：src/App.tsx、src/types.ts、src/styles.css、public/scanner-settings/（13 張 PNG）、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行 SQL。
+GitHub Summary：新增掃描槍設定頁與原廠 QR 設定碼。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

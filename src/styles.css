@@ -7621,7 +7621,80 @@ textarea:focus-visible {
   margin: 0;
 }
 
-/* 庫存管理系統－條碼掃描與產生｜「掃描刀具條碼」彈出視窗的整體寬度與高度 */
+/* 庫存管理系統－掃描槍設定｜設定選項與單張 QR Code 的版面 */
+.scanner-settings-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr));
+  gap: 24px;
+  max-width: 860px;
+  padding: 20px;
+  border: 1px solid #303940;
+  border-radius: 8px;
+  background: #0b1013;
+}
+
+/* 庫存管理系統－掃描槍設定｜類別與設定碼選項按鈕 */
+.scanner-settings-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scanner-settings-buttons + .scanner-settings-buttons {
+  margin-top: 16px;
+}
+
+.scanner-settings-buttons > .button {
+  min-height: 44px;
+  padding: 4px 12px;
+  border-color: #39444b;
+  background: #151c21;
+  color: #e9eef1;
+  font-size: 15px;
+}
+
+.scanner-settings-buttons > .button[aria-pressed="true"] {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+/* 庫存管理系統－掃描槍設定｜藍牙配對操作步驟 */
+.scanner-pairing-steps {
+  display: grid;
+  gap: 6px;
+  margin: 16px 0;
+  padding-left: 24px;
+  color: #afbdc3;
+  line-height: 1.55;
+}
+
+/* 庫存管理系統－掃描槍設定｜目前選取的 QR Code、名稱與掃描說明 */
+.scanner-settings-code {
+  display: grid;
+  justify-items: center;
+  align-self: start;
+  gap: 8px;
+  margin: 0;
+  text-align: center;
+}
+
+.scanner-settings-code img {
+  display: block;
+  width: min(100%, 256px);
+  height: auto;
+  background: #fff;
+}
+
+.scanner-settings-code figcaption {
+  color: var(--accent-gold);
+  font-weight: 800;
+}
+
+.scanner-settings-code small {
+  color: #afbdc3;
+}
+
+/* 庫存管理系統－條碼掃描與產生｜掃描刀具條碼彈窗 */
 .modal.barcode-scanner-modal {
   width: min(720px, 100%);
 }
@@ -8284,7 +8357,14 @@ textarea:focus-visible {
       height: 21px;
     }
 
-  /* 庫存管理系統－條碼掃描與產生｜整個掃描彈出視窗的手機版寬度與內距 */
+  /* 手機版｜庫存管理系統－掃描槍設定｜設定按鈕與 QR Code 採單欄 */
+  .scanner-settings-card {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+      padding: 14px;
+    }
+
+  /* 手機版｜庫存管理系統－條碼掃描與產生｜掃描刀具條碼彈窗 */
   .modal.barcode-scanner-modal {
       max-height: 96vh;
     }
