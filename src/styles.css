@@ -361,9 +361,9 @@ textarea:focus-visible {
 }
 
 @media (max-width: 620px) {
-  /* 全站基本元件｜四張統計資訊卡排列區 */
+  /* 手機版｜庫存管理系統－庫存總覽｜四張統計卡片由上往下排列 */
   .stats-grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 9px;
     }
 
