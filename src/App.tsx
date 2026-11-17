@@ -592,12 +592,12 @@ function HomePage({ navigate, openAdmin, guestMode, showPasskeySetup }: { naviga
       <p>加工資訊與庫存管理整合平台</p>
     </div>
     <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div><small className="home-eyebrow"></small></div>
-    <div className="function-grid portal-functions">
+    <div className={`function-grid portal-functions${showPasskeySetup ? ' has-passkey' : ''}`}>
       <FunctionCard icon={<Layers/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
       <FunctionCard icon={<DatabaseBackup/>} title="資料備份／還原" description={guestMode ? '訪客模式無法匯出或還原資料' : '匯出或整批匯入 Supabase Excel'} tone="purple" onClick={openAdmin} disabled={guestMode} disabledLabel="管理員限定"/>
+      {showPasskeySetup && <PasskeySetup />}
     </div>
-    {showPasskeySetup && <PasskeySetup />}
   </section>
 }
 
@@ -618,12 +618,18 @@ function PasskeySetup() {
     }
   }
 
-  return <div className="home-passkey-setup">
-    <button className="button" type="button" onClick={() => void register()} disabled={busy}>
-      <LockKeyhole />{busy ? '正在設定…' : '設定通行密鑰（Face ID）'}
-    </button>
-    {feedback.text && <p role={feedback.success ? 'status' : 'alert'} className={feedback.success ? 'admin-success' : 'form-error'}>{feedback.text}</p>}
-  </div>
+  return <>
+    <FunctionCard
+      icon={<LockKeyhole aria-hidden="true" />}
+      title={busy ? '正在設定通行密鑰…' : '設定通行密鑰（Face ID）'}
+      description="設定後可用 iPhone 快速登入"
+      tone="yellow"
+      onClick={() => void register()}
+      disabled={busy}
+      disabledLabel=""
+    />
+    {feedback.text && <p role={feedback.success ? 'status' : 'alert'} className={`home-passkey-feedback ${feedback.success ? 'admin-success' : 'form-error'}`}>{feedback.text}</p>}
+  </>
 }
 
 function ProductionDashboard({ records, productCodes, loading }: { records: ProductionRecord[]; productCodes: string[]; loading: boolean }) {
@@ -1149,7 +1155,7 @@ function ProductionOptionModal({ type, values, close, save, remove, rename }: { 
 }
 
 function FunctionCard({ icon, title, description, tone, onClick, disabled = false, disabledLabel = '即將推出' }: { icon: ReactNode; title: string; description: string; tone: string; onClick?: () => void; disabled?: boolean; disabledLabel?: string }) {
-  return <button className={`function-card ${tone} ${disabled ? 'is-future' : ''}`} onClick={onClick} disabled={disabled}><span className="function-icon">{icon}</span><span className="function-copy"><strong>{title}</strong><small>{description}</small></span>{disabled ? <em>{disabledLabel}</em> : <ChevronDown className="function-arrow"/>}</button>
+  return <button type="button" className={`function-card ${tone} ${disabled && disabledLabel ? 'is-future' : ''}`} onClick={onClick} disabled={disabled}><span className="function-icon">{icon}</span><span className="function-copy"><strong>{title}</strong><small>{description}</small></span>{disabled ? (disabledLabel && <em>{disabledLabel}</em>) : <ChevronDown className="function-arrow"/>}</button>
 }
 
 function PageTitle({ eyebrow, title, actions }: { eyebrow: string; title: string; actions?: ReactNode }) {

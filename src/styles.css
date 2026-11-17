@@ -746,10 +746,6 @@ textarea:focus-visible {
 }
 
 /* 網站共用版面｜功能選擇卡片排列區 */
-.home-passkey-setup {
-  margin-top: 1rem;
-}
-
 .portal-functions {
   grid-template-columns: repeat(2, 1fr);
 }
@@ -1974,6 +1970,18 @@ textarea:focus-visible {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
+}
+
+@media (min-width: 621px) {
+  /* 電腦版｜系統首頁 → 管理員的四張功能卡以兩欄排列 */
+  .portal-functions.has-passkey {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 系統首頁｜「設定通行密鑰（Face ID）」卡片下方的操作結果 */
+.home-passkey-feedback {
+  grid-column: 1 / -1;
 }
 
 /* 登入畫面與系統首頁｜單張功能卡（加工管理系統、庫存管理系統或資料備份／還原） */
