@@ -712,7 +712,7 @@ function OperationLogPage({ goHome }: { goHome: () => void }) {
   }
 
   return <section className="page-content operation-log-page">
-    <PageTitle eyebrow="OPERATION LOG" title="操作紀錄" actions={<button className="button operation-log-button" type="button" onClick={goHome}><Home/>返回首頁</button>} />
+    <PageTitle eyebrow="OPERATION LOG" title="操作紀錄" actions={<button className="button operation-log-button operation-log-home" type="button" onClick={goHome} aria-label="返回首頁"><Home aria-hidden="true" /><span>返回首頁</span></button>} />
     <div className="operation-log-header"><span>台灣時間・最新在上</span><button className="button operation-log-button operation-log-refresh" type="button" disabled={loading} onClick={() => setRefreshKey((key) => key + 1)}>重新整理</button></div>
     {error && <p className="form-error" role="alert">{error}</p>}
     {authIncluded === false && <p className="form-error">尚未接入登入登出紀錄，請套用 enable-operation-log-auth.sql。</p>}

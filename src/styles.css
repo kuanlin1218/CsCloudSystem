@@ -2013,6 +2013,19 @@ textarea:focus-visible {
   border-color: #778992;
 }
 
+@media (max-width: 620px) {
+  /* 手機版｜系統首頁 → 操作紀錄 → 標題右側的「返回首頁」圖示置中 */
+  .title-actions .operation-log-home {
+    width: 46px;
+    padding: 0;
+    gap: 0;
+  }
+
+  .operation-log-home > span {
+    display: none;
+  }
+}
+
 /* 系統首頁－操作紀錄｜重新整理按鈕使用與首頁入口相同的金色 */
 .operation-log-button.operation-log-refresh {
   border-color: #8b6832;
