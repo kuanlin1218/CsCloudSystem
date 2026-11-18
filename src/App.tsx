@@ -901,17 +901,65 @@ function calculateProductionTotals(records: ProductionRecord[]) {
 
 function ProductionTotals({ totals, latestProductCode }: { totals: ReturnType<typeof calculateProductionTotals>; latestProductCode?: string }) {
   const latest = latestProductCode !== undefined
+  const productCodeParts = latestProductCode?.match(/^([^<]+)(<[^>]+>.*)$/)
   return <div className={latest ? 'production-totals production-totals-latest' : 'production-totals'}>
     {!latest && <div><span>總天數</span><strong>{formatNumber(totals.totalDays)}</strong></div>}
     <div><span>總時間</span><strong>{formatNumber(totals.totalMinutes)} <small>分</small></strong></div>
     {!latest && <div><span>1天平均</span><strong>{formatNumber(totals.dailyAverage)} <small>顆</small></strong></div>}
     <div><span>1顆平均</span><strong>{formatNumber(totals.pieceSeconds)} <small>秒</small></strong></div>
     <div className={latest ? undefined : 'production-total-quantity'}>
-      {latest && <span className="production-latest-product-code">{latestProductCode}</span>}
+      {latest && <span className="production-latest-product-code">
+        {productCodeParts ? <>{productCodeParts[1]}<br />{productCodeParts[2]}</> : latestProductCode}
+      </span>}
       <span>總數量</span>
       <strong>{formatNumber(totals.totalQuantity)}</strong>
     </div>
   </div>
+}
+
+function ProductionMachineTotals({ records }: { records: ProductionRecord[] }) {
+  const recordsByMachine = new Map<string, ProductionRecord[]>()
+  for (const record of records) {
+    const machine = record.machine.trim().toUpperCase()
+    const machineRecords = recordsByMachine.get(machine) ?? []
+    machineRecords.push(record)
+    recordsByMachine.set(machine, machineRecords)
+  }
+  const machines = [...recordsByMachine]
+    .sort(([a], [b]) => a.localeCompare(b, 'zh-Hant', { numeric: true }))
+    .map(([machine, machineRecords]) => ({ machine, totals: calculateProductionTotals(machineRecords) }))
+  const metrics = [
+    ['totalDays', '總天數'],
+    ['totalMinutes', '總時間（分）'],
+    ['dailyAverage', '1天平均（顆）'],
+    ['pieceSeconds', '1顆平均（秒）'],
+    ['totalQuantity', '總數量'],
+  ] as const
+
+  return <section aria-label="各機台統計">
+    <h3 className="production-machine-totals-title">各機台統計</h3>
+    <div className="production-machine-totals-scroll" role="region" aria-label="各機台統計表格" tabIndex={0}>
+      <table className="production-machine-totals" aria-label="各機台統計">
+        <thead><tr>
+          <th scope="col">機台</th>
+          {metrics.map(([key, label]) => <th key={key} scope="col">{label}</th>)}
+        </tr></thead>
+        <tbody>{machines.map(({ machine, totals }) => <tr key={machine}>
+          <th scope="row">{machine || '未填機台'}</th>
+          {metrics.map(([key]) => <td key={key}>{formatNumber(totals[key])}</td>)}
+        </tr>)}</tbody>
+      </table>
+    </div>
+    <div className="production-machine-totals-cards">
+      {machines.map(({ machine, totals }) => <article key={machine} className="production-machine-totals-card">
+        <h4>{machine || '未填機台'}</h4>
+        <dl>{metrics.map(([key, label]) => <div key={key}>
+          <dt>{label}</dt>
+          <dd>{formatNumber(totals[key])}</dd>
+        </div>)}</dl>
+      </article>)}
+    </div>
+  </section>
 }
 
 function ProductionQueryPage({ records, productCodes, machines, loading, readOnly, onUpdateRecord, onDeleteRecord }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; readOnly: boolean; onUpdateRecord: (record: ProductionRecord, input: ProductionInput) => Promise<void>; onDeleteRecord: (record: ProductionRecord) => Promise<boolean> }) {
@@ -976,6 +1024,7 @@ function ProductionQueryPage({ records, productCodes, machines, loading, readOnl
       {results.length === 0 ? <div className="production-empty"><ClipboardList />沒有符合條件的加工紀錄</div> : <>
         <div className="production-table-wrap"><table className={`production-table ${readOnly ? 'guest-read-only-table' : ''}`}><thead><tr><th>日期</th><th>機台</th><th>時</th><th>分</th><th>數量</th><th>總時間</th><th>備註</th>{!readOnly && <th className="record-action-column" aria-label="操作" />}</tr></thead><tbody>{results.map((record) => <tr key={record.id}><td>{formatDate(record.work_date)}</td><td>{record.machine}</td><td>{record.hours}</td><td>{record.minutes}</td><td>{formatNumber(record.quantity)}</td><td>{formatNumber(record.total_minutes)}</td><td>{record.notes || '—'}</td>{!readOnly && <td><div className="production-row-actions"><button className="production-row-edit" onClick={() => setEditingRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`編輯 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Pencil />編輯</button><button className="production-row-delete" onClick={() => void deleteOneRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`刪除 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Trash2 />{deletingRecordId === record.id ? '刪除中' : '刪除'}</button></div></td>}</tr>)}</tbody></table></div>
         <ProductionTotals totals={totals} latestProductCode={mode === 'latest' ? code : undefined} />
+        {mode === 'all' && <ProductionMachineTotals records={results} />}
       </>}
     </div>)}
     {!loading && mode === 'latest' && resultGroups.length === 0 && <div className="production-results">

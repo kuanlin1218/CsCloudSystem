@@ -3857,6 +3857,66 @@ textarea:focus-visible {
   font-size: 34px;
 }
 
+/* 加工管理系統｜加工數量查詢 → 查詢全部 → 各機台統計表格 */
+.production-machine-totals {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+/* 電腦版｜加工管理系統 → 加工數量查詢 → 各機台統計表格的水平捲動區 */
+.production-machine-totals-scroll {
+  overflow-x: auto;
+}
+
+/* 加工管理系統｜加工數量查詢 → 查詢全部 →「各機台統計」標題 */
+.production-machine-totals-title {
+  margin: 0;
+  padding: 14px 16px;
+  border-top: 1px solid #3c6971;
+  background: #16363d;
+  color: #b8f2ed;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* 電腦版｜加工管理系統 → 加工數量查詢 → 各機台統計的欄位名稱列 */
+.production-machine-totals thead {
+  background: #214b53;
+  color: #e0f7f5;
+}
+
+/* 加工管理系統｜加工數量查詢 → 查詢全部 → 各機台統計的表頭與數值 */
+.production-machine-totals th,
+.production-machine-totals td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #2a484e;
+}
+
+/* 加工管理系統｜加工數量查詢 → 查詢全部 → 各機台統計的機台名稱與數值 */
+.production-machine-totals tbody {
+  background: #13242a;
+  color: #dbeeed;
+  font-family: var(--font-family-monospace);
+}
+
+/* 電腦版｜加工管理系統 → 加工數量查詢 → 各機台統計的偶數資料列 */
+.production-machine-totals tbody tr:nth-child(even) {
+  background: #1a3037;
+}
+
+/* 加工管理系統｜加工數量查詢 → 查詢全部 → 各機台統計的「總數量」數字 */
+.production-machine-totals td:last-child {
+  color: #8df3de;
+  font-weight: 800;
+}
+
+/* 電腦版｜加工管理系統 → 加工數量查詢 → 手機用的各機台統計卡片 */
+.production-machine-totals-cards {
+  display: none;
+}
+
 /* 加工管理系統｜左側選單（系統首頁、總覽、功能分頁、雲端同步、使用者與登出） */
 .production-sidebar .brand-mark {
   color: #0dee76;
@@ -4581,6 +4641,61 @@ textarea:focus-visible {
   /* 加工管理系統｜加工紀錄資料卡清單的外框與水平捲動設定 */
   .production-table-wrap {
       overflow-x: hidden;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量查詢 → 各機台統計改用機台卡片 */
+  .production-machine-totals-scroll {
+      display: none;
+    }
+
+  .production-machine-totals-cards {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      background: #13242a;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量查詢 → 各機台統計卡片的外框與機台名稱 */
+  .production-machine-totals-card {
+      min-width: 0;
+      border: 1px solid #2f5057;
+      border-radius: 6px;
+      overflow: hidden;
+      color: #dbeeed;
+      background: #1a3037;
+    }
+
+  .production-machine-totals-card h4 {
+      margin: 0;
+      padding: 9px 12px;
+      background: #214b53;
+      color: #e0f7f5;
+      overflow-wrap: anywhere;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量查詢 → 各機台統計卡片中的數值與標籤 */
+  .production-machine-totals-card dl {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 12px;
+      margin: 0;
+      padding: 12px;
+    }
+
+  .production-machine-totals-card dt {
+      font-size: 13px;
+    }
+
+  .production-machine-totals-card dd {
+      margin: 3px 0 0;
+      font: 800 17px var(--font-family-monospace);
+      overflow-wrap: anywhere;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量查詢 → 各機台統計卡片的「總數量」 */
+  .production-machine-totals-card dl > div:last-child {
+      grid-column: 1 / -1;
+      color: #8df3de;
     }
 
   /* 加工管理系統｜目前未使用的舊版摘要表格之欄位標題 */
