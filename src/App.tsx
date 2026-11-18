@@ -857,24 +857,57 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
     finally { setSaving(false) }
   }
 
+  const handleEntryKeyDown = (event: ReactKeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.target instanceof HTMLInputElement
+      && window.matchMedia('(max-width: 620px)').matches) {
+      const nextId = event.target.id === 'production-entry-hours' ? 'production-entry-minutes'
+        : event.target.id === 'production-entry-minutes' ? 'production-entry-quantity' : ''
+      const next = event.currentTarget.elements.namedItem(nextId)
+      if (next instanceof HTMLInputElement) {
+        event.preventDefault()
+        next.focus()
+        return
+      }
+    }
+    preventInputEnterSubmit(event)
+  }
+
+  const updateEntryMinutes = (value: string) => {
+    const enteredMinutes = Number(value.replace(/\D/g, '').slice(0, 2))
+    setForm((current) => ({
+      ...current,
+      hours: current.hours + Math.floor(enteredMinutes / 60),
+      minutes: enteredMinutes % 60,
+    }))
+  }
+
   return <section className="page-content production-system-page production-entry-page">
     <PageTitle eyebrow="PRODUCTION ENTRY" title="加工數量登記" />
-    <form className="production-card entry-card" onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
-      <div className="production-field-row"><label>日期</label><input type="date" value={form.work_date} onChange={(e) => setForm({ ...form, work_date: e.target.value })} required /></div>
-      <div className="production-field-row"><label>產品編號</label><select value={form.product_code} onChange={(e) => setForm({ ...form, product_code: e.target.value })} required><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
-      <div className="production-field-row"><label>機台</label><select value={form.machine} onChange={(e) => setForm({ ...form, machine: e.target.value })} required><option value="">請選擇機台</option>{machines.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+    <form className="production-card entry-card" onSubmit={submit} onKeyDown={handleEntryKeyDown}>
+      <div className="production-field-row"><label htmlFor="production-entry-date">日期</label><input id="production-entry-date" type="date" value={form.work_date} onChange={(e) => setForm({ ...form, work_date: e.target.value })} required /></div>
+      <div className="production-field-row entry-product-field"><label htmlFor="production-entry-product">產品編號</label><select id="production-entry-product" value={form.product_code} onChange={(e) => setForm({ ...form, product_code: e.target.value })} required><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+      <div className="production-field-row"><label htmlFor="production-entry-machine">機台</label><select id="production-entry-machine" value={form.machine} onChange={(e) => setForm({ ...form, machine: e.target.value })} required><option value="">請選擇機台</option>{machines.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
 
       <div className="time-entry-panel">
         <div className="duration-fields compact">
-          <label className="actual-hours-field"><span>加工時間（時）</span><input className="actual-hours-input" type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={form.hours || ''} onChange={(e) => setForm({ ...form, hours: Math.max(0, Number(e.target.value)) })} aria-label="加工時數" /></label>
-          <label className="actual-minutes-field"><span>加工時間（分）</span><input className="actual-minutes-input" type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="59" step="1" value={form.minutes || ''} onChange={(e) => setForm({ ...form, minutes: Math.max(0, Number(e.target.value)) })} aria-label="加工分鐘" /></label>
+          <label className="actual-hours-field">
+            <span className="entry-duration-label">加工時間（時）</span><span className="entry-duration-label-mobile">加工時數</span>
+            <input id="production-entry-hours" className="actual-hours-input" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} placeholder="0" value={form.hours || ''} onChange={(e) => {
+              const hours = Number(e.target.value.replace(/\D/g, '').slice(0, 2))
+              setForm((current) => ({ ...current, hours }))
+            }} aria-label="加工時數" />
+          </label>
+          <label className="actual-minutes-field">
+            <span className="entry-duration-label">加工時間（分）</span><span className="entry-duration-label-mobile">加工分鐘</span>
+            <input id="production-entry-minutes" className="actual-minutes-input" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} placeholder="0" value={form.minutes || ''} onChange={(e) => updateEntryMinutes(e.target.value)} aria-label="加工分鐘" />
+          </label>
           <div><span>實際總時間</span><strong>{formatNumber(form.hours * 60 + form.minutes)} 分鐘</strong></div>
         </div>
       </div>
 
-      <div className="production-field-row"><label>數量</label><input type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: Math.max(0, Number(e.target.value)) })} placeholder="輸入完成數量" required /></div>
-      <div className="production-field-row note-row"><label>備註</label><textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="選填" /></div>
-      {formError && <div className="form-error production-error">{formError}</div>}
+      <div className="production-field-row"><label htmlFor="production-entry-quantity">數量</label><input id="production-entry-quantity" type="number" inputMode="numeric" enterKeyHint="done" pattern="[0-9]*" min="1" step="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: Math.max(0, Number(e.target.value)) })} placeholder="輸入完成數量" required /></div>
+      <div className="production-field-row note-row"><label htmlFor="production-entry-notes">備註</label><textarea id="production-entry-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="選填" /></div>
+      {formError && <div className="form-error production-error" role="alert">{formError}</div>}
       <button className="production-action save-action" disabled={saving} type="submit"><Save />{saving ? '儲存中…' : '送出登記'}</button>
       <button className="production-action delete-action" disabled={loading || !latest} type="button" onClick={() => latest && void onDeleteLast(latest)}><Trash2 />刪除最後一筆</button>
       <button className="production-action time-tool-action" type="button" onClick={() => setShowTimeCalculator(true)}><Calculator />加工時間計算</button>

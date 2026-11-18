@@ -2876,6 +2876,11 @@ textarea:focus-visible {
   margin-top: 0;
 }
 
+/* 電腦版｜加工管理系統 → 加工數量登記 → 手機專用的時數與分鐘短標題 */
+.entry-duration-label-mobile {
+  display: none;
+}
+
 /* 加工管理系統｜表單驗證或操作錯誤訊息 */
 .production-error {
   margin-bottom: 14px;
@@ -4264,6 +4269,95 @@ textarea:focus-visible {
   .production-field-row {
       grid-template-columns: 112px minmax(0, 1fr);
       min-height: 54px;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量登記 → 日期、機台、數量與備註欄位 */
+  .entry-card .production-field-row {
+      grid-template-columns: 62px minmax(0, 1fr);
+      min-height: 48px;
+      margin-bottom: 9px;
+    }
+
+  .entry-card .production-field-row > label:first-child {
+      padding: 7px 4px;
+      font-size: 15px;
+    }
+
+  .entry-card .production-field-row > :is(input, select, textarea) {
+      padding-block: 9px;
+      text-align: left;
+    }
+
+  .entry-card .production-field-row > select {
+      font-size: 17px;
+      text-overflow: ellipsis;
+    }
+
+  .entry-card .production-field-row > textarea {
+      min-height: 62px;
+      font-size: 16px;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量登記 → 產品編號上下排列，選單可使用整欄寬度 */
+  .entry-card .entry-product-field {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+  .entry-card .entry-product-field > label:first-child {
+      justify-content: flex-start;
+      padding-inline: 10px;
+      border-right: 0;
+      border-bottom: 1px solid #303a40;
+      border-radius: 6px 6px 0 0;
+    }
+
+  .entry-card .entry-product-field > select {
+      min-height: 46px;
+      border-radius: 0 0 6px 6px;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量登記 → 工時輸入與下方總分鐘數 */
+  .entry-card .time-entry-panel {
+      margin: 9px 0;
+      padding: 10px;
+    }
+
+  .entry-card .duration-fields.compact {
+      gap: 8px;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量登記 → 時數與分鐘的輸入框填滿標題右側 */
+  .entry-card .duration-fields label {
+      grid-template-columns: max-content minmax(0, 1fr);
+      align-items: center;
+      gap: 5px;
+    }
+
+  .entry-card .entry-duration-label {
+      display: none;
+    }
+
+  .entry-card .duration-fields label > .entry-duration-label-mobile {
+      display: block;
+      font-size: 14px;
+    }
+
+  .entry-card .duration-fields input {
+      min-width: 0;
+      min-height: 46px;
+      padding-inline: 3px;
+    }
+
+  .entry-card .duration-fields.compact > div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 10px;
+    }
+
+  .entry-card .duration-fields.compact > div strong {
+      margin-top: 0;
     }
 
   /* 加工管理系統｜「加工時間（時）」「加工時間（分）」「實際總時間」三欄排列 */
