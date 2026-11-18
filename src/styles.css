@@ -8202,7 +8202,7 @@ textarea:focus-visible {
 
 /* 庫存管理系統－條碼掃描與產生｜正在掃描時放大的相機預覽區 */
 .barcode-camera.is-active {
-  height: clamp(300px, 48vw, 425px);
+  height: clamp(360px, 54vw, 500px);
   border-color: rgba(255, 194, 58, .62);
 }
 
@@ -8255,7 +8255,7 @@ textarea:focus-visible {
   z-index: 2;
   left: 50%;
   top: 50%;
-  width: min(72%, 208px);
+  width: min(72%, 250px);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border: 2px solid #ffc23a;
@@ -8849,12 +8849,12 @@ textarea:focus-visible {
 
   /* 庫存管理系統－條碼掃描與產生｜正在掃描時放大的手機相機預覽區 */
   .barcode-camera.is-active {
-      height: clamp(260px, 68vw, 340px);
+      height: clamp(310px, 88vw, 430px);
     }
 
   /* 手機版｜庫存管理系統－條碼掃描與產生｜黃色正方形掃描框與上方掃描狀態留距 */
   .barcode-target {
-      width: min(72%, 170px);
+      width: min(72%, 200px);
     }
 
   /* 庫存管理系統－條碼掃描與產生｜回饋區最上方的成功或警告圖示 */
