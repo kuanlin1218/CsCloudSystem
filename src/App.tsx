@@ -565,8 +565,8 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
       }} />}
       {!guestMode && scannerBarcode !== null && <BarcodeScannerModal products={products} initialBarcode={scannerBarcode} close={() => setScannerBarcode(null)} createWithBarcode={(barcode) => {
         setScannerBarcode(null); setPendingBarcode(barcode); setProductModal('new')
-      }} linkBarcode={async (productId, barcode) => {
-        await updateProductBarcode(productId, barcode); await afterSave('條碼已綁定刀具')
+      }} linkBarcode={async (productId, barcode, expectedBarcode) => {
+        await updateProductBarcode(productId, barcode, expectedBarcode); await afterSave('條碼已綁定刀具')
       }} openStock={(type, productId) => {
         setScannerBarcode(null); setStockModal({ type, productId })
       }} openStocktake={(productId) => {
@@ -1640,7 +1640,13 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, open
       const haystack = `${product.code} ${product.barcode || ''} ${product.name} ${product.brand} ${product.supplier}`.toLowerCase()
       return (haystack.includes(normalizedQuery) || matchesProductName(product.name, normalizedQuery)) && (category === '全部分類' || product.category === category)
     })
-    .sort((a, b) => `${b.purchased_at || '0000-00-00'}-${b.updated_at}-${b.code}`.localeCompare(`${a.purchased_at || '0000-00-00'}-${a.updated_at}-${a.code}`))
+    .sort((a, b) => {
+      const updatedA = Date.parse(a.updated_at) || Date.parse(a.created_at) || 0
+      const updatedB = Date.parse(b.updated_at) || Date.parse(b.created_at) || 0
+      return updatedB - updatedA
+        || (b.purchased_at || '').localeCompare(a.purchased_at || '')
+        || b.code.localeCompare(a.code)
+    })
   return <section className="page-content">
     <PageTitle eyebrow="TOOLS" title="刀具資料" actions={!readOnly ? <><ScanButton openScanner={openScanner}/><button className="button primary" onClick={add}><Plus />新增刀具</button></> : undefined} />
     <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商" scanProducts={products}/><label className="select-wrap"><select value={category} onChange={(e) => setCategory(e.target.value)}>{categories.map((c) => <option key={c}>{c}</option>)}</select><ChevronDown /></label></div>
@@ -1828,16 +1834,22 @@ function ScannerSettingsPage() {
   </section>
 }
 
-function BarcodeScannerModal({ products, initialBarcode, close, createWithBarcode, linkBarcode, openStock, openStocktake, editProduct }: {
+function BarcodeScannerModal(props: {
   products: Product[]
   initialBarcode: string
   close: () => void
+} & ({
+  editingProductId: string
+  applyBarcode: (barcode: string) => void
+} | {
   createWithBarcode: (barcode: string) => void
-  linkBarcode: (productId: string, barcode: string) => Promise<void>
+  linkBarcode: (productId: string, barcode: string, expectedBarcode: string) => Promise<void>
   openStock: (type: MovementType, productId: string) => void
   openStocktake: (productId: string) => void
   editProduct: (product: Product) => void
-}) {
+})) {
+  const { products, initialBarcode, close } = props
+  const lookup = 'applyBarcode' in props ? null : props
   const videoRef = useRef<HTMLVideoElement>(null)
   const targetRef = useRef<HTMLSpanElement>(null)
   const resultRef = useRef<HTMLElement>(null)
@@ -1853,8 +1865,9 @@ function BarcodeScannerModal({ products, initialBarcode, close, createWithBarcod
   const bindingRef = useRef<HTMLElement>(null)
   const [keyboardQrOpen, setKeyboardQrOpen] = useState(false)
   const normalizedBarcode = barcode.trim().toLowerCase()
-  const matchedProduct = products.find((product) => product.barcode?.trim().toLowerCase() === normalizedBarcode)
-    || products.find((product) => product.code.toLowerCase() === normalizedBarcode)
+  const barcodeOwner = normalizedBarcode ? products.find((product) => product.barcode?.trim().toLowerCase() === normalizedBarcode) : undefined
+  const matchedProduct = barcodeOwner || (lookup ? products.find((product) => product.code.toLowerCase() === normalizedBarcode) : undefined)
+  const conflictingProduct = 'applyBarcode' in props && barcodeOwner?.id !== props.editingProductId ? barcodeOwner : undefined
 
   // 「掃描刀具條碼」的「掃描成功提示音」：相機按鈕或查詢按鈕觸發後才啟用，避免 iPhone 阻擋自動播放。
   const prepareScanAudio = async () => {
@@ -2071,10 +2084,17 @@ function BarcodeScannerModal({ products, initialBarcode, close, createWithBarcod
   }
 
   const bindExistingProduct = async () => {
-    if (!selectedProductId || !barcode) { setError('請先選擇要綁定的刀具'); return }
-    setLinking(true); setError('')
+    if (!lookup) return
+    const product = products.find((item) => item.id === selectedProductId)
+    if (!product || !normalizedBarcode) { setError('請先選擇要綁定的刀具'); return }
+    const expectedBarcode = product.barcode || ''
+    const previousBarcode = expectedBarcode.trim()
+    setError('')
+    if (previousBarcode && previousBarcode.toLowerCase() !== normalizedBarcode
+      && !window.confirm(`刀具 ${product.code}「${product.name}」已有條碼。\n\n原條碼：${previousBarcode}\n新條碼：${barcode.trim()}\n\n確定要覆蓋原條碼嗎？`)) return
+    setLinking(true)
     try {
-      await linkBarcode(selectedProductId, barcode)
+      await lookup.linkBarcode(product.id, barcode, expectedBarcode)
       setBindingOpen(false)
     }
     catch (linkError) { setError(messageFor(linkError)) }
@@ -2087,7 +2107,7 @@ function BarcodeScannerModal({ products, initialBarcode, close, createWithBarcod
     setBindingOpen(false)
   }
 
-  return <Modal title={bindingOpen ? '綁定現有刀具' : '掃描刀具條碼'} close={bindingOpen ? returnToScan : () => { stopCamera(); close() }} size="barcode-scanner-modal">
+  return <Modal title={bindingOpen ? '綁定現有刀具' : lookup ? '掃描刀具條碼' : '重新掃碼'} close={bindingOpen ? returnToScan : () => { stopCamera(); close() }} size="barcode-scanner-modal">
     {bindingOpen ? <section ref={bindingRef} className="barcode-binding-step">
       <p className="barcode-binding-code">待綁定條碼 <strong>{barcode}</strong></p>
       <div className="field wide">
@@ -2133,20 +2153,23 @@ function BarcodeScannerModal({ products, initialBarcode, close, createWithBarcod
     {error && <p className="form-error barcode-scanner-error" role="alert">{error}</p>}
     {barcode && <section ref={resultRef} className={`barcode-result ${matchedProduct ? 'matched' : 'unmatched'}`}>
       <div className="barcode-result-code"><span>掃描結果</span><strong>{barcode}</strong></div>
-      {matchedProduct ? <>
+      {'applyBarcode' in props ? (conflictingProduct
+        ? <p className="form-error" role="alert">此條碼已綁定 {conflictingProduct.code}「{conflictingProduct.name}」，請掃描其他條碼。</p>
+        : <button className="button primary barcode-apply-result" type="button" onClick={() => props.applyBarcode(barcode.trim())}><ClipboardCheck/>使用此條碼</button>)
+      : matchedProduct ? <>
         <div className="barcode-product-card">
           <div><span>{matchedProduct.code}</span><strong>{matchedProduct.name}</strong><small>{matchedProduct.category}・{matchedProduct.brand || '未設定廠牌'}</small></div>
           <p>目前庫存 <b>{formatNumber(matchedProduct.stock_quantity)} {matchedProduct.unit}</b></p>
         </div>
         <div className="barcode-result-actions">
-          <button className="button inbound" type="button" onClick={() => openStock('in', matchedProduct.id)}><ArrowDownToLine/>入庫</button>
-          <button className="button outbound" type="button" onClick={() => openStock('out', matchedProduct.id)}><ArrowUpFromLine/>出庫</button>
-          <button className="button stocktake-barcode-action" type="button" onClick={() => openStocktake(matchedProduct.id)}><ClipboardCheck/>盤點</button>
-          <button className="button edit-barcode-action" type="button" onClick={() => editProduct(matchedProduct)}><Pencil/>編輯刀具</button>
+          <button className="button inbound" type="button" onClick={() => props.openStock('in', matchedProduct.id)}><ArrowDownToLine/>入庫</button>
+          <button className="button outbound" type="button" onClick={() => props.openStock('out', matchedProduct.id)}><ArrowUpFromLine/>出庫</button>
+          <button className="button stocktake-barcode-action" type="button" onClick={() => props.openStocktake(matchedProduct.id)}><ClipboardCheck/>盤點</button>
+          <button className="button edit-barcode-action" type="button" onClick={() => props.editProduct(matchedProduct)}><Pencil/>編輯刀具</button>
         </div>
       </> : <>
         <div className="barcode-unmatched-message"><ScanBarcode/><div><strong>尚未綁定任何刀具</strong><span>可以建立新刀具，或從現有刀具中選擇一筆綁定。</span></div></div>
-        <button className="button primary barcode-create-product" type="button" onClick={() => createWithBarcode(barcode)}><Plus/>以此條碼建立新刀具</button>
+        <button className="button primary barcode-create-product" type="button" onClick={() => props.createWithBarcode(barcode)}><Plus/>以此條碼建立新刀具</button>
         <button className="button scan-button barcode-link-existing" type="button" onClick={() => { setError(''); setBindingOpen(true) }}>綁定現有刀具</button>
       </>}
     </section>}
@@ -2160,6 +2183,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
   const [formError, setFormError] = useState('')
   const [qrPreview, setQrPreview] = useState('')
   const [qrPreviewError, setQrPreviewError] = useState('')
+  const [rescanOpen, setRescanOpen] = useState(false)
   const set = <K extends keyof ProductInput>(key: K, value: ProductInput[K]) => setData((old) => ({ ...old, [key]: value }))
   const name = composeProductName(data.category, data.specification, data.size, data.chipbreaker, data.material)
   const initialTotalPrice = data.initial_quantity * data.initial_unit_price
@@ -2185,8 +2209,10 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
     return () => { cancelled = true }
   }, [data.barcode])
   const generateBarcode = () => {
+    const currentBarcode = data.barcode.trim()
+    if (product && currentBarcode && !window.confirm(`目前條碼：${currentBarcode}\n\n確定要重新產生條碼嗎？儲存後才會更新刀具。`)) return
     setFormError('')
-    try { set('barcode', generateUniqueToolBarcode(products.map((item) => item.barcode))) }
+    try { set('barcode', generateUniqueToolBarcode([...products.map((item) => item.barcode), currentBarcode])) }
     catch (error) { setFormError(messageFor(error)) }
   }
   const changeCategory = (category: ProductCategory) => setData((old) => ({
@@ -2206,6 +2232,12 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
     setBusy(true)
     try { await save(data) } catch (err) { setFormError(messageFor(err)); setBusy(false) }
   }
+  if (product && rescanOpen) return <BarcodeScannerModal products={products} editingProductId={product.id} initialBarcode="" close={() => setRescanOpen(false)} applyBarcode={(barcode) => {
+    set('barcode', barcode)
+    setFormError('')
+    setRescanOpen(false)
+  }} />
+
   return <Modal close={() => { if (!busy) close() }} title={product ? '編輯刀具' : '新增刀具'} size="large">
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="form-grid">
@@ -2216,7 +2248,10 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
         <div className="barcode-generator">
           <div className="barcode-generator-entry">
             <div className="barcode-input"><ScanBarcode/><input value={data.barcode} onChange={(event) => set('barcode', event.target.value.trimStart())} placeholder="尚未綁定條碼，可手動輸入" autoComplete="off" /></div>
-            <button className="button barcode-generate-button" type="button" onClick={generateBarcode}><WandSparkles/>{data.barcode.trim() ? '重新產生條碼' : '自動產生條碼'}</button>
+            <div className="barcode-generator-actions">
+              <button className="button barcode-generate-button" type="button" onClick={generateBarcode} disabled={busy}><WandSparkles/>{data.barcode.trim() ? '重新產生條碼' : '自動產生條碼'}</button>
+              {product && <button className="button barcode-rescan-button" type="button" onClick={() => setRescanOpen(true)} disabled={busy}><Camera/>重新掃碼</button>}
+            </div>
           </div>
           {data.barcode.trim() && <figure className="product-qr-preview">
             <div>{qrPreview ? <img src={qrPreview} alt={`條碼 ${data.barcode.trim()} 的 QR Code`}/> : <QrCode aria-hidden="true"/>}</div>

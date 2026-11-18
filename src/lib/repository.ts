@@ -321,19 +321,23 @@ export async function updateProduct(productId: string, input: ProductInput): Pro
   if (error) throw error.code === '23505' ? new Error('這個條碼已綁定其他刀具') : error
 }
 
-export async function updateProductBarcode(productId: string, rawBarcode: string): Promise<void> {
+export async function updateProductBarcode(productId: string, rawBarcode: string, expectedBarcode: string): Promise<void> {
   const barcode = rawBarcode.trim()
   if (!barcode) throw new Error('條碼不能空白')
+  const conflictMessage = '刀具條碼已變更或刀具已移除，請重新整理後再掃描綁定。'
   if (isDemoMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts)
+    const product = products.find((item) => item.id === productId)
+    if (!product || (product.barcode || '') !== expectedBarcode) throw new Error(conflictMessage)
     if (products.some((product) => product.id !== productId && product.barcode?.toLowerCase() === barcode.toLowerCase())) throw new Error('這個條碼已綁定其他刀具')
     writeLocal(PRODUCT_KEY, products.map((product) => product.id === productId ? { ...product, barcode, updated_at: new Date().toISOString() } : product))
     return
   }
   const userId = await requireAuthenticatedUserId()
-  const { data, error } = await supabase!.from('products').update({ barcode }).eq('id', productId).eq('user_id', userId).select('id').maybeSingle()
+  const { data, error } = await supabase!.from('products').update({ barcode })
+    .eq('id', productId).eq('user_id', userId).eq('barcode', expectedBarcode).select('id').maybeSingle()
   if (error) throw error.code === '23505' ? new Error('這個條碼已綁定其他刀具') : error
-  if (!data) throw new Error('找不到刀具資料或沒有修改權限')
+  if (!data) throw new Error(conflictMessage)
 }
 
 export async function deleteProduct(productId: string): Promise<void> {

@@ -8067,6 +8067,13 @@ textarea:focus-visible {
   gap: 9px;
 }
 
+/* 庫存管理系統－刀具資料 → 編輯刀具｜並排顯示條碼產生與重新掃碼按鈕 */
+.barcode-generator-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
 /* 庫存管理系統－條碼掃描與產生｜「自動產生條碼／重新產生條碼」按鈕 */
 .barcode-generate-button {
   min-width: 178px;
@@ -8082,6 +8089,20 @@ textarea:focus-visible {
 .barcode-generate-button:hover:not(:disabled) {
   border-color: #ffc23a;
   background: rgba(255, 194, 58, .15);
+}
+
+/* 庫存管理系統－刀具資料 → 編輯刀具｜「重新掃碼」按鈕 */
+.barcode-rescan-button {
+  padding: 0 12px;
+  border-color: rgba(61, 204, 179, .46);
+  background: rgba(61, 204, 179, .08);
+  color: #58d9c5;
+  font-size: 15px;
+}
+
+.barcode-rescan-button:hover:not(:disabled) {
+  border-color: #58d9c5;
+  background: rgba(61, 204, 179, .15);
 }
 
 /* 庫存管理系統－條碼掃描與產生｜QR Code 預覽產生失敗時的錯誤訊息 */
@@ -8595,6 +8616,11 @@ textarea:focus-visible {
   width: 100%;
 }
 
+/* 庫存管理系統－刀具資料 → 重新掃碼｜「使用此條碼」按鈕 */
+.barcode-apply-result {
+  width: 100%;
+}
+
 /* 庫存管理系統－條碼掃描與產生｜未綁定掃描結果的「綁定現有刀具」按鈕 */
 .barcode-link-existing {
   width: 100%;
@@ -8802,9 +8828,9 @@ textarea:focus-visible {
       grid-template-columns: 1fr;
     }
 
-  /* 庫存管理系統－條碼掃描與產生｜「自動產生條碼／重新產生條碼」滿版按鈕 */
+  /* 手機版｜庫存管理系統－刀具資料 → 新增或編輯刀具｜產生條碼按鈕填滿可用寬度 */
   .barcode-generate-button {
-      width: 100%;
+      flex: 1 1 auto;
       min-width: 0;
       font-size: 16px;
     }
