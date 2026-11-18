@@ -1600,7 +1600,6 @@ function StocktakePage({ products, loading, add, openScanner, onAdjust }: { prod
 
   return <section className="page-content stocktake-page">
     <PageTitle eyebrow="STOCKTAKE" title="庫存盤點" actions={<><ScanButton openScanner={openScanner}/><button className="button primary" onClick={add}><Plus />新增盤點品項</button></>} />
-    <div className="stocktake-guide"><ClipboardCheck /><div><strong>直接填入現場實際數量</strong><p>不需要輸入價格。系統只以盤點差異調整庫存，既有單價會保留；沒有價格的刀具也能正常盤點。</p></div></div>
     <div className="stocktake-summary">
       <div><span>目前顯示</span><strong>{formatNumber(filtered.length)}</strong><small>個品項</small></div>
       <div><span>未設定單價</span><strong>{formatNumber(noPriceCount)}</strong><small>仍可盤點</small></div>
@@ -1608,20 +1607,26 @@ function StocktakePage({ products, loading, add, openScanner, onAdjust }: { prod
     </div>
     <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商" scanProducts={products}/><label className="select-wrap"><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((value) => <option key={value}>{value}</option>)}</select><ChevronDown /></label></div>
     {pageError && <div className="form-error stocktake-error">{pageError}</div>}
-    {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table stocktake-table"><thead><tr><th>編號</th><th>品名</th><th>分類</th><th>單價</th><th className="number">庫存</th><th className="number">實際數量</th><th className="number">差異</th><th aria-label="更新" /><th>歷史資料</th></tr></thead><tbody>
-      {filtered.length === 0 ? <EmptyRow colSpan={9} label="沒有符合條件的刀具"/> : filtered.map((product) => {
+    {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table stocktake-table"><thead><tr><th>編號</th><th>品名</th><th>分類</th><th>單價</th><th className="number">庫存</th><th className="number">實際數量</th><th aria-label="操作" /></tr></thead><tbody>
+      {filtered.length === 0 ? <EmptyRow colSpan={7} label="沒有符合條件的刀具"/> : filtered.map((product) => {
         const difference = differenceFor(product)
         const invalid = actualFor(product) !== '' && difference === null
+        const differenceClass = invalid ? 'invalid' : difference !== null && difference > 0 ? 'increase' : difference !== null && difference < 0 ? 'decrease' : ''
+        const differenceText = difference === null ? (invalid ? '格式錯誤' : '—') : `${difference > 0 ? '+' : ''}${formatNumber(difference)}`
         return <tr key={product.id} className={difference ? 'has-stocktake-difference' : ''}>
           <td className="code">{product.code}</td>
           <td className="product-name">{product.name}</td>
           <td><span className="tag neutral">{product.category}</span></td>
           <td className="number">{product.unit_price > 0 ? <span className="known-price">{formatMoney(product.unit_price)}</span> : <span className="unknown-price">未設定</span>}</td>
           <td className="number quantity">{formatNumber(product.stock_quantity)} <small>{product.unit}</small></td>
-          <td><label className={`stocktake-quantity ${invalid ? 'invalid' : ''}`}><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={actualFor(product)} onFocus={(event) => event.currentTarget.select()} onChange={(event) => { setDrafts((current) => ({ ...current, [product.id]: event.target.value })); setPageError('') }} aria-label={`${product.name} 實際盤點數量`}/><span>{product.unit}</span></label></td>
-          <td className={`number stocktake-difference ${difference === null ? (invalid ? 'invalid' : '') : difference > 0 ? 'positive' : difference < 0 ? 'negative' : ''}`}>{difference === null ? (invalid ? '格式錯誤' : '—') : difference === 0 ? '0' : `${difference > 0 ? '+' : ''}${formatNumber(difference)}`}</td>
-          <td><button className="stocktake-save" onClick={() => void save(product)} disabled={savingId !== '' || difference === null || difference === 0}><Save />{savingId === product.id ? '儲存中' : '更新'}</button></td>
-          <td><button className="button stocktake-history-button" type="button" aria-label={`查看 ${product.name} 的歷史資料`} onClick={() => setHistoryProduct(product)}><History/>查看</button></td>
+          <td><div className="stocktake-actual">
+            <label className={`stocktake-quantity ${invalid ? 'invalid' : ''}`}><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={actualFor(product)} onFocus={(event) => event.currentTarget.select()} onChange={(event) => { setDrafts((current) => ({ ...current, [product.id]: event.target.value })); setPageError('') }} aria-label={`${product.name} 實際盤點數量`}/><span>{product.unit}</span></label>
+            <output className={`stocktake-difference ${differenceClass}`} aria-label="盤點差異" title={differenceText}>{differenceText}</output>
+          </div></td>
+          <td><div className="stocktake-row-actions">
+            <button className="stocktake-save" type="button" onClick={() => void save(product)} disabled={savingId !== '' || difference === null || difference === 0}><Save />{savingId === product.id ? '儲存中' : '更新'}</button>
+            <button className="button stocktake-history-button" type="button" aria-label={`查看 ${product.name} 的歷史資料`} onClick={() => setHistoryProduct(product)}><History/>查看</button>
+          </div></td>
         </tr>
       })}
     </tbody></table></div>}
