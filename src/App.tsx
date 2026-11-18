@@ -1844,7 +1844,7 @@ function StockModal({ type, initialProductId, products, close, switchType, save 
     try { await save({ product_id: productId, movement_type: type, quantity: Number(quantity), movement_date: date, unit_price: Number(price) || 0, supplier, notes, request_key: crypto.randomUUID() }) }
     catch (err) { setFormError(messageFor(err)); setBusy(false) }
   }
-  return <Modal close={close} title={`登記${type === 'in' ? '入庫' : '出庫'}`}>
+  return <Modal close={close} title={`登記${type === 'in' ? '入庫' : '出庫'}`} size="stock-movement-modal">
     <form className="stock-movement-form" onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="segmented"><button type="button" className={type === 'in' ? 'selected-in' : ''} onClick={() => switchType('in')}>入庫</button><button type="button" className={type === 'out' ? 'selected-out' : ''} onClick={() => switchType('out')}>出庫</button></div>
       <Field label="刀具" wide><ProductPicker products={products} value={productId} onChange={setProductId}/></Field>
@@ -2443,7 +2443,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
     setRescanOpen(false)
   }} />
 
-  return <Modal close={() => { if (!busy) close() }} title={product ? '編輯刀具' : '新增品項'} size="large">
+  return <Modal close={() => { if (!busy) close() }} title={product ? '編輯刀具' : '新增品項'} size={product ? 'large' : 'large product-create-modal'}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="form-grid">
         <Field label="編號"><input disabled value={product?.code || '儲存後自動產生'} /></Field>

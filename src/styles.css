@@ -1911,6 +1911,67 @@ textarea:focus-visible {
 }
 
 
+/* 手機與電腦版｜庫存管理系統 → 出入庫登記與新增品項 → 視窗上下留白 */
+.modal:is(.stock-movement-modal, .product-create-modal) {
+  padding-block: 16px 18px;
+}
+
+/* 手機與電腦版｜庫存管理系統 → 出入庫登記與新增品項 → 視窗標題下方 */
+:is(.stock-movement-modal, .product-create-modal) .modal-head {
+  margin-bottom: 10px;
+}
+
+/* 手機與電腦版｜庫存管理系統 → 出入庫登記與新增品項 → 表單各列 */
+:is(.stock-movement-modal, .product-create-modal) .form-grid {
+  row-gap: 10px;
+}
+
+/* 手機與電腦版｜庫存管理系統 → 出入庫登記與新增品項 → 欄位標題與輸入框間距 */
+:is(.stock-movement-modal, .product-create-modal) .field {
+  gap: 5px;
+}
+
+/* 手機與電腦版｜庫存管理系統 → 出入庫登記與新增品項 → 橫跨整列的欄位 */
+:is(.stock-movement-modal, .product-create-modal) .field.wide {
+  margin-block: 10px;
+}
+
+/* 手機與電腦版｜庫存管理系統 → 出入庫登記與新增品項 → 備註輸入框 */
+:is(.stock-movement-modal, .product-create-modal) .field textarea {
+  min-height: 60px;
+}
+
+/* 手機與電腦版｜庫存管理系統 → 出入庫登記與新增品項 → 總金額預覽 */
+:is(.stock-movement-modal, .product-create-modal) .total-preview {
+  margin-top: 10px;
+  min-height: 48px;
+  padding-block: 6px;
+}
+
+/* 手機與電腦版｜庫存管理系統 → 出入庫登記與新增品項 → 確認、儲存與返回按鈕 */
+:is(.stock-movement-modal, .product-create-modal) .modal-submit {
+  margin-top: 8px;
+}
+
+/* 手機與電腦版｜庫存管理系統 → 出入庫登記 → 入庫／出庫切換與目前庫存 */
+.stock-movement-modal .segmented {
+  margin-bottom: 10px;
+}
+
+.stock-movement-modal .stock-hint {
+  margin: -3px 0 10px;
+}
+
+/* 手機與電腦版｜庫存管理系統 → 新增品項 → 規格與廠牌欄位區及期初庫存區 */
+.product-create-modal :is(.dynamic-fields, .common-fields, .initial-stock) {
+  margin-top: 10px;
+}
+
+.product-create-modal .initial-stock {
+  padding-block: 8px 10px;
+}
+
+
 /* ############################################################################
    五、登入畫面與系統首頁
 ############################################################################ */
@@ -2696,15 +2757,73 @@ textarea:focus-visible {
   resize: vertical;
 }
 
-/* 電腦版｜加工管理系統 → 加工數量登記 →「備註」輸入框文字大小 */
 @media (min-width: 621px) {
+  /* 電腦版｜加工管理系統 → 加工數量登記與查詢 → 頁面標題與表單外框 */
+  :is(.production-entry-page, .production-query-page) .page-title {
+    min-height: 64px;
+    margin-bottom: 16px;
+  }
+
+  :is(.production-entry-page, .production-query-page) .production-card {
+    padding: 16px 20px;
+  }
+
+  /* 電腦版｜加工管理系統 → 加工數量登記與查詢 → 日期、產品編號、機台及數量欄位 */
+  :is(.entry-card, .query-card) .production-field-row {
+    min-height: 46px;
+    margin-bottom: 8px;
+  }
+
+  :is(.entry-card, .query-card) .production-field-row > :is(label:first-child, input, select, textarea) {
+    padding-block: 7px;
+  }
+
+  /* 電腦版｜加工管理系統 → 加工數量登記 → 時數、分鐘與總時間 */
+  .entry-card .time-entry-panel {
+    margin-block: 9px;
+    padding: 10px 12px;
+  }
+
+  .entry-card .duration-fields input {
+    height: 42px;
+  }
+
+  /* 電腦版｜加工管理系統 → 加工數量登記 →「備註」輸入框 */
   .production-entry-page .entry-card .production-field-row.note-row > textarea {
+    min-height: 62px;
     font-size: 20px;
   }
 
   /* 電腦版｜加工管理系統 → 加工數量登記 →「備註」輸入框的「選填」提示文字大小 */
   .production-entry-page .entry-card .production-field-row.note-row > textarea::placeholder {
     font-size: inherit;
+  }
+
+  /* 電腦版｜加工管理系統 → 加工數量登記 → 登記、刪除與工時計算按鈕 */
+  .entry-card .production-action {
+    min-height: 44px;
+    margin-top: 7px;
+  }
+
+  /* 電腦版｜加工管理系統 → 加工數量查詢 → 查詢條件與三個查詢按鈕 */
+  .production-query-page .query-card {
+    margin-bottom: 14px;
+  }
+
+  .query-card .query-fields {
+    gap: 8px;
+  }
+
+  .query-card .query-fields > .production-field-row {
+    margin-bottom: 0;
+  }
+
+  .query-card .query-actions {
+    margin-top: 10px;
+  }
+
+  .query-card .query-button {
+    min-height: 44px;
   }
 }
 
@@ -3590,7 +3709,7 @@ textarea:focus-visible {
 /* 加工管理系統｜查詢結果內容區 */
 .production-results {
   overflow: hidden;
-  border: 1px solid #354149;
+  border: 1px solid #badef5;
   border-radius: 9px;
   background: #11171b;
   box-shadow: 0 15px 45px rgba(0,0,0,.2);
@@ -3646,6 +3765,25 @@ textarea:focus-visible {
 }
 
 @media (min-width: 621px) {
+/* 電腦版｜加工管理系統 → 加工數量查詢 → 結果標題、資料列及產品間距 */
+.production-query-page .production-results + .production-results {
+  margin-top: 12px;
+}
+
+.production-query-page .result-title {
+  min-height: 48px;
+  padding-block: 8px;
+}
+
+.production-query-page .production-table th {
+  height: 40px;
+}
+
+.production-query-page .production-table td {
+  height: 44px;
+  padding-block: 4px;
+}
+
 /* ============================================================================
    畫面：加工管理系統 → 加工數量查詢
    位置：加工紀錄表格 → 電腦版各欄個別設定
@@ -6004,7 +6142,7 @@ textarea:focus-visible {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
       padding: 6px 8px;
-      border: 1px solid #52646d;
+      border: 1px solid #badef5;
       border-radius: 7px;
       background: #11171a;
     }
@@ -6611,7 +6749,7 @@ textarea:focus-visible {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
       padding: 6px 8px;
-      border: 1px solid #52646d;
+      border: 1px solid #badef5;
       border-radius: 7px;
       background: #11171a;
     }
@@ -7546,7 +7684,7 @@ textarea:focus-visible {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
       padding: 6px 8px;
-      border: 1px solid #52646d;
+      border: 1px solid #badef5;
       border-radius: 7px;
       background: #11171a;
     }
