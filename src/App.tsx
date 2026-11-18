@@ -1552,7 +1552,7 @@ const priceEntriesFor = (productId: string, movements: Movement[]) => movements
   .sort((a, b) => `${b.movement_date}-${b.created_at}`.localeCompare(`${a.movement_date}-${a.created_at}`))
 
 function parseStocktakeQuantity(value: string) {
-  if (!value.trim()) return null
+  if (!/^[0-9]+$/.test(value.trim())) return null
   const quantity = Number(value)
   return Number.isSafeInteger(quantity) && quantity >= 0 ? quantity : null
 }
@@ -1561,6 +1561,8 @@ function StocktakePage({ products, loading, add, openScanner, onAdjust }: { prod
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('全部分類')
   const [drafts, setDrafts] = useState<Record<string, string>>({})
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({})
+  const [noteProduct, setNoteProduct] = useState<Product | null>(null)
   const [historyProduct, setHistoryProduct] = useState<Product | null>(null)
   const [savingId, setSavingId] = useState('')
   const [pageError, setPageError] = useState('')
@@ -1588,14 +1590,22 @@ function StocktakePage({ products, loading, add, openScanner, onAdjust }: { prod
     if (actual === product.stock_quantity) return
     setSavingId(product.id)
     try {
-      if (await onAdjust(product, actual, '')) {
+      if (await onAdjust(product, actual, noteDrafts[product.id] ?? '')) {
         setDrafts((current) => ({ ...current, [product.id]: '' }))
+        setNoteDrafts((current) => ({ ...current, [product.id]: '' }))
       }
     } catch (error) {
       setPageError(messageFor(error))
     } finally {
       setSavingId('')
     }
+  }
+
+  const keepNote = (event: FormEvent<HTMLFormElement>, product: Product) => {
+    event.preventDefault()
+    const note = String(new FormData(event.currentTarget).get('note') ?? '').trim()
+    setNoteDrafts((current) => ({ ...current, [product.id]: note }))
+    setNoteProduct(null)
   }
 
   return <section className="page-content stocktake-page">
@@ -1620,16 +1630,27 @@ function StocktakePage({ products, loading, add, openScanner, onAdjust }: { prod
           <td className="number">{product.unit_price > 0 ? <span className="known-price">{formatMoney(product.unit_price)}</span> : <span className="unknown-price">未設定</span>}</td>
           <td className="number quantity">{formatNumber(product.stock_quantity)} <small>{product.unit}</small></td>
           <td><div className="stocktake-actual">
-            <label className={`stocktake-quantity ${invalid ? 'invalid' : ''}`}><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={actualFor(product)} onFocus={(event) => event.currentTarget.select()} onChange={(event) => { setDrafts((current) => ({ ...current, [product.id]: event.target.value })); setPageError('') }} aria-label={`${product.name} 實際盤點數量`}/><span>{product.unit}</span></label>
+            <label className={`stocktake-quantity ${invalid ? 'invalid' : ''}`}><input type="text" inputMode="numeric" disabled={savingId === product.id} value={actualFor(product)} onFocus={(event) => event.currentTarget.select()} onChange={(event) => { setDrafts((current) => ({ ...current, [product.id]: event.target.value })); setPageError('') }} aria-label={`${product.name} 實際盤點數量`}/><span>{product.unit}</span></label>
             <output className={`stocktake-difference ${differenceClass}`} aria-label="盤點差異" title={differenceText}>{differenceText}</output>
           </div></td>
           <td><div className="stocktake-row-actions">
             <button className="stocktake-save" type="button" onClick={() => void save(product)} disabled={savingId !== '' || difference === null || difference === 0}><Save />{savingId === product.id ? '儲存中' : '更新'}</button>
+            <button className={`button stocktake-note-button ${noteDrafts[product.id] ? 'has-note' : ''}`} type="button" aria-label={`${product.name} 的盤點備註${noteDrafts[product.id] ? '（已填寫）' : ''}`} disabled={savingId === product.id} onClick={() => setNoteProduct(product)}><Pencil/>備註</button>
             <button className="button stocktake-history-button" type="button" aria-label={`查看 ${product.name} 的歷史資料`} onClick={() => setHistoryProduct(product)}><History/>查看</button>
           </div></td>
         </tr>
       })}
     </tbody></table></div>}
+    {noteProduct && <Modal title={`盤點備註 ${noteProduct.code}`} close={() => setNoteProduct(null)}>
+      <form onSubmit={(event) => keepNote(event, noteProduct)}>
+        <p className="modal-intro">{noteProduct.name}。按「更新」完成盤點時，備註會一併寫入歷史資料。</p>
+        <Field label="備註"><textarea name="note" defaultValue={noteDrafts[noteProduct.id] ?? ''} placeholder="選填"/></Field>
+        <div className="modal-tool-actions">
+          <button className="button secondary" type="button" onClick={() => setNoteProduct(null)}>取消</button>
+          <button className="button primary" type="submit">確定</button>
+        </div>
+      </form>
+    </Modal>}
     {historyProduct && <StocktakeHistoryModal product={historyProduct} close={() => setHistoryProduct(null)}/>}
   </section>
 }
@@ -2229,7 +2250,7 @@ function BarcodeScannerModal(props: {
       </div>
       <form onSubmit={saveScanStocktake}>
         <div className="form-grid">
-          <Field label={`實際數量（${stocktakeProduct.unit}）`} wide><input type="number" min="0" step="1" inputMode="numeric" required disabled={stocktakeSaving} value={stocktake.quantity} onChange={(event) => { setStocktake({ ...stocktake, quantity: event.target.value }); setError('') }}/></Field>
+          <Field label={`實際數量（${stocktakeProduct.unit}）`} wide><input type="text" inputMode="numeric" required disabled={stocktakeSaving} value={stocktake.quantity} onChange={(event) => { setStocktake({ ...stocktake, quantity: event.target.value }); setError('') }}/></Field>
           <Field label="盤點備註" wide><input placeholder="選填" disabled={stocktakeSaving} value={stocktake.notes} onChange={(event) => setStocktake({ ...stocktake, notes: event.target.value })}/></Field>
         </div>
         {error && <div className="form-error modal-tool-error" role="alert">{error}</div>}

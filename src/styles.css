@@ -6333,12 +6333,12 @@ textarea:focus-visible {
   color: #3dccb3;
 }
 
-/* 庫存管理系統－庫存盤點｜同欄並排的「更新」與「查看」按鈕尺寸 */
+/* 庫存管理系統 → 庫存盤點 → 同欄並排的「更新」、「備註」與「查看」 */
 .stocktake-row-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  width: min(100%, 190px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  width: min(100%, 184px);
   margin: 0 auto;
 }
 
@@ -6346,19 +6346,20 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
-  padding: 0 4px;
-  gap: 4px;
+  min-height: 32px;
+  padding: 0 2px;
+  gap: 3px;
   border-radius: 7px;
   font-family: var(--font-family-site);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 850;
   white-space: nowrap;
 }
 
 .stocktake-row-actions > button svg {
-  width: 16px;
-  height: 16px;
+  width: 13px;
+  min-width: 0;
+  height: 13px;
 }
 
 /* 庫存管理系統－庫存盤點｜更新數量按鈕 */
@@ -6507,10 +6508,10 @@ textarea:focus-visible {
       font-size: 18px !important;
     }
 
-  /* 手機版｜庫存管理系統 → 庫存盤點｜「更新」與「查看」按鈕字級與高度 */
+  /* 手機版｜庫存管理系統 → 庫存盤點 →「更新」、「備註」與「查看」按鈕字級與高度 */
   .stocktake-row-actions > button {
-      font-size: 16px;
-      min-height: 40px;
+      font-size: 13px;
+      min-height: 36px;
     }
 
   /* 搜尋關鍵字：手機版 + 庫存管理系統 + 庫存盤點資料卡 + 每一欄獨立設定。 手機版庫存盤點內容
@@ -6562,13 +6563,13 @@ textarea:focus-visible {
       font-size: 18px; color: #edf4f7; font-weight: 700; line-height: 1.35; text-align: left;
     }
 
-  /* 手機版｜庫存管理系統 → 庫存盤點｜「更新」與「查看」並排的操作列 */
+  /* 手機版｜庫存管理系統 → 庫存盤點 →「更新」、「備註」與「查看」並排的操作列 */
   .stocktake-table td:nth-child(7) {
       grid-column: 1 / 7;
       grid-row: 5;
     }
 
-  /* 手機版｜庫存管理系統 → 庫存盤點｜「更新」與「查看」按鈕整組靠左 */
+  /* 手機版｜庫存管理系統 → 庫存盤點 → 三個操作按鈕整組靠左 */
   .stocktake-row-actions {
       margin-inline: 0;
     }
@@ -6715,7 +6716,7 @@ textarea:focus-visible {
   .stocktake-table th:nth-child(6) { width: 17%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
   .stocktake-table td:nth-child(6) { width: 17%; font-size: 16px; color: #e9eef1; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
 
-  /* 電腦版｜庫存管理系統 → 庫存盤點表格 → 第 7 欄「更新」與「查看」 */
+  /* 電腦版｜庫存管理系統 → 庫存盤點表格 → 第 7 欄「更新」、「備註」與「查看」 */
   .stocktake-table th:nth-child(7),
   .stocktake-table td:nth-child(7) { width: 23%; text-align: center; }
 
@@ -6815,6 +6816,18 @@ textarea:focus-visible {
     }
 }
 
+
+/* 庫存管理系統 → 庫存盤點表格 →「備註」按鈕及已填寫狀態 */
+.button.stocktake-note-button {
+  border-color: #5b5140;
+  background: #282117;
+  color: #e3cda2;
+}
+
+.button.stocktake-note-button.has-note {
+  border-color: #d99b21;
+  color: #ffc23a;
+}
 
 /* 庫存管理系統 → 庫存盤點表格｜「查看」歷史資料按鈕 */
 .button.stocktake-history-button {
