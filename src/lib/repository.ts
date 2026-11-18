@@ -4,6 +4,8 @@ import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type Product, ty
 import { requireAuthenticatedUserId } from './auth'
 import type { OperationLogEntry } from '../types'
 
+type StoredOperationLogEntry = Omit<OperationLogEntry, 'id'> & { id: number }
+
 export async function loadOperationLog(cursor?: Pick<OperationLogEntry, 'id' | 'occurred_at'>) {
   if (!supabase) throw new Error('請連線至 Supabase 後查看操作紀錄')
   const timeline = await supabase.rpc('read_operation_timeline', cursor
@@ -24,7 +26,7 @@ export async function loadOperationLog(cursor?: Pick<OperationLogEntry, 'id' | '
   const { data, error } = await query.order('occurred_at', { ascending: false }).order('id', { ascending: false }).limit(51)
   if (error?.code === 'PGRST205' || error?.code === '42P01') throw new Error('操作紀錄尚未啟用，請先套用 enable-operation-log.sql。')
   if (error) throw error
-  const legacyEntries = data as (Omit<OperationLogEntry, 'id'> & { id: number })[]
+  const legacyEntries = data as StoredOperationLogEntry[]
   const entries = legacyEntries.slice(0, 50).map((entry) => ({ ...entry, id: `data:${String(entry.id).padStart(19, '0')}` }))
   return { entries, hasMore: data.length > 50, authIncluded: false }
 }
@@ -118,6 +120,40 @@ export async function loadInventory(): Promise<{ products: Product[]; movements:
   if (productsResult.error) throw productsResult.error
   if (movementsResult.error) throw movementsResult.error
   return { products: (productsResult.data as Product[]).map((product) => ({ ...product, barcode: product.barcode || '' })), movements: movementsResult.data as unknown as Movement[] }
+}
+
+export async function loadProductMovements(productId: string): Promise<Movement[]> {
+  if (isDemoMode) return readLocal(MOVEMENT_KEY, seedMovements).filter((movement) => movement.product_id === productId)
+  const movements: Movement[] = []
+  let lastId: string | undefined
+  while (true) {
+    const query = supabase!.from('stock_movements').select('*').eq('product_id', productId).order('id').limit(1000)
+    if (lastId) query.gt('id', lastId)
+    const { data, error } = await query
+    if (error) throw error
+    if (!data.length) return movements
+    const page = data as Movement[]
+    movements.push(...page)
+    lastId = page[page.length - 1].id
+  }
+}
+
+export async function loadProductChanges(productCode: string, createdAt: string): Promise<OperationLogEntry[]> {
+  if (isDemoMode) return []
+  const changes: OperationLogEntry[] = []
+  let lastId: number | undefined
+  while (true) {
+    // 操作紀錄只保留刀具編號，以建立時間區分重新使用同一編號的刀具。
+    const query = supabase!.from('operation_log').select('*').eq('target', productCode).gte('occurred_at', createdAt)
+      .in('entity', ['products', 'stock_movements']).in('operation', ['UPDATE', 'DELETE']).order('id').limit(1000)
+    if (lastId !== undefined) query.gt('id', lastId)
+    const { data, error } = await query
+    if (error) throw error
+    if (!data.length) return changes.sort((a, b) => Date.parse(b.occurred_at) - Date.parse(a.occurred_at) || b.id.localeCompare(a.id, 'en', { numeric: true }))
+    const page = data as StoredOperationLogEntry[]
+    changes.push(...page.map((entry) => ({ ...entry, id: String(entry.id) })))
+    lastId = page[page.length - 1].id
+  }
 }
 
 export async function loadProductionRecords(): Promise<ProductionRecord[]> {

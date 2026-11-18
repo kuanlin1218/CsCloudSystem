@@ -14,7 +14,7 @@ import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
 import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
 import type { WorkbookPreview } from './lib/adminDataWorkbook'
-import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, findMatchingProductionRecord, loadInventory, loadOperationLog, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
+import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, findMatchingProductionRecord, loadInventory, loadOperationLog, loadProductChanges, loadProductMovements, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type OperationLogEntry, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
 
 const blankProduct = (): ProductInput => ({
@@ -348,7 +348,6 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   const [productModal, setProductModal] = useState<Product | 'new' | null>(null)
   const [scannerBarcode, setScannerBarcode] = useState<string | null>(null)
   const [pendingBarcode, setPendingBarcode] = useState('')
-  const [stocktakeFocusProductId, setStocktakeFocusProductId] = useState('')
   const [priceHistoryProduct, setPriceHistoryProduct] = useState<Product | null>(null)
   const [productionOptionModal, setProductionOptionModal] = useState<ProductionOptionType | null>(null)
   const [adminDataModal, setAdminDataModal] = useState(false)
@@ -397,7 +396,6 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
     const followBrowserHistory = () => {
       const nextPage = pageFromLocation()
       setPage(nextPage)
-      if (nextPage !== 'stocktake') setStocktakeFocusProductId('')
       setMobileNav(false)
       setStockModal(null); setProductModal(null); setScannerBarcode(null); setPendingBarcode(''); setPriceHistoryProduct(null)
       setProductionOptionModal(null); setAdminDataModal(false)
@@ -423,12 +421,21 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
   const nav = (next: Page) => {
     if (guestMode && (next === 'production-entry' || next === 'production-settings' || next === 'production-delete' || next === 'stocktake')) return
     if (window.location.hash !== `#${next}`) window.history.pushState({ page: next }, '', pageUrl(next))
-    if (next !== 'stocktake') setStocktakeFocusProductId('')
     setPage(next)
     setMobileNav(false)
     void refresh()
   }
   const afterSave = async (message: string) => { await refresh(false); setToast(message) }
+  const adjustStocktake = async (product: Product, actualQuantity: number, notes: string) => {
+    if (actualQuantity === product.stock_quantity) {
+      setToast(`${product.code} 盤點完成，庫存沒有差異`)
+      return true
+    }
+    if (!window.confirm(`確定將 ${product.code}「${product.name}」的庫存由 ${product.stock_quantity} ${product.unit}調整為 ${actualQuantity} ${product.unit}？`)) return false
+    await setStocktakeQuantity({ product_id: product.id, actual_quantity: actualQuantity, notes, request_key: crypto.randomUUID() })
+    await afterSave(`${product.code} 的盤點數量已更新`)
+    return true
+  }
   const requestAdminDelete = (title: string, description: string, execute: () => Promise<void>) => new Promise<boolean>((resolve) => {
     setAdminDelete({ title, description, execute, resolve })
   })
@@ -528,15 +535,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
           const deleted = await requestAdminDelete('刪除出入庫紀錄', `${formatDate(movement.movement_date)} 的${movement.movement_type === 'in' ? '入庫' : '出庫'}紀錄「${product?.name || ''}」。庫存會自動重新計算。`, () => deleteMovement(movement.id))
           if (deleted) await afterSave('出入庫紀錄已刪除，庫存已重新計算')
         }} />}
-        {activePage === 'stocktake' && !guestMode && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} openScanner={() => setScannerBarcode('')} focusProductId={stocktakeFocusProductId} clearFocusProduct={() => setStocktakeFocusProductId('')} onAdjust={async (product, actualQuantity, notes) => {
-          if (actualQuantity === product.stock_quantity) return true
-          if (!window.confirm(`確定將 ${product.code}「${product.name}」的庫存由 ${product.stock_quantity} ${product.unit}調整為 ${actualQuantity} ${product.unit}？`)) return false
-          try {
-            await setStocktakeQuantity({ product_id: product.id, actual_quantity: actualQuantity, notes, request_key: crypto.randomUUID() })
-            await afterSave(`${product.code} 的盤點數量已更新`)
-            return true
-          } catch (e) { setError(messageFor(e)); return false }
-        }} />}
+        {activePage === 'stocktake' && !guestMode && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} openScanner={() => setScannerBarcode('')} onAdjust={adjustStocktake} />}
         {activePage === 'products' && <ProductsPage products={products} movements={movements} loading={loading} add={() => setProductModal('new')} edit={setProductModal} openStock={(type, productId) => setStockModal({ type, productId })} openScanner={() => setScannerBarcode('')} viewHistory={setPriceHistoryProduct} readOnly={guestMode} onDelete={async (p) => {
           const deleted = await requestAdminDelete('刪除刀具資料', `將刪除 ${p.code}「${p.name}」及其全部出入庫紀錄。`, () => deleteProduct(p.id))
           if (deleted) await afterSave('商品已刪除')
@@ -569,9 +568,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         await updateProductBarcode(productId, barcode, expectedBarcode); await afterSave('條碼已綁定刀具')
       }} openStock={(type, productId) => {
         setScannerBarcode(null); setStockModal({ type, productId })
-      }} openStocktake={(productId) => {
-        setScannerBarcode(null); setStocktakeFocusProductId(productId); nav('stocktake')
-      }} editProduct={(product) => {
+      }} adjustStocktake={adjustStocktake} editProduct={(product) => {
         setScannerBarcode(null); setProductModal(product)
       }} />}
       {priceHistoryProduct && <PriceHistoryModal product={priceHistoryProduct} movements={movements} close={() => setPriceHistoryProduct(null)} />}
@@ -1554,22 +1551,20 @@ const priceEntriesFor = (productId: string, movements: Movement[]) => movements
   .filter((movement) => movement.product_id === productId && movement.movement_type === 'in' && movement.unit_price !== null)
   .sort((a, b) => `${b.movement_date}-${b.created_at}`.localeCompare(`${a.movement_date}-${a.created_at}`))
 
-function StocktakePage({ products, loading, add, openScanner, focusProductId, clearFocusProduct, onAdjust }: { products: Product[]; loading: boolean; add: () => void; openScanner: () => void; focusProductId: string; clearFocusProduct: () => void; onAdjust: (product: Product, actualQuantity: number, notes: string) => Promise<boolean> }) {
+function parseStocktakeQuantity(value: string) {
+  if (!value.trim()) return null
+  const quantity = Number(value)
+  return Number.isSafeInteger(quantity) && quantity >= 0 ? quantity : null
+}
+
+function StocktakePage({ products, loading, add, openScanner, onAdjust }: { products: Product[]; loading: boolean; add: () => void; openScanner: () => void; onAdjust: (product: Product, actualQuantity: number, notes: string) => Promise<boolean> }) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('全部分類')
   const [drafts, setDrafts] = useState<Record<string, string>>({})
-  const [notes, setNotes] = useState<Record<string, string>>({})
+  const [historyProduct, setHistoryProduct] = useState<Product | null>(null)
   const [savingId, setSavingId] = useState('')
   const [pageError, setPageError] = useState('')
   const categories = ['全部分類', ...PRODUCT_CATEGORIES]
-  useEffect(() => {
-    const product = products.find((item) => item.id === focusProductId)
-    if (product) {
-      setQuery(product.code)
-      setCategory('全部分類')
-      clearFocusProduct()
-    }
-  }, [focusProductId, products])
   const normalizedQuery = query.toLowerCase()
   /* 「庫存盤點」的「表格資料順序」：依刀具最後更新時間由新到舊排列；時間相同時再依編號由新到舊。 */
   const filtered = products
@@ -1578,26 +1573,29 @@ function StocktakePage({ products, loading, add, openScanner, focusProductId, cl
       return (haystack.includes(normalizedQuery) || matchesProductName(product.name, normalizedQuery)) && (category === '全部分類' || product.category === category)
     })
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at) || b.code.localeCompare(a.code))
-  const actualFor = (product: Product) => drafts[product.id] ?? String(product.stock_quantity)
+  const actualFor = (product: Product) => drafts[product.id] ?? ''
   const differenceFor = (product: Product) => {
-    const actual = Number(actualFor(product))
-    return Number.isInteger(actual) && actual >= 0 ? actual - product.stock_quantity : null
+    const actual = parseStocktakeQuantity(actualFor(product))
+    return actual === null ? null : actual - product.stock_quantity
   }
   const pendingCount = filtered.filter((product) => differenceFor(product) !== null && differenceFor(product) !== 0).length
   const noPriceCount = filtered.filter((product) => product.unit_price <= 0).length
 
   const save = async (product: Product) => {
     setPageError('')
-    const actual = Number(actualFor(product))
-    if (!Number.isInteger(actual) || actual < 0) { setPageError(`${product.code} 的實際數量必須是 0 以上的整數`); return }
+    const actual = parseStocktakeQuantity(actualFor(product))
+    if (actual === null) { setPageError(`${product.code} 的實際數量必須是 0 以上的整數`); return }
     if (actual === product.stock_quantity) return
     setSavingId(product.id)
-    const saved = await onAdjust(product, actual, notes[product.id] || '')
-    if (saved) {
-      setDrafts((current) => ({ ...current, [product.id]: String(actual) }))
-      setNotes((current) => ({ ...current, [product.id]: '' }))
+    try {
+      if (await onAdjust(product, actual, '')) {
+        setDrafts((current) => ({ ...current, [product.id]: '' }))
+      }
+    } catch (error) {
+      setPageError(messageFor(error))
+    } finally {
+      setSavingId('')
     }
-    setSavingId('')
   }
 
   return <section className="page-content stocktake-page">
@@ -1610,10 +1608,10 @@ function StocktakePage({ products, loading, add, openScanner, focusProductId, cl
     </div>
     <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商" scanProducts={products}/><label className="select-wrap"><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((value) => <option key={value}>{value}</option>)}</select><ChevronDown /></label></div>
     {pageError && <div className="form-error stocktake-error">{pageError}</div>}
-    {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table stocktake-table"><thead><tr><th>編號</th><th>品名</th><th>分類</th><th>單價</th><th className="number">庫存</th><th className="number">實際數量</th><th className="number">差異</th><th aria-label="更新" /><th>盤點備註</th></tr></thead><tbody>
+    {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table stocktake-table"><thead><tr><th>編號</th><th>品名</th><th>分類</th><th>單價</th><th className="number">庫存</th><th className="number">實際數量</th><th className="number">差異</th><th aria-label="更新" /><th>歷史資料</th></tr></thead><tbody>
       {filtered.length === 0 ? <EmptyRow colSpan={9} label="沒有符合條件的刀具"/> : filtered.map((product) => {
         const difference = differenceFor(product)
-        const invalid = difference === null
+        const invalid = actualFor(product) !== '' && difference === null
         return <tr key={product.id} className={difference ? 'has-stocktake-difference' : ''}>
           <td className="code">{product.code}</td>
           <td className="product-name">{product.name}</td>
@@ -1621,13 +1619,75 @@ function StocktakePage({ products, loading, add, openScanner, focusProductId, cl
           <td className="number">{product.unit_price > 0 ? <span className="known-price">{formatMoney(product.unit_price)}</span> : <span className="unknown-price">未設定</span>}</td>
           <td className="number quantity">{formatNumber(product.stock_quantity)} <small>{product.unit}</small></td>
           <td><label className={`stocktake-quantity ${invalid ? 'invalid' : ''}`}><input type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={actualFor(product)} onFocus={(event) => event.currentTarget.select()} onChange={(event) => { setDrafts((current) => ({ ...current, [product.id]: event.target.value })); setPageError('') }} aria-label={`${product.name} 實際盤點數量`}/><span>{product.unit}</span></label></td>
-          <td className={`number stocktake-difference ${difference === null ? 'invalid' : difference > 0 ? 'positive' : difference < 0 ? 'negative' : ''}`}>{difference === null ? '格式錯誤' : difference === 0 ? '0' : `${difference > 0 ? '+' : ''}${formatNumber(difference)}`}</td>
-          <td><button className="stocktake-save" onClick={() => void save(product)} disabled={savingId !== '' || invalid || difference === 0}><Save />{savingId === product.id ? '儲存中' : '更新'}</button></td>
-          <td><input className="stocktake-note" value={notes[product.id] || ''} onChange={(event) => setNotes((current) => ({ ...current, [product.id]: event.target.value }))} placeholder="選填" /></td>
+          <td className={`number stocktake-difference ${difference === null ? (invalid ? 'invalid' : '') : difference > 0 ? 'positive' : difference < 0 ? 'negative' : ''}`}>{difference === null ? (invalid ? '格式錯誤' : '—') : difference === 0 ? '0' : `${difference > 0 ? '+' : ''}${formatNumber(difference)}`}</td>
+          <td><button className="stocktake-save" onClick={() => void save(product)} disabled={savingId !== '' || difference === null || difference === 0}><Save />{savingId === product.id ? '儲存中' : '更新'}</button></td>
+          <td><button className="button stocktake-history-button" type="button" aria-label={`查看 ${product.name} 的歷史資料`} onClick={() => setHistoryProduct(product)}><History/>查看</button></td>
         </tr>
       })}
     </tbody></table></div>}
+    {historyProduct && <StocktakeHistoryModal product={historyProduct} close={() => setHistoryProduct(null)}/>}
   </section>
+}
+
+function StocktakeHistoryModal({ product, close }: { product: Product; close: () => void }) {
+  const [history, setHistory] = useState<[PromiseSettledResult<Movement[]>, PromiseSettledResult<OperationLogEntry[]>] | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void Promise.allSettled([loadProductMovements(product.id), loadProductChanges(product.code, product.created_at)]).then((result) => {
+      if (!cancelled) setHistory(result)
+    })
+    return () => { cancelled = true }
+  }, [product.id, product.code, product.created_at])
+
+  const [movementHistory, changeHistory] = history || []
+  const movements = movementHistory?.status === 'fulfilled'
+    ? [...movementHistory.value].sort((a, b) => b.movement_date.localeCompare(a.movement_date) || Date.parse(b.created_at) - Date.parse(a.created_at))
+    : []
+  const changes = changeHistory?.status === 'fulfilled' ? changeHistory.value : []
+
+  return <Modal title={`歷史資料 ${product.code}`} size="large" close={close}>
+    <div className="stocktake-history">
+      <section className="stocktake-history-card">
+        <h3>{product.name}</h3>
+        <p>庫存 {formatNumber(product.stock_quantity)} {product.unit} · 目前單價 {product.unit_price > 0 ? formatMoney(product.unit_price) : '未設定'}</p>
+        {product.purchased_at && <p>最近購入日期 {formatDate(product.purchased_at)}{product.supplier && ` · ${product.supplier}`}</p>}
+        {product.notes?.trim() && <p className="stocktake-history-note">刀具備註　{product.notes}</p>}
+      </section>
+      {!history && <p role="status">讀取歷史資料中…</p>}
+      {history && <>
+        <section>
+          <h3>出入庫、購入與盤點紀錄</h3>
+          {movementHistory?.status === 'rejected' && <p className="form-error" role="alert">無法讀取庫存歷史。{messageFor(movementHistory.reason)}</p>}
+          {movementHistory?.status === 'fulfilled' && !movements.length && <p>目前沒有庫存異動紀錄。</p>}
+          {movements.length > 0 && <ul className="stocktake-history-movements">
+            {movements.map((movement) => {
+              const initial = isInitialStockNote(movement.notes)
+              const stocktake = /^庫存盤點調整[：:]/.test(movement.notes || '')
+              const inbound = movement.movement_type === 'in'
+              const unitPrice = movement.unit_price ?? 0
+              const priced = unitPrice > 0
+              const label = initial ? INITIAL_STOCK_NOTE : stocktake ? '盤點' : inbound ? (priced ? '入庫／購入' : '入庫') : '出庫'
+              return <li className="stocktake-history-card" key={movement.id}>
+                <strong>{label} · {formatDate(movement.movement_date)}</strong>
+                <time dateTime={movement.created_at}>登記於 {formatTaipeiRecordTime(movement.created_at, true, true)}</time>
+                <p>{inbound ? '+' : '−'}{formatNumber(movement.quantity)} {product.unit} · 庫存餘額 {formatNumber(movement.stock_after)} {product.unit}</p>
+                {priced && <p>單價 {formatMoney(unitPrice)}{!stocktake && ` · 金額 ${formatMoney(unitPrice * movement.quantity)}`}</p>}
+                {movement.supplier && <p>供應商　{movement.supplier}</p>}
+                {!initial && movement.notes?.trim() && <p className="stocktake-history-note">備註　{movement.notes}</p>}
+              </li>
+            })}
+          </ul>}
+        </section>
+        <section>
+          <h3>修改與刪除紀錄</h3>
+          {changeHistory?.status === 'rejected' && <p className="form-error" role="alert">無法讀取修改紀錄。{messageFor(changeHistory.reason)}</p>}
+          {changeHistory?.status === 'fulfilled' && !changes.length && <p>{isDemoMode ? '示範模式沒有雲端修改紀錄。' : '目前沒有這件刀具的修改或刪除紀錄。'}</p>}
+          {changes.length > 0 && <ol className="operation-log-list">{changes.map((entry) => <OperationLogItem key={entry.id} entry={entry}/>)}</ol>}
+        </section>
+      </>}
+    </div>
+  </Modal>
 }
 
 function ProductsPage({ products, movements, loading, add, edit, openStock, openScanner, viewHistory, readOnly, onDelete }: { products: Product[]; movements: Movement[]; loading: boolean; add: () => void; edit: (p: Product) => void; openStock: (type: MovementType, productId: string) => void; openScanner: () => void; viewHistory: (p: Product) => void; readOnly: boolean; onDelete: (p: Product) => void }) {
@@ -1845,7 +1905,7 @@ function BarcodeScannerModal(props: {
   createWithBarcode: (barcode: string) => void
   linkBarcode: (productId: string, barcode: string, expectedBarcode: string) => Promise<void>
   openStock: (type: MovementType, productId: string) => void
-  openStocktake: (productId: string) => void
+  adjustStocktake: (product: Product, actualQuantity: number, notes: string) => Promise<boolean>
   editProduct: (product: Product) => void
 })) {
   const { products, initialBarcode, close } = props
@@ -1853,6 +1913,8 @@ function BarcodeScannerModal(props: {
   const videoRef = useRef<HTMLVideoElement>(null)
   const targetRef = useRef<HTMLSpanElement>(null)
   const resultRef = useRef<HTMLElement>(null)
+  const cameraButtonRef = useRef<HTMLButtonElement>(null)
+  const returnToNextScanRef = useRef(false)
   const controlsRef = useRef<{ stop: () => void } | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const [cameraActive, setCameraActive] = useState(false)
@@ -1863,12 +1925,17 @@ function BarcodeScannerModal(props: {
   const [linking, setLinking] = useState(false)
   const [bindingOpen, setBindingOpen] = useState(false)
   const [pendingOverwrite, setPendingOverwrite] = useState<Product | null>(null)
-  const bindingRef = useRef<HTMLElement>(null)
+  const stepRef = useRef<HTMLElement>(null)
+  const [stocktake, setStocktake] = useState<{ product: Product; quantity: string; notes: string } | null>(null)
+  const [stocktakeSaving, setStocktakeSaving] = useState(false)
+  const stocktakeOpen = stocktake !== null
   const [keyboardQrOpen, setKeyboardQrOpen] = useState(false)
   const normalizedBarcode = barcode.trim().toLowerCase()
   const barcodeOwner = normalizedBarcode ? products.find((product) => product.barcode?.trim().toLowerCase() === normalizedBarcode) : undefined
   const matchedProduct = barcodeOwner || (lookup ? products.find((product) => product.code.toLowerCase() === normalizedBarcode) : undefined)
   const conflictingProduct = 'applyBarcode' in props && barcodeOwner?.id !== props.editingProductId ? barcodeOwner : undefined
+  const stocktakeProduct = stocktake && (products.find((product) => product.id === stocktake.product.id) || stocktake.product)
+  const stocktakeQuantity = stocktake ? parseStocktakeQuantity(stocktake.quantity) : null
 
   // 「掃描刀具條碼」的「掃描成功提示音」：相機按鈕或查詢按鈕觸發後才啟用，避免 iPhone 阻擋自動播放。
   const prepareScanAudio = async () => {
@@ -1936,14 +2003,18 @@ function BarcodeScannerModal(props: {
   }, [])
 
   useEffect(() => {
-    if (bindingOpen) {
-      bindingRef.current?.closest('.modal')?.scrollTo(0, 0)
+    if (bindingOpen || stocktakeOpen) {
+      stepRef.current?.closest('.modal')?.scrollTo(0, 0)
       return
     }
     if (!barcode) return
-    const frame = window.requestAnimationFrame(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
+    const frame = window.requestAnimationFrame(() => {
+      const target = returnToNextScanRef.current ? cameraButtonRef.current : resultRef.current
+      returnToNextScanRef.current = false
+      target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
     return () => window.cancelAnimationFrame(frame)
-  }, [barcode, bindingOpen, pendingOverwrite])
+  }, [barcode, bindingOpen, pendingOverwrite, stocktakeOpen])
 
   const startCamera = async () => {
     setError(''); setBarcode(''); setSelectedProductId('')
@@ -2121,8 +2192,48 @@ function BarcodeScannerModal(props: {
     setBindingOpen(false)
   }
 
-  return <Modal title={pendingOverwrite ? '覆蓋刀具條碼' : bindingOpen ? '綁定現有刀具' : lookup ? '掃描刀具條碼' : '重新掃碼'} close={pendingOverwrite ? cancelOverwrite : bindingOpen ? returnToScan : () => { stopCamera(); close() }} size={pendingOverwrite ? '' : 'barcode-scanner-modal'}>
-    {pendingOverwrite ? <section ref={bindingRef}>
+  const closeScanStocktake = () => {
+    if (stocktakeSaving) return
+    setError('')
+    setStocktake(null)
+  }
+
+  const saveScanStocktake = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!lookup || !stocktake || !stocktakeProduct || stocktakeQuantity === null || stocktakeSaving) return
+    setError('')
+    setStocktakeSaving(true)
+    try {
+      if (await lookup.adjustStocktake(stocktakeProduct, stocktakeQuantity, stocktake.notes)) {
+        // 盤點完成後把下一次掃描的按鈕帶回手機可見範圍。
+        returnToNextScanRef.current = true
+        setStocktake(null)
+      }
+    } catch (saveError) {
+      setError(messageFor(saveError))
+    } finally {
+      setStocktakeSaving(false)
+    }
+  }
+
+  return <Modal title={stocktakeOpen ? '掃碼盤點' : pendingOverwrite ? '覆蓋刀具條碼' : bindingOpen ? '綁定現有刀具' : lookup ? '掃描刀具條碼' : '重新掃碼'} close={stocktakeOpen ? closeScanStocktake : pendingOverwrite ? cancelOverwrite : bindingOpen ? returnToScan : () => { stopCamera(); close() }} size={pendingOverwrite || stocktakeOpen ? '' : 'barcode-scanner-modal'}>
+    {stocktake && stocktakeProduct ? <section ref={stepRef}>
+      <div className="barcode-product-card">
+        <div><span>{stocktakeProduct.code}</span><strong>{stocktakeProduct.name}</strong></div>
+        <p>目前庫存 <b>{formatNumber(stocktakeProduct.stock_quantity)} {stocktakeProduct.unit}</b></p>
+      </div>
+      <form onSubmit={saveScanStocktake}>
+        <div className="form-grid">
+          <Field label={`實際數量（${stocktakeProduct.unit}）`} wide><input type="number" min="0" step="1" inputMode="numeric" required disabled={stocktakeSaving} value={stocktake.quantity} onChange={(event) => { setStocktake({ ...stocktake, quantity: event.target.value }); setError('') }}/></Field>
+          <Field label="盤點備註" wide><input placeholder="選填" disabled={stocktakeSaving} value={stocktake.notes} onChange={(event) => setStocktake({ ...stocktake, notes: event.target.value })}/></Field>
+        </div>
+        {error && <div className="form-error modal-tool-error" role="alert">{error}</div>}
+        <div className="modal-tool-actions">
+          <button className="button barcode-stocktake-return" type="button" disabled={stocktakeSaving} onClick={closeScanStocktake}>返回掃描結果</button>
+          <button className="button primary" type="submit" disabled={stocktakeQuantity === null || stocktakeSaving}><Save/>{stocktakeSaving ? '儲存中…' : '完成盤點'}</button>
+        </div>
+      </form>
+    </section> : pendingOverwrite ? <section ref={stepRef}>
       <p className="modal-intro">此刀具已有條碼。確認覆蓋後，會改用下方的新條碼。</p>
       <div className="modal-replacement-details">
         <strong>{pendingOverwrite.code} · {pendingOverwrite.name}</strong>
@@ -2134,7 +2245,7 @@ function BarcodeScannerModal(props: {
         <button className="button modal-replacement-cancel" type="button" autoFocus disabled={linking} onClick={cancelOverwrite}>取消</button>
         <button className="button modal-replacement-confirm" type="button" disabled={linking} onClick={() => void bindExistingProduct(pendingOverwrite)}>{linking ? '覆蓋中…' : '確認覆蓋'}</button>
       </div>
-    </section> : bindingOpen ? <section ref={bindingRef} className="barcode-binding-step">
+    </section> : bindingOpen ? <section ref={stepRef} className="barcode-binding-step">
       <p className="barcode-binding-code">待綁定條碼 <strong>{barcode}</strong></p>
       <div className="field wide">
         <span><label htmlFor="barcode-binding-product">搜尋刀具</label></span>
@@ -2169,7 +2280,7 @@ function BarcodeScannerModal(props: {
       </div>}
       {!cameraActive && !barcode && <div className="barcode-camera-placeholder"><ScanBarcode/><span>點擊下方按鈕開始掃描</span></div>}
     </div>
-    <button className={`button barcode-camera-button ${cameraActive ? 'outbound' : 'scan-button'}`} type="button" onClick={() => cameraActive ? stopCamera() : void startCamera()}>{cameraActive ? <X/> : barcode ? <History/> : <Camera/>}{cameraActive ? '停止相機' : barcode ? '掃描下一筆' : '開啟相機掃描'}</button>
+    <button ref={cameraButtonRef} className={`button barcode-camera-button ${cameraActive ? 'outbound' : 'scan-button'}`} type="button" onClick={() => cameraActive ? stopCamera() : void startCamera()}>{cameraActive ? <X/> : barcode ? <History/> : <Camera/>}{cameraActive ? '停止相機' : barcode ? '掃描下一筆' : '開啟相機掃描'}</button>
 
     <div className="barcode-manual-test">
       <span>電腦測試／相機無法辨識時</span>
@@ -2190,7 +2301,7 @@ function BarcodeScannerModal(props: {
         <div className="barcode-result-actions">
           <button className="button inbound" type="button" onClick={() => props.openStock('in', matchedProduct.id)}><ArrowDownToLine/>入庫</button>
           <button className="button outbound" type="button" onClick={() => props.openStock('out', matchedProduct.id)}><ArrowUpFromLine/>出庫</button>
-          <button className="button stocktake-barcode-action" type="button" onClick={() => props.openStocktake(matchedProduct.id)}><ClipboardCheck/>盤點</button>
+          <button className="button stocktake-barcode-action" type="button" onClick={() => { setError(''); setStocktake({ product: matchedProduct, quantity: '', notes: '' }) }}><ClipboardCheck/>盤點</button>
           <button className="button edit-barcode-action" type="button" onClick={() => props.editProduct(matchedProduct)}><Pencil/>編輯刀具</button>
         </div>
       </> : <>

@@ -6528,9 +6528,9 @@ textarea:focus-visible {
       content: "差異";
     }
 
-  /* 庫存管理系統－庫存盤點｜「盤點備註」欄左側標題 */
+  /* 庫存管理系統－庫存盤點｜「歷史資料」欄左側標題 */
   .stocktake-table td:nth-child(9)::before {
-      content: "盤點備註";
+      content: "歷史資料";
     }
 
   /* 庫存管理系統－庫存盤點｜更新數量按鈕 */
@@ -6619,7 +6619,7 @@ textarea:focus-visible {
       font-size: 18px; color: #edf4f7; font-weight: 700; line-height: 1.35; text-align: left;
     }
 
-  /* 庫存管理系統－庫存盤點｜「盤點備註」欄內容 */
+  /* 庫存管理系統－庫存盤點｜「歷史資料」欄內容 */
   .stocktake-table td:nth-child(9) {
       grid-column: 1 / 7;
       grid-row: 5;
@@ -6721,7 +6721,7 @@ textarea:focus-visible {
       font-size: 18px !important;
     }
 
-  /* 庫存管理系統－庫存盤點｜「盤點備註」欄內容 */
+  /* 庫存管理系統－庫存盤點｜「歷史資料」欄內容 */
   .stocktake-table tbody td:nth-child(9) {
       border-bottom: 1px solid #252e33;
     }
@@ -6795,9 +6795,9 @@ textarea:focus-visible {
   .stocktake-table th:nth-child(8) { width: 9%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
   .stocktake-table td:nth-child(8) { width: 9%; font-size: 16px; color: #3dccb3; font-weight: 700; text-align: center; }
 
-  /* 搜尋關鍵字：電腦版 + 庫存管理系統 + 庫存盤點表格 + 第 9 欄「盤點備註」。 */
-  .stocktake-table th:nth-child(9) { width: 14%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: left; }
-  .stocktake-table td:nth-child(9) { width: 14%; font-size: 13px; color: #e9eef1; font-weight: 500; text-align: left; }
+  /* 電腦版｜庫存管理系統 → 庫存盤點表格 → 第 9 欄「歷史資料」 */
+  .stocktake-table th:nth-child(9) { width: 14%; font-size: 14px; color: #8ca7b6; font-weight: 700; text-align: center; }
+  .stocktake-table td:nth-child(9) { width: 14%; font-size: 13px; color: #e9eef1; font-weight: 500; text-align: center; }
 
   /* 庫存管理系統－庫存盤點｜欄位標題列 */
   .stocktake-table th {
@@ -6905,71 +6905,64 @@ textarea:focus-visible {
 }
 
 
-/* ============================================================================
-   畫面：庫存管理系統 → 庫存盤點
-   位置：庫存盤點表格 → 每筆資料最右側
-   元件：「盤點備註」輸入框的完整設定
-   說明：電腦版、焦點、提示字與手機版設定全部集中在這一區。
-============================================================================ */
-
-/* --------------------------------------------------------------------------
-   畫面：庫存管理系統 → 庫存盤點
-   位置：庫存盤點表格 → 每筆資料最右側
-   元件：「盤點備註」輸入框
-   裝置：電腦版
---------------------------------------------------------------------------- */
-.stocktake-table .stocktake-note {
-  width: 110px;
-  min-width: 0;
-  max-width: 100%;
-  height: 34px;
-  padding: 0 5px;
-  border: 1px solid #343f45;
-  border-radius: 5px;
-  outline: 0;
-  background: #0d1316;
-  color: #e9eef1;
-  font-family:var(--font-family-site);
+/* 庫存管理系統 → 庫存盤點 → 歷史資料欄｜「查看」按鈕 */
+.button.stocktake-history-button {
+  min-height: 36px;
+  padding: 0 7px;
+  gap: 5px;
+  border-color: #475c65;
+  background: #18252b;
+  color: #c3dee7;
   font-size: 13px;
-  font-weight: 500;
-  line-height: 1.35;
+  white-space: nowrap;
 }
 
-/* --------------------------------------------------------------------------
-   畫面：庫存管理系統 → 庫存盤點
-   位置：庫存盤點表格 → 每筆資料最右側
-   元件：「盤點備註」輸入框被點擊時的外框
-   裝置：所有裝置
---------------------------------------------------------------------------- */
-.stocktake-table .stocktake-note:focus {
-  border-color: #687a84;
+.stocktake-history-button svg {
+  width: 15px;
 }
 
-/* --------------------------------------------------------------------------
-   畫面：庫存管理系統 → 庫存盤點
-   位置：庫存盤點表格 → 每筆資料最右側
-   元件：「盤點備註」尚未輸入時的「選填」提示字
-   裝置：所有裝置
---------------------------------------------------------------------------- */
-.stocktake-table .stocktake-note::placeholder {
-  color: #69777f;
+/* 庫存管理系統 → 庫存盤點 → 歷史資料視窗｜刀具摘要、出入庫與修改紀錄 */
+.stocktake-history {
+  display: grid;
+  gap: 18px;
+  overflow-wrap: anywhere;
 }
 
-/* --------------------------------------------------------------------------
-   畫面：庫存管理系統 → 庫存盤點
-   位置：庫存盤點手機資料卡 →「盤點備註」列
-   元件：「盤點備註」輸入框
-   裝置：手機版（螢幕寬度 620px 以下）
---------------------------------------------------------------------------- */
-@media (max-width: 620px) {
-  .stocktake-table .stocktake-note {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    height: 36px;
-    padding: 0 8px;
-    font-size: 18px;
-  }
+.stocktake-history h3 {
+  margin: 0 0 8px;
+  color: #edf4f7;
+}
+
+.stocktake-history-movements {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stocktake-history-card {
+  padding: 12px;
+  border: 1px solid #39464d;
+  border-radius: 7px;
+  background: #131c21;
+}
+
+.stocktake-history-card p {
+  margin: 5px 0 0;
+  color: #c6d4db;
+}
+
+.stocktake-history-card time {
+  display: block;
+  margin-top: 4px;
+  color: #a8b8c0;
+  font-size: 13px;
+}
+
+/* 庫存管理系統 → 庫存盤點 → 歷史資料視窗｜保留刀具備註與異動備註中的換行 */
+.stocktake-history-note {
+  white-space: pre-wrap;
 }
 
 
@@ -8625,6 +8618,13 @@ textarea:focus-visible {
 .barcode-link-existing {
   width: 100%;
   margin-top: 10px;
+}
+
+/* 庫存管理系統－條碼掃描與產生 → 掃碼盤點｜「返回掃描結果」按鈕 */
+.button.barcode-stocktake-return {
+  border-color: #39444b;
+  background: #151c21;
+  color: #c9d4da;
 }
 
 /* 庫存管理系統－條碼掃描與產生｜綁定畫面的待綁定條碼與已選刀具 */
