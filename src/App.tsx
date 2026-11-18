@@ -899,13 +899,18 @@ function calculateProductionTotals(records: ProductionRecord[]) {
   }
 }
 
-function ProductionTotals({ totals }: { totals: ReturnType<typeof calculateProductionTotals> }) {
-  return <div className="production-totals">
-    <div><span>總天數</span><strong>{formatNumber(totals.totalDays)}</strong></div>
+function ProductionTotals({ totals, latestProductCode }: { totals: ReturnType<typeof calculateProductionTotals>; latestProductCode?: string }) {
+  const latest = latestProductCode !== undefined
+  return <div className={latest ? 'production-totals production-totals-latest' : 'production-totals'}>
+    {!latest && <div><span>總天數</span><strong>{formatNumber(totals.totalDays)}</strong></div>}
     <div><span>總時間</span><strong>{formatNumber(totals.totalMinutes)} <small>分</small></strong></div>
-    <div><span>1天平均</span><strong>{formatNumber(totals.dailyAverage)} <small>顆</small></strong></div>
+    {!latest && <div><span>1天平均</span><strong>{formatNumber(totals.dailyAverage)} <small>顆</small></strong></div>}
     <div><span>1顆平均</span><strong>{formatNumber(totals.pieceSeconds)} <small>秒</small></strong></div>
-    <div className="production-total-quantity"><span>總數量</span><strong>{formatNumber(totals.totalQuantity)}</strong></div>
+    <div className={latest ? undefined : 'production-total-quantity'}>
+      {latest && <span className="production-latest-product-code">{latestProductCode}</span>}
+      <span>總數量</span>
+      <strong>{formatNumber(totals.totalQuantity)}</strong>
+    </div>
   </div>
 }
 
@@ -917,22 +922,29 @@ function ProductionQueryPage({ records, productCodes, machines, loading, readOnl
   const [editingRecord, setEditingRecord] = useState<ProductionRecord | null>(null)
   const [queryError, setQueryError] = useState('')
   const [deletingRecordId, setDeletingRecordId] = useState('')
-  const selectedRecords = useMemo(() => records
-    .filter((record) => record.product_code.toLowerCase() === productCode.trim().toLowerCase())
-    .sort((a, b) => `${b.work_date}-${b.created_at}-${b.id}`.localeCompare(`${a.work_date}-${a.created_at}-${a.id}`)), [records, productCode])
-  const results = useMemo(() => {
+  const selectedCode = productCode.trim().toUpperCase()
+  const resultGroups = useMemo(() => {
     if (!mode) return []
-    if (mode === 'range') return selectedRecords.filter((record) => (!from || record.work_date >= from) && (!to || record.work_date <= to))
-    if (mode === 'latest') {
-      const latestDate = selectedRecords[0]?.work_date
-      return latestDate ? selectedRecords.filter((record) => record.work_date === latestDate) : []
+    const matchingRecords = records
+      .filter((record) => !selectedCode || record.product_code.trim().toUpperCase() === selectedCode)
+      .sort((a, b) => `${b.work_date}-${b.created_at}-${b.id}`.localeCompare(`${a.work_date}-${a.created_at}-${a.id}`))
+    const groups = new Map<string, ProductionRecord[]>()
+    if (selectedCode) groups.set(selectedCode, [])
+
+    // 依加工日期由新到舊掃過，各產品第一筆的日期就是該產品的最新加工日。
+    for (const record of matchingRecords) {
+      if (mode === 'range' && ((from && record.work_date < from) || (to && record.work_date > to))) continue
+      const code = record.product_code.trim().toUpperCase()
+      const group = groups.get(code) ?? []
+      if (mode === 'latest' && group.length && record.work_date !== group[0].work_date) continue
+      group.push(record)
+      groups.set(code, group)
     }
-    return selectedRecords
-  }, [mode, selectedRecords, from, to])
-  const totals = useMemo(() => calculateProductionTotals(results), [results])
+    return [...groups].map(([code, results]) => ({ code, results, totals: calculateProductionTotals(results) }))
+  }, [mode, records, selectedCode, from, to])
   const runQuery = (nextMode: ProductionQueryMode) => {
     setQueryError('')
-    if (!productCode.trim()) { setMode(null); setQueryError('請先輸入或選擇產品編號'); return }
+    if (!selectedCode && nextMode !== 'latest') { setMode(null); setQueryError('請先輸入或選擇產品編號'); return }
     if (nextMode === 'range' && from && to && from > to) { setMode(null); setQueryError('開始日期不能晚於結束日期'); return }
     setMode(nextMode)
   }
@@ -959,12 +971,15 @@ function ProductionQueryPage({ records, productCodes, machines, loading, readOnl
       {queryError && <div className="form-error production-error">{queryError}</div>}
     </div>
 
-    {loading ? <PageSkeleton /> : mode && <div className="production-results">
-      <div className="result-title"><span>產品編號</span><strong>{productCode.trim().toUpperCase()}</strong><small>{mode === 'range' ? `${formatDate(from)} ～ ${formatDate(to)}` : mode === 'latest' ? `最後日期 ${formatDate(results[0]?.work_date || '')}・全部機台` : '全部紀錄'}</small></div>
+    {loading ? <PageSkeleton /> : mode && resultGroups.map(({ code, results, totals }) => <div key={code} className="production-results">
+      <div className="result-title"><span>產品編號</span><strong>{code}</strong><small>{mode === 'range' ? `${formatDate(from)} ～ ${formatDate(to)}` : mode === 'latest' ? `最後日期 ${formatDate(results[0]?.work_date || '')}・全部機台` : '全部紀錄'}</small></div>
       {results.length === 0 ? <div className="production-empty"><ClipboardList />沒有符合條件的加工紀錄</div> : <>
         <div className="production-table-wrap"><table className={`production-table ${readOnly ? 'guest-read-only-table' : ''}`}><thead><tr><th>日期</th><th>機台</th><th>時</th><th>分</th><th>數量</th><th>總時間</th><th>備註</th>{!readOnly && <th className="record-action-column" aria-label="操作" />}</tr></thead><tbody>{results.map((record) => <tr key={record.id}><td>{formatDate(record.work_date)}</td><td>{record.machine}</td><td>{record.hours}</td><td>{record.minutes}</td><td>{formatNumber(record.quantity)}</td><td>{formatNumber(record.total_minutes)}</td><td>{record.notes || '—'}</td>{!readOnly && <td><div className="production-row-actions"><button className="production-row-edit" onClick={() => setEditingRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`編輯 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Pencil />編輯</button><button className="production-row-delete" onClick={() => void deleteOneRecord(record)} disabled={Boolean(deletingRecordId)} aria-label={`刪除 ${formatDate(record.work_date)} ${record.machine} 加工紀錄`}><Trash2 />{deletingRecordId === record.id ? '刪除中' : '刪除'}</button></div></td>}</tr>)}</tbody></table></div>
-        <ProductionTotals totals={totals} />
+        <ProductionTotals totals={totals} latestProductCode={mode === 'latest' ? code : undefined} />
       </>}
+    </div>)}
+    {!loading && mode === 'latest' && resultGroups.length === 0 && <div className="production-results">
+      <div className="production-empty"><ClipboardList />沒有符合條件的加工紀錄</div>
     </div>}
     {!readOnly && editingRecord && <ProductionRecordEditModal record={editingRecord} productCodes={productCodes} machines={machines} close={() => setEditingRecord(null)} save={async (input) => { await onUpdateRecord(editingRecord, input); setEditingRecord(null) }} />}
   </section>

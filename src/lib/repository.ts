@@ -122,9 +122,20 @@ export async function loadInventory(): Promise<{ products: Product[]; movements:
 
 export async function loadProductionRecords(): Promise<ProductionRecord[]> {
   if (isDemoMode) return readLocal(PRODUCTION_KEY, seedProductionRecords)
-  const { data, error } = await supabase!.from('production_records').select('*').order('work_date', { ascending: false }).order('created_at', { ascending: false })
-  if (error) throw error
-  return data as ProductionRecord[]
+  const records: ProductionRecord[] = []
+  let lastId: string | undefined
+  // 由上一批最後的紀錄 ID 繼續讀取，避免分頁期間增刪資料造成位置位移。
+  while (true) {
+    const query = supabase!.from('production_records').select('*').order('id').limit(1000)
+    if (lastId) query.gt('id', lastId)
+    const { data, error } = await query
+    if (error) throw error
+    if (!data.length) break
+    const page = data as ProductionRecord[]
+    records.push(...page)
+    lastId = page[page.length - 1].id
+  }
+  return records.sort((a, b) => b.work_date.localeCompare(a.work_date) || Date.parse(b.created_at) - Date.parse(a.created_at))
 }
 
 export async function loadProductionOptions(): Promise<ProductionOption[]> {

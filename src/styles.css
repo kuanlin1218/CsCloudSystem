@@ -3517,6 +3517,11 @@ textarea:focus-visible {
   box-shadow: 0 15px 45px rgba(0,0,0,.2);
 }
 
+/* 加工管理系統｜加工數量查詢 → 各產品最後一筆結果之間的間距 */
+.production-query-page .production-results + .production-results {
+  margin-top: 20px;
+}
+
 /* 加工管理系統｜產品編號、日期範圍與筆數標題列 */
 .result-title {
   min-height: 60px;
@@ -3774,6 +3779,11 @@ textarea:focus-visible {
   background: rgba(255,221,53,.10);
 }
 
+/* 加工管理系統｜加工數量查詢 → 最後一筆結果的總時間、1顆平均、總數量 */
+.production-totals-latest {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 /* 加工管理系統｜總天數、總數量、總時間與平均值統計卡 */
 .production-totals > div {
   min-height: 94px;
@@ -3800,6 +3810,22 @@ textarea:focus-visible {
   margin-top: 7px;
   color: #ffc23a;
   font: 800 23px var(--font-family-monospace);
+}
+
+/* 加工管理系統｜加工數量查詢 → 最後一筆結果「總數量」上方的產品編號 */
+.production-totals-latest .production-latest-product-code {
+  margin-bottom: 3px;
+  color: #ffe285;
+  font-family: var(--font-family-monospace);
+  font-weight: 800;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* 加工管理系統｜加工數量查詢 → 最後一筆結果右側的「總數量」數字 */
+.production-totals-latest > div:last-child strong {
+  color: #ffe285;
+  font-size: clamp(27px, 4vw, 36px);
 }
 
 /* 加工管理系統｜總天數、總數量、總時間與平均值統計卡內的補充說明文字 */
@@ -4252,7 +4278,7 @@ textarea:focus-visible {
     }
 
   /* 加工管理系統｜總天數、總數量、總時間與平均值統計卡 */
-  .production-totals {
+  .production-totals:not(.production-totals-latest) {
       grid-template-columns: 1fr 1fr;
     }
 
@@ -4262,8 +4288,15 @@ textarea:focus-visible {
     }
 
   /* 加工管理系統｜總天數、總數量、總時間與平均值統計卡 */
-  .production-totals > div:last-child {
+  .production-totals:not(.production-totals-latest) > div:last-child {
       grid-column: 1 / -1;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量查詢 → 最後一筆的三欄統計 */
+  .production-totals-latest > div {
+      padding-inline: 6px;
+      text-align: center;
+      overflow-wrap: anywhere;
     }
 
   /* 加工管理系統｜加工登記／查詢表單的「日期、產品編號、機台、數量、備註」各欄位 */

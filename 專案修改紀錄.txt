@@ -1437,6 +1437,36 @@ GitHub Summary：掃碼新增刀具後自動返回條碼掃描。
 SQL：不需要執行 SQL。
 GitHub Summary：置中操作紀錄頁並建立專用按鈕樣式。
 
+2026-11-17
+修改內容：使用者確認操作紀錄已上線，實測操作會留下紀錄。同步交接待辦，移除已不用的 .env.example 設定步驟。
+修改檔案：README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行 SQL。
+GitHub Summary：更新操作紀錄上線驗證與接續待辦。
+
+2026-11-18
+修改內容：未選產品編號時，「查詢最後一筆」依產品列出各自最新加工日的機台紀錄和合計；加工歷史改為分頁讀取。
+修改檔案：src/App.tsx、src/styles.css、src/lib/repository.ts、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：加工查詢支援各產品最新加工日與獨立合計。
+
+2026-11-18
+修改內容：「查詢最後一筆」的結果移除總天數與 1 天平均，將總時間、1 顆平均與總數量排在同一列。
+修改檔案：src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：將加工最後一筆的三項統計排成同一列。
+
+2026-11-18
+修改內容：放大「查詢最後一筆」結果的總數量數字，並改用亮黃色。
+修改檔案：src/styles.css、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：強調加工最後一筆結果的總數量。
+
+2026-11-18
+修改內容：「查詢最後一筆」在各組結果的總數量上方顯示該組產品編號。
+修改檔案：src/App.tsx、src/styles.css、README.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：在加工最後一筆的總數量上方顯示產品編號。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
