@@ -1059,6 +1059,45 @@ textarea:focus-visible {
   justify-content: center;
 }
 
+/* 網站共用按鈕、表單與彈出視窗｜加工重複登記及刀具條碼覆蓋的原資料與新資料 */
+.modal-replacement-details {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #3a464d;
+  border-radius: 7px;
+  background: #10171b;
+  overflow-wrap: anywhere;
+}
+
+.modal-replacement-details > div {
+  padding: 9px 11px;
+  border-radius: 5px;
+}
+
+.modal-replacement-original {
+  background: #36261d;
+  color: #ffd2ad;
+}
+
+.modal-replacement-incoming {
+  background: #153430;
+  color: #b1f2e4;
+}
+
+/* 網站共用按鈕、表單與彈出視窗｜加工重複登記及刀具條碼覆蓋的取消與覆蓋按鈕 */
+.button.modal-replacement-cancel {
+  border-color: #485961;
+  background: #253239;
+  color: #e0e8ec;
+}
+
+.button.modal-replacement-confirm {
+  border-color: #a86540;
+  background: #482d1e;
+  color: #ffd2ad;
+}
+
 /* 網站共用按鈕、表單與彈出視窗｜搜尋、分類與日期篩選外框 */
 .filter-card {
   border: 1px solid #2a3238;
@@ -2900,46 +2939,7 @@ textarea:focus-visible {
   margin-bottom: 14px;
 }
 
-/* 加工管理系統｜加工數量登記 → 重複登記提醒的原資料與本次資料 */
-.production-duplicate-details {
-  display: grid;
-  gap: 10px;
-  padding: 14px;
-  border: 1px solid #3a464d;
-  border-radius: 7px;
-  background: #10171b;
-  overflow-wrap: anywhere;
-}
-
-/* 加工管理系統｜加工數量登記 → 重複登記提醒的兩筆資料底色 */
-.production-duplicate-details > div {
-  padding: 9px 11px;
-  border-radius: 5px;
-}
-
-.production-duplicate-original {
-  background: #36261d;
-  color: #ffd2ad;
-}
-
-.production-duplicate-incoming {
-  background: #153430;
-  color: #b1f2e4;
-}
-
-/* 加工管理系統｜加工數量登記 → 重複登記提醒的取消、覆蓋與新增按鈕 */
-.button.production-duplicate-cancel {
-  border-color: #485961;
-  background: #253239;
-  color: #e0e8ec;
-}
-
-.button.production-duplicate-overwrite {
-  border-color: #a86540;
-  background: #482d1e;
-  color: #ffd2ad;
-}
-
+/* 加工管理系統｜加工數量登記 → 重複登記提醒的「新增一筆」按鈕 */
 .button.production-duplicate-create {
   border-color: #51bca9;
   background: #75e4ce;

@@ -946,15 +946,15 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
     </form>
     {pendingDuplicate && <Modal title="發現重複加工登記" close={closeDuplicate}>
       <p className="modal-intro">相同加工日期、機台和產品編號已有登記。請選擇如何儲存本次內容。</p>
-      <div className="production-duplicate-details">
+      <div className="modal-replacement-details">
         <strong>{formatDate(pendingDuplicate.input.work_date)} · {pendingDuplicate.input.machine} · {pendingDuplicate.input.product_code}</strong>
-        <div className="production-duplicate-original"><strong>原登記（{formatTaipeiRecordTime(pendingDuplicate.record.created_at, true, true)}）</strong><br />{formatNumber(pendingDuplicate.record.quantity)} 顆 · {formatNumber(pendingDuplicate.record.total_minutes)} 分{pendingDuplicate.record.notes && <> · {pendingDuplicate.record.notes}</>}</div>
-        <div className="production-duplicate-incoming"><strong>本次登記</strong><br />{formatNumber(pendingDuplicate.input.quantity)} 顆 · {formatNumber(pendingDuplicate.input.hours * 60 + pendingDuplicate.input.minutes)} 分{pendingDuplicate.input.notes && <> · {pendingDuplicate.input.notes}</>}</div>
+        <div className="modal-replacement-original"><strong>原登記（{formatTaipeiRecordTime(pendingDuplicate.record.created_at, true, true)}）</strong><br />{formatNumber(pendingDuplicate.record.quantity)} 顆 · {formatNumber(pendingDuplicate.record.total_minutes)} 分{pendingDuplicate.record.notes && <> · {pendingDuplicate.record.notes}</>}</div>
+        <div className="modal-replacement-incoming"><strong>本次登記</strong><br />{formatNumber(pendingDuplicate.input.quantity)} 顆 · {formatNumber(pendingDuplicate.input.hours * 60 + pendingDuplicate.input.minutes)} 分{pendingDuplicate.input.notes && <> · {pendingDuplicate.input.notes}</>}</div>
       </div>
       {formError && <div className="form-error modal-tool-error" role="alert">{formError}</div>}
       <div className="modal-tool-actions">
-        <button className="button production-duplicate-cancel" type="button" disabled={saving} autoFocus onClick={closeDuplicate}>取消</button>
-        <button className="button production-duplicate-overwrite" type="button" disabled={saving} onClick={() => void saveEntry(pendingDuplicate.input, pendingDuplicate.record)}>覆蓋原登記</button>
+        <button className="button modal-replacement-cancel" type="button" disabled={saving} autoFocus onClick={closeDuplicate}>取消</button>
+        <button className="button modal-replacement-confirm" type="button" disabled={saving} onClick={() => void saveEntry(pendingDuplicate.input, pendingDuplicate.record)}>覆蓋原登記</button>
         <button className="button production-duplicate-create" type="button" disabled={saving} onClick={() => void saveEntry(pendingDuplicate.input, 'new')}>新增一筆</button>
       </div>
     </Modal>}
@@ -1862,6 +1862,7 @@ function BarcodeScannerModal(props: {
   const [error, setError] = useState('')
   const [linking, setLinking] = useState(false)
   const [bindingOpen, setBindingOpen] = useState(false)
+  const [pendingOverwrite, setPendingOverwrite] = useState<Product | null>(null)
   const bindingRef = useRef<HTMLElement>(null)
   const [keyboardQrOpen, setKeyboardQrOpen] = useState(false)
   const normalizedBarcode = barcode.trim().toLowerCase()
@@ -1942,7 +1943,7 @@ function BarcodeScannerModal(props: {
     if (!barcode) return
     const frame = window.requestAnimationFrame(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
     return () => window.cancelAnimationFrame(frame)
-  }, [barcode, bindingOpen])
+  }, [barcode, bindingOpen, pendingOverwrite])
 
   const startCamera = async () => {
     setError(''); setBarcode(''); setSelectedProductId('')
@@ -2083,22 +2084,35 @@ function BarcodeScannerModal(props: {
     playScanFeedback()
   }
 
-  const bindExistingProduct = async () => {
-    if (!lookup) return
+  const requestBinding = () => {
     const product = products.find((item) => item.id === selectedProductId)
     if (!product || !normalizedBarcode) { setError('請先選擇要綁定的刀具'); return }
-    const expectedBarcode = product.barcode || ''
-    const previousBarcode = expectedBarcode.trim()
+    const previousBarcode = product.barcode?.trim()
     setError('')
-    if (previousBarcode && previousBarcode.toLowerCase() !== normalizedBarcode
-      && !window.confirm(`刀具 ${product.code}「${product.name}」已有條碼。\n\n原條碼：${previousBarcode}\n新條碼：${barcode.trim()}\n\n確定要覆蓋原條碼嗎？`)) return
+    if (previousBarcode && previousBarcode.toLowerCase() !== normalizedBarcode) {
+      setPendingOverwrite(product)
+      return
+    }
+    void bindExistingProduct(product)
+  }
+
+  const bindExistingProduct = async (product: Product) => {
+    if (!lookup || linking) return
+    setError('')
     setLinking(true)
     try {
-      await lookup.linkBarcode(product.id, barcode, expectedBarcode)
+      await lookup.linkBarcode(product.id, barcode, product.barcode || '')
+      setPendingOverwrite(null)
       setBindingOpen(false)
     }
     catch (linkError) { setError(messageFor(linkError)) }
     finally { setLinking(false) }
+  }
+
+  const cancelOverwrite = () => {
+    if (linking) return
+    setError('')
+    setPendingOverwrite(null)
   }
 
   const returnToScan = () => {
@@ -2107,8 +2121,20 @@ function BarcodeScannerModal(props: {
     setBindingOpen(false)
   }
 
-  return <Modal title={bindingOpen ? '綁定現有刀具' : lookup ? '掃描刀具條碼' : '重新掃碼'} close={bindingOpen ? returnToScan : () => { stopCamera(); close() }} size="barcode-scanner-modal">
-    {bindingOpen ? <section ref={bindingRef} className="barcode-binding-step">
+  return <Modal title={pendingOverwrite ? '覆蓋刀具條碼' : bindingOpen ? '綁定現有刀具' : lookup ? '掃描刀具條碼' : '重新掃碼'} close={pendingOverwrite ? cancelOverwrite : bindingOpen ? returnToScan : () => { stopCamera(); close() }} size={pendingOverwrite ? '' : 'barcode-scanner-modal'}>
+    {pendingOverwrite ? <section ref={bindingRef}>
+      <p className="modal-intro">此刀具已有條碼。確認覆蓋後，會改用下方的新條碼。</p>
+      <div className="modal-replacement-details">
+        <strong>{pendingOverwrite.code} · {pendingOverwrite.name}</strong>
+        <div className="modal-replacement-original"><strong>原條碼</strong><br />{pendingOverwrite.barcode.trim()}</div>
+        <div className="modal-replacement-incoming"><strong>新條碼</strong><br />{barcode.trim()}</div>
+      </div>
+      {error && <div className="form-error modal-tool-error" role="alert">{error}</div>}
+      <div className="modal-tool-actions">
+        <button className="button modal-replacement-cancel" type="button" autoFocus disabled={linking} onClick={cancelOverwrite}>取消</button>
+        <button className="button modal-replacement-confirm" type="button" disabled={linking} onClick={() => void bindExistingProduct(pendingOverwrite)}>{linking ? '覆蓋中…' : '確認覆蓋'}</button>
+      </div>
+    </section> : bindingOpen ? <section ref={bindingRef} className="barcode-binding-step">
       <p className="barcode-binding-code">待綁定條碼 <strong>{barcode}</strong></p>
       <div className="field wide">
         <span><label htmlFor="barcode-binding-product">搜尋刀具</label></span>
@@ -2117,7 +2143,7 @@ function BarcodeScannerModal(props: {
       {error && <p className="form-error barcode-scanner-error" role="alert">{error}</p>}
       <div className="barcode-binding-actions">
         <button className="button" type="button" disabled={linking} onClick={returnToScan}>返回掃描結果</button>
-        <button className="button scan-button" type="button" disabled={!selectedProductId || linking} onClick={() => void bindExistingProduct()}><Save/>{linking ? '綁定中…' : '確認綁定'}</button>
+        <button className="button scan-button" type="button" disabled={!selectedProductId || linking} onClick={requestBinding}><Save/>{linking ? '綁定中…' : '確認綁定'}</button>
       </div>
     </section> : <>
     {/* <p className="barcode-scanner-intro">將條碼放在框線中央，建議先保持約 20～30 公分再慢慢靠近。第一次使用時，請允許網站使用 iPhone 相機。</p> */}
