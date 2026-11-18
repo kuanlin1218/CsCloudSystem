@@ -73,6 +73,18 @@ textarea {
   color: inherit;
 }
 
+/* 全站表單｜加工數量、庫存數量與單價等數字欄位：隱藏瀏覽器的上下箭頭。 */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* ############################################################################
    二、全站基本元件
 ############################################################################ */
