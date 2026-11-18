@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
@@ -14,7 +14,7 @@ import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
 import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
 import type { WorkbookPreview } from './lib/adminDataWorkbook'
-import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, loadInventory, loadOperationLog, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
+import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, findMatchingProductionRecord, loadInventory, loadOperationLog, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type OperationLogEntry, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
 
 const blankProduct = (): ProductInput => ({
@@ -495,7 +495,12 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} showOperationLog={canReadOperationLog} />}
         {activePage === 'operation-log' && <OperationLogPage goHome={() => nav('home')} />}
         {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
-        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} onSave={async (input) => {
+        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} onSave={async (input, overwrite) => {
+          if (overwrite) {
+            await updateProductionRecord(overwrite.id, input, overwrite)
+            await afterSave('已覆蓋原加工登記')
+            return
+          }
           await createProductionRecord(input); await afterSave('加工數量已登記')
         }} onDeleteLast={async (record) => {
           const deleted = await requestAdminDelete('刪除最後一筆加工紀錄', `${record.product_code}・${record.machine}・${record.quantity}，刪除後無法復原。`, () => deleteProductionRecord(record.id))
@@ -538,7 +543,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         {activePage === 'scanner-settings' && <ScannerSettingsPage />}
       </main>
 
-      {showTableScrollControls && <TableScrollControls />}
+      {showTableScrollControls && <TableScrollControls key={activePage} />}
 
       {!guestMode && stockModal && <StockModal type={stockModal.type} initialProductId={stockModal.productId} products={products} close={() => setStockModal(null)} switchType={(type) => setStockModal((current) => current ? { ...current, type } : null)} save={async (input) => {
         await registerMovement(input); setStockModal(null); await afterSave(input.movement_type === 'in' ? '入庫完成' : '出庫完成')
@@ -828,11 +833,13 @@ function ProductionQuantityChart({ productCode, days, total }: { productCode: st
   </article>
 }
 
-function ProductionEntryPage({ records, productCodes, machines, loading, onSave, onDeleteLast }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; onSave: (input: ProductionInput) => Promise<void>; onDeleteLast: (record: ProductionRecord) => Promise<void> }) {
+function ProductionEntryPage({ records, productCodes, machines, loading, onSave, onDeleteLast }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; onSave: (input: ProductionInput, overwrite?: ProductionRecord) => Promise<void>; onDeleteLast: (record: ProductionRecord) => Promise<void> }) {
   const [form, setForm] = useState<ProductionInput>({ work_date: previousLocalDate(), product_code: '', machine: '', hours: 0, minutes: 0, quantity: 0, notes: '' })
   const [showTimeCalculator, setShowTimeCalculator] = useState(false)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
+  const saveInProgress = useRef(false)
+  const [pendingDuplicate, setPendingDuplicate] = useState<{ input: ProductionInput; record: ProductionRecord } | null>(null)
   const latest = useMemo(() => [...records].sort((a, b) => `${b.created_at}-${b.id}`.localeCompare(`${a.created_at}-${a.id}`))[0], [records])
   useEffect(() => {
     setForm((current) => ({
@@ -842,19 +849,39 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
     }))
   }, [productCodes, machines])
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault(); setFormError('')
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    if (saveInProgress.current || pendingDuplicate) return
+    setFormError('')
     if (!form.product_code.trim()) { setFormError('請輸入或選擇產品編號'); return }
     if (!form.machine.trim()) { setFormError('請輸入或選擇機台'); return }
     if (!Number.isInteger(form.hours) || form.hours < 0 || !Number.isInteger(form.minutes) || form.minutes < 0 || form.minutes > 59) { setFormError('工時格式不正確，分鐘需介於 0 到 59'); return }
     if (form.hours * 60 + form.minutes <= 0) { setFormError('加工時間必須大於 0 分鐘'); return }
     if (!Number.isInteger(form.quantity) || form.quantity <= 0) { setFormError('加工數量必須是大於 0 的整數'); return }
+    void saveEntry({ ...form, product_code: form.product_code.trim().toUpperCase(), machine: form.machine.trim().toUpperCase() })
+  }
+
+  const saveEntry = async (input: ProductionInput, decision?: ProductionRecord | 'new') => {
+    if (saveInProgress.current) return
+    saveInProgress.current = true
     setSaving(true)
+    setFormError('')
     try {
-      await onSave({ ...form, product_code: form.product_code.trim().toUpperCase(), machine: form.machine.trim().toUpperCase() })
+      if (!decision) {
+        const record = await findMatchingProductionRecord(input)
+        if (record) { setPendingDuplicate({ input, record }); return }
+      }
+      await onSave(input, decision === 'new' ? undefined : decision)
+      setPendingDuplicate(null)
       setForm((current) => ({ ...current, hours: 0, minutes: 0, quantity: 0, notes: '' }))
     } catch (error) { setFormError(messageFor(error)) }
-    finally { setSaving(false) }
+    finally { saveInProgress.current = false; setSaving(false) }
+  }
+
+  const closeDuplicate = () => {
+    if (saveInProgress.current) return
+    setPendingDuplicate(null)
+    setFormError('')
   }
 
   const handleEntryKeyDown = (event: ReactKeyboardEvent<HTMLFormElement>) => {
@@ -907,11 +934,25 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
 
       <div className="production-field-row"><label htmlFor="production-entry-quantity">數量</label><input id="production-entry-quantity" type="number" inputMode="numeric" enterKeyHint="done" pattern="[0-9]*" min="1" step="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: Math.max(0, Number(e.target.value)) })} placeholder="輸入完成數量" required /></div>
       <div className="production-field-row note-row"><label htmlFor="production-entry-notes">備註</label><textarea id="production-entry-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="選填" /></div>
-      {formError && <div className="form-error production-error" role="alert">{formError}</div>}
+      {formError && !pendingDuplicate && <div className="form-error production-error" role="alert">{formError}</div>}
       <button className="production-action save-action" disabled={saving} type="submit"><Save />{saving ? '儲存中…' : '送出登記'}</button>
-      <button className="production-action delete-action" disabled={loading || !latest} type="button" onClick={() => latest && void onDeleteLast(latest)}><Trash2 />刪除最後一筆</button>
-      <button className="production-action time-tool-action" type="button" onClick={() => setShowTimeCalculator(true)}><Calculator />加工時間計算</button>
+      <button className="production-action delete-action" disabled={loading || saving || !latest} type="button" onClick={() => latest && void onDeleteLast(latest)}><Trash2 />刪除最後一筆</button>
+      <button className="production-action time-tool-action" disabled={saving} type="button" onClick={() => setShowTimeCalculator(true)}><Calculator />加工時間計算</button>
     </form>
+    {pendingDuplicate && <Modal title="發現重複加工登記" close={closeDuplicate}>
+      <p className="modal-intro">相同加工日期、機台和產品編號已有登記。請選擇如何儲存本次內容。</p>
+      <div className="production-duplicate-details">
+        <strong>{formatDate(pendingDuplicate.input.work_date)} · {pendingDuplicate.input.machine} · {pendingDuplicate.input.product_code}</strong>
+        <div className="production-duplicate-original"><strong>原登記（{formatTaipeiRecordTime(pendingDuplicate.record.created_at, true, true)}）</strong><br />{formatNumber(pendingDuplicate.record.quantity)} 顆 · {formatNumber(pendingDuplicate.record.total_minutes)} 分{pendingDuplicate.record.notes && <> · {pendingDuplicate.record.notes}</>}</div>
+        <div className="production-duplicate-incoming"><strong>本次登記</strong><br />{formatNumber(pendingDuplicate.input.quantity)} 顆 · {formatNumber(pendingDuplicate.input.hours * 60 + pendingDuplicate.input.minutes)} 分{pendingDuplicate.input.notes && <> · {pendingDuplicate.input.notes}</>}</div>
+      </div>
+      {formError && <div className="form-error modal-tool-error" role="alert">{formError}</div>}
+      <div className="modal-tool-actions">
+        <button className="button production-duplicate-cancel" type="button" disabled={saving} autoFocus onClick={closeDuplicate}>取消</button>
+        <button className="button production-duplicate-overwrite" type="button" disabled={saving} onClick={() => void saveEntry(pendingDuplicate.input, pendingDuplicate.record)}>覆蓋原登記</button>
+        <button className="button production-duplicate-create" type="button" disabled={saving} onClick={() => void saveEntry(pendingDuplicate.input, 'new')}>新增一筆</button>
+      </div>
+    </Modal>}
     {showTimeCalculator && <ProductionTimeCalculatorModal initialHours={form.hours} initialMinutes={form.minutes} close={() => setShowTimeCalculator(false)} apply={(hours, minutes) => { setForm((current) => ({ ...current, hours, minutes })); setShowTimeCalculator(false) }} />}
   </section>
 }
@@ -2336,9 +2377,35 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
 function Field({ label, wide, children }: { label: string; wide?: boolean; children: ReactNode }) { return <label className={`field ${wide ? 'wide' : ''}`}><span>{label}</span>{children}</label> }
 
 function TableScrollControls() {
+  const [isScrolling, setIsScrolling] = useState(false)
+  const hideTimer = useRef<number | undefined>(undefined)
+  const showControls = useCallback(() => {
+    if (hideTimer.current === undefined) setIsScrolling(true)
+    window.clearTimeout(hideTimer.current)
+    hideTimer.current = window.setTimeout(() => {
+      hideTimer.current = undefined
+      setIsScrolling(false)
+    }, 1800)
+  }, [])
+
+  useEffect(() => {
+    const mobile = window.matchMedia('(max-width: 620px)')
+    const handleScroll = () => {
+      if (mobile.matches) showControls()
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.clearTimeout(hideTimer.current)
+      hideTimer.current = undefined
+    }
+  }, [showControls])
+
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
-  const scrollToBottom = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
-  return <nav className="table-scroll-controls" aria-label="表格快速捲動">
+  const scrollToBottom = () => window.scrollTo({ top: (document.scrollingElement ?? document.documentElement).scrollHeight, behavior: 'smooth' })
+  return <nav className={`table-scroll-controls${isScrolling ? ' is-scrolling' : ''}`} aria-label="表格快速捲動" onPointerDown={() => {
+    if (window.matchMedia('(max-width: 620px)').matches) showControls()
+  }}>
     <button type="button" onClick={scrollToTop} aria-label="回到頁面最頂端" title="回到最頂端"><ChevronUp /></button>
     <button type="button" onClick={scrollToBottom} aria-label="前往頁面最底端" title="前往最底端"><ChevronDown /></button>
   </nav>

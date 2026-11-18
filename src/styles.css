@@ -2886,6 +2886,52 @@ textarea:focus-visible {
   margin-bottom: 14px;
 }
 
+/* 加工管理系統｜加工數量登記 → 重複登記提醒的原資料與本次資料 */
+.production-duplicate-details {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #3a464d;
+  border-radius: 7px;
+  background: #10171b;
+  overflow-wrap: anywhere;
+}
+
+/* 加工管理系統｜加工數量登記 → 重複登記提醒的兩筆資料底色 */
+.production-duplicate-details > div {
+  padding: 9px 11px;
+  border-radius: 5px;
+}
+
+.production-duplicate-original {
+  background: #36261d;
+  color: #ffd2ad;
+}
+
+.production-duplicate-incoming {
+  background: #153430;
+  color: #b1f2e4;
+}
+
+/* 加工管理系統｜加工數量登記 → 重複登記提醒的取消、覆蓋與新增按鈕 */
+.button.production-duplicate-cancel {
+  border-color: #485961;
+  background: #253239;
+  color: #e0e8ec;
+}
+
+.button.production-duplicate-overwrite {
+  border-color: #a86540;
+  background: #482d1e;
+  color: #ffd2ad;
+}
+
+.button.production-duplicate-create {
+  border-color: #51bca9;
+  background: #75e4ce;
+  color: #0b2723;
+}
+
 /* 加工管理系統｜大型操作按鈕 */
 .production-action {
   width: 100%;
@@ -4407,6 +4453,33 @@ textarea:focus-visible {
       gap: 9px;
     }
 
+  /* 手機版｜加工管理系統 → 加工數量查詢 → 開始日期、結束日期與產品編號的排列 */
+  .query-card .query-fields {
+      gap: 6px;
+    }
+
+  .query-card .query-fields > .production-field-row {
+      min-height: 44px;
+      grid-template-columns: 86px minmax(0, 1fr);
+      margin-bottom: 0;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量查詢 → 日期與產品編號的標題、日期欄及選單 */
+  .query-card .query-fields > .production-field-row > label:first-child {
+      padding: 6px 4px;
+      font-size: 15px;
+    }
+
+  .query-card .query-fields > .production-field-row > :is(input, select) {
+      padding-block: 7px;
+      font-size: 17px;
+    }
+
+  /* 手機版｜加工管理系統 → 加工數量查詢 → 產品編號與查詢按鈕之間的距離 */
+  .query-card .query-actions {
+      margin-top: 10px;
+    }
+
   /* 加工管理系統｜估算說明與「訂單總數量」欄位改為上下排列 */
   .forecast-head {
       align-items: stretch;
@@ -5383,7 +5456,7 @@ textarea:focus-visible {
   color: #ffc23a;
 }
 
-/* 庫存管理系統－共用結構｜回到最上方與最下方圖示按鈕 */
+/* 加工與庫存有表格的頁面 → 右下角的快速捲動按鈕 */
 .table-scroll-controls {
   position: fixed;
   z-index: 55;
@@ -5414,10 +5487,12 @@ textarea:focus-visible {
   width: 20px;
 }
 
-/* 庫存管理系統－共用結構｜回到最上方與最下方圖示按鈕內的按鈕（滑鼠移入狀態） */
-.table-scroll-controls button:hover {
-  transform: translateY(-1px);
-  background: #1a2226;
+@media (min-width: 621px) {
+  /* 電腦版｜加工與庫存有表格的頁面 → 快速捲動按鈕的滑鼠移入狀態 */
+  .table-scroll-controls button:hover {
+    transform: translateY(-1px);
+    background: #1a2226;
+  }
 }
 
 @media (max-width: 620px) {
@@ -5489,21 +5564,29 @@ textarea:focus-visible {
       width: 19px;
     }
 
-  /* 庫存管理系統－共用結構｜回到最上方與最下方圖示按鈕 */
+  /* 手機版｜加工與庫存有表格的頁面 → 右下角快速捲動按鈕，停止捲動時淡出 */
   .table-scroll-controls {
       right: 10px;
       bottom: calc(12px + env(safe-area-inset-bottom));
       gap: 6px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s ease;
     }
 
-  /* 庫存管理系統－共用結構｜回到最上方與最下方圖示按鈕內的按鈕 */
+  /* 手機版｜加工與庫存有表格的頁面 → 捲動中或使用鍵盤聚焦時顯示按鈕 */
+  .table-scroll-controls.is-scrolling,
+  .table-scroll-controls:has(button:focus-visible) {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+  /* 手機版｜加工與庫存有表格的頁面 → 回到最上方與最下方按鈕 */
   .table-scroll-controls button {
-      width: 40px;
-      height: 40px;
       border-radius: 7px;
+      touch-action: manipulation;
     }
 
-  /* 庫存管理系統－共用結構｜回到最上方與最下方圖示按鈕內的圖示 */
   .table-scroll-controls svg {
       width: 18px;
     }

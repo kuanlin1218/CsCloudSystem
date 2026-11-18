@@ -187,6 +187,22 @@ export async function renameProductionProductCode(currentValue: string, nextValu
   if (error) throw error
 }
 
+export async function findMatchingProductionRecord(input: Pick<ProductionInput, 'work_date' | 'product_code' | 'machine'>): Promise<ProductionRecord | null> {
+  if (isDemoMode) {
+    return readLocal(PRODUCTION_KEY, seedProductionRecords)
+      .filter((record) => record.work_date === input.work_date
+        && record.product_code.trim().toUpperCase() === input.product_code
+        && record.machine.trim().toUpperCase() === input.machine)
+      .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at) || b.id.localeCompare(a.id))[0] ?? null
+  }
+  const userId = await requireAuthenticatedUserId()
+  const { data, error } = await supabase!.from('production_records').select('*')
+    .eq('user_id', userId).eq('work_date', input.work_date).eq('product_code', input.product_code).eq('machine', input.machine)
+    .order('created_at', { ascending: false }).order('id', { ascending: false }).limit(1).maybeSingle()
+  if (error) throw error
+  return data as ProductionRecord | null
+}
+
 export async function createProductionRecord(input: ProductionInput): Promise<void> {
   const record: ProductionRecord = {
     id: id(), ...input, product_code: input.product_code.trim().toUpperCase(), machine: input.machine.trim().toUpperCase(),
@@ -202,30 +218,44 @@ export async function createProductionRecord(input: ProductionInput): Promise<vo
   if (error) throw error
 }
 
-export async function updateProductionRecord(recordId: string, input: ProductionInput): Promise<void> {
+export async function updateProductionRecord(recordId: string, input: ProductionInput, expected?: ProductionInput): Promise<void> {
   const values = {
     ...input,
     product_code: input.product_code.trim().toUpperCase(),
     machine: input.machine.trim().toUpperCase(),
     notes: input.notes.trim(),
   }
+  const expectedFields = expected && {
+    work_date: expected.work_date,
+    product_code: expected.product_code,
+    machine: expected.machine,
+    hours: expected.hours,
+    minutes: expected.minutes,
+    quantity: expected.quantity,
+    notes: expected.notes,
+  }
+  const conflictMessage = '原登記已變更或刪除，請取消後重新送出。'
   if (isDemoMode) {
     const records = readLocal(PRODUCTION_KEY, seedProductionRecords)
+    const current = records.find((record) => record.id === recordId)
+    if (expectedFields && (!current || Object.entries(expectedFields).some(([key, value]) => current[key as keyof ProductionInput] !== value))) {
+      throw new Error(conflictMessage)
+    }
     writeLocal(PRODUCTION_KEY, records.map((record) => record.id === recordId
       ? { ...record, ...values, total_minutes: values.hours * 60 + values.minutes }
       : record))
     return
   }
   const userId = await requireAuthenticatedUserId()
-  const { data, error } = await supabase!
+  const query = supabase!
     .from('production_records')
     .update(values)
     .eq('id', recordId)
     .eq('user_id', userId)
-    .select('id')
-    .maybeSingle()
+  if (expectedFields) query.match(expectedFields)
+  const { data, error } = await query.select('id').maybeSingle()
   if (error) throw error
-  if (!data) throw new Error('找不到這筆加工紀錄或沒有修改權限')
+  if (!data) throw new Error(expectedFields ? conflictMessage : '找不到這筆加工紀錄或沒有修改權限')
 }
 
 export async function deleteProductionRecord(recordId: string): Promise<void> {
