@@ -2491,11 +2491,12 @@ function EditableCombo({ options, value, onChange, placeholder, required = false
   const inputRef = useRef<HTMLInputElement>(null)
   const normalized = value.trim().toLocaleLowerCase('zh-Hant')
   const filtered = options.filter((option) => !normalized || option.toLocaleLowerCase('zh-Hant').includes(normalized)).slice(0, 20)
+  const showOptions = open && filtered.length > 0
   const choose = (option: string) => { onChange(option); setOpen(false); inputRef.current?.blur() }
   return <span className="editable-combo" onBlur={() => window.setTimeout(() => setOpen(false), 120)}>
-    <input ref={inputRef} autoComplete="off" required={required} role="combobox" aria-expanded={open} value={value} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onChange={(event) => { onChange(event.target.value); setOpen(true) }} placeholder={placeholder}/><ChevronDown aria-hidden="true"/>
-    {open && <span className="product-picker-menu editable-combo-menu" role="listbox">
-      {filtered.length === 0 ? <span className="product-picker-empty">可直接輸入新資料</span> : filtered.map((option) => <button type="button" role="option" aria-selected={option === value} key={option} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(option)}><span>{option}</span></button>)}
+    <input ref={inputRef} autoComplete="off" required={required} role="combobox" aria-expanded={showOptions} value={value} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onChange={(event) => { onChange(event.target.value); setOpen(true) }} placeholder={placeholder}/><ChevronDown aria-hidden="true"/>
+    {showOptions && <span className="product-picker-menu editable-combo-menu" role="listbox">
+      {filtered.map((option) => <button type="button" role="option" aria-selected={option === value} key={option} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(option)}><span>{option}</span></button>)}
     </span>}
   </span>
 }
