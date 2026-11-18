@@ -835,10 +835,8 @@ textarea:focus-visible {
     }
 
   /* 網站共用版面｜頁面最外層容器 */
-  .portal-shell .portal-logout {
-      top: 8px;
-      right: 10px;
-      min-height: 35px;
+  .home-section-head > .portal-logout {
+      min-height: 44px;
       padding: 0 10px;
       font-size: 12px;
     }
@@ -1976,9 +1974,12 @@ textarea:focus-visible {
   font-size: 25px;
 }
 
-/* 登入畫面與系統首頁｜「功能選擇」標題右側的補充說明文字 */
-.home-section-head > small {
-  color: #75838c;
+/* 系統首頁｜「功能選擇」標題右側的「登出」或「返回登入」按鈕 */
+.home-section-head > .portal-logout {
+  position: static;
+  z-index: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* 系統首頁－操作紀錄｜頁面與右上角登出按鈕留距 */

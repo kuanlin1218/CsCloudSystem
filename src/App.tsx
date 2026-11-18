@@ -445,10 +445,11 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
     ...productionRecords.map((record) => record.product_code),
   ].filter(Boolean))].sort(), [productionEntryProductCodes, productionRecords])
   const productionMachines = useMemo(() => productionOptions.filter((option) => option.option_type === 'machine').map((option) => option.value).sort(), [productionOptions])
+  const portalExitButton = !isDemoMode && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>
 
   return (
     <div className={`app-shell ${isHome ? 'portal-shell' : ''} ${isSystem && !isProduction ? 'inventory-shell' : ''}`}>
-      {!isDemoMode && !isSystem && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>}
+      {!isHome && !isSystem && portalExitButton}
       {isSystem && <aside className={`sidebar ${isProduction ? 'production-sidebar' : ''} ${mobileNav ? 'is-open' : ''}`}>
         <div className={`brand ${isProduction ? 'production-brand' : ''}`}>
           <span className="brand-mark">{isProduction? <Factory />: <><Triangle fill="currentColor" /><i /></>}</span>
@@ -492,7 +493,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         {guestMode && <div className="guest-banner"><ShieldCheck /> 訪客模式僅供查看，無法新增、修改、刪除、盤點、匯出或還原資料。</div>}
         {error && <div className="error-banner">{error}<button onClick={() => void refresh()}>重試</button></div>}
 
-        {activePage === 'home' && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} showOperationLog={canReadOperationLog} />}
+        {isHome && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} showOperationLog={canReadOperationLog} exitButton={portalExitButton} />}
         {activePage === 'operation-log' && <OperationLogPage goHome={() => nav('home')} />}
         {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
         {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} onSave={async (input, overwrite) => {
@@ -599,7 +600,7 @@ function NavItem({ active, icon, onClick, children }: { active: boolean; icon: R
   return <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>{icon}<span>{children}</span></button>
 }
 
-function HomePage({ navigate, openAdmin, guestMode, showOperationLog }: { navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean; showOperationLog: boolean }) {
+function HomePage({ navigate, openAdmin, guestMode, showOperationLog, exitButton }: { navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean; showOperationLog: boolean; exitButton: ReactNode }) {
   return <section className="page-content home-page">
     <div className="home-hero">
       <img
@@ -611,7 +612,7 @@ function HomePage({ navigate, openAdmin, guestMode, showOperationLog }: { naviga
       <h1>詮 栩 雲 端 系 統</h1>
       <p>加工資訊與庫存管理整合平台</p>
     </div>
-    <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div><small className="home-eyebrow"></small></div>
+    <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div>{exitButton}</div>
     <div className="function-grid portal-functions">
       <FunctionCard icon={<Layers/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
@@ -834,7 +835,7 @@ function ProductionQuantityChart({ productCode, days, total }: { productCode: st
 }
 
 function ProductionEntryPage({ records, productCodes, machines, loading, onSave, onDeleteLast }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; onSave: (input: ProductionInput, overwrite?: ProductionRecord) => Promise<void>; onDeleteLast: (record: ProductionRecord) => Promise<void> }) {
-  const [form, setForm] = useState<ProductionInput>({ work_date: previousLocalDate(), product_code: '', machine: '', hours: 0, minutes: 0, quantity: 0, notes: '' })
+  const [form, setForm] = useState<Omit<ProductionInput, 'hours' | 'minutes'> & { hours: number | null; minutes: number | null }>({ work_date: previousLocalDate(), product_code: '', machine: '', hours: null, minutes: null, quantity: 0, notes: '' })
   const [showTimeCalculator, setShowTimeCalculator] = useState(false)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -853,12 +854,15 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
     event.preventDefault()
     if (saveInProgress.current || pendingDuplicate) return
     setFormError('')
+    if (!form.work_date) { setFormError('請選擇加工日期'); return }
     if (!form.product_code.trim()) { setFormError('請輸入或選擇產品編號'); return }
     if (!form.machine.trim()) { setFormError('請輸入或選擇機台'); return }
-    if (!Number.isInteger(form.hours) || form.hours < 0 || !Number.isInteger(form.minutes) || form.minutes < 0 || form.minutes > 59) { setFormError('工時格式不正確，分鐘需介於 0 到 59'); return }
-    if (form.hours * 60 + form.minutes <= 0) { setFormError('加工時間必須大於 0 分鐘'); return }
+    const { hours, minutes } = form
+    if (hours === null || minutes === null) { setFormError('請填寫加工時數和分鐘，沒有的話請填 0'); return }
+    if (!Number.isInteger(hours) || hours < 0 || !Number.isInteger(minutes) || minutes < 0 || minutes > 59) { setFormError('工時格式不正確，分鐘需介於 0 到 59'); return }
+    if (hours * 60 + minutes <= 0) { setFormError('加工時間必須大於 0 分鐘'); return }
     if (!Number.isInteger(form.quantity) || form.quantity <= 0) { setFormError('加工數量必須是大於 0 的整數'); return }
-    void saveEntry({ ...form, product_code: form.product_code.trim().toUpperCase(), machine: form.machine.trim().toUpperCase() })
+    void saveEntry({ ...form, hours, minutes, product_code: form.product_code.trim().toUpperCase(), machine: form.machine.trim().toUpperCase() })
   }
 
   const saveEntry = async (input: ProductionInput, decision?: ProductionRecord | 'new') => {
@@ -873,7 +877,7 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
       }
       await onSave(input, decision === 'new' ? undefined : decision)
       setPendingDuplicate(null)
-      setForm((current) => ({ ...current, hours: 0, minutes: 0, quantity: 0, notes: '' }))
+      setForm((current) => ({ ...current, hours: null, minutes: null, quantity: 0, notes: '' }))
     } catch (error) { setFormError(messageFor(error)) }
     finally { saveInProgress.current = false; setSaving(false) }
   }
@@ -900,11 +904,12 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
   }
 
   const updateEntryMinutes = (value: string) => {
-    const enteredMinutes = Number(value.replace(/\D/g, '').slice(0, 2))
+    const digits = value.replace(/\D/g, '').slice(0, 2)
+    const enteredMinutes = Number(digits)
     setForm((current) => ({
       ...current,
-      hours: current.hours + Math.floor(enteredMinutes / 60),
-      minutes: enteredMinutes % 60,
+      hours: enteredMinutes >= 60 ? (current.hours ?? 0) + Math.floor(enteredMinutes / 60) : current.hours,
+      minutes: digits ? enteredMinutes % 60 : null,
     }))
   }
 
@@ -919,16 +924,16 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
         <div className="duration-fields compact">
           <label className="actual-hours-field">
             <span className="entry-duration-label">加工時間（時）</span><span className="entry-duration-label-mobile">加工時數</span>
-            <input id="production-entry-hours" className="actual-hours-input" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} placeholder="0" value={form.hours || ''} onChange={(e) => {
-              const hours = Number(e.target.value.replace(/\D/g, '').slice(0, 2))
-              setForm((current) => ({ ...current, hours }))
-            }} aria-label="加工時數" />
+            <input id="production-entry-hours" className="actual-hours-input" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} value={form.hours ?? ''} onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 2)
+              setForm((current) => ({ ...current, hours: digits ? Number(digits) : null }))
+            }} aria-label="加工時數" required />
           </label>
           <label className="actual-minutes-field">
             <span className="entry-duration-label">加工時間（分）</span><span className="entry-duration-label-mobile">加工分鐘</span>
-            <input id="production-entry-minutes" className="actual-minutes-input" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} placeholder="0" value={form.minutes || ''} onChange={(e) => updateEntryMinutes(e.target.value)} aria-label="加工分鐘" />
+            <input id="production-entry-minutes" className="actual-minutes-input" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} value={form.minutes ?? ''} onChange={(e) => updateEntryMinutes(e.target.value)} aria-label="加工分鐘" required />
           </label>
-          <div><span>實際總時間</span><strong>{formatNumber(form.hours * 60 + form.minutes)} 分鐘</strong></div>
+          <div><span>實際總時間</span><strong>{formatNumber((form.hours ?? 0) * 60 + (form.minutes ?? 0))} 分鐘</strong></div>
         </div>
       </div>
 
@@ -953,7 +958,7 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
         <button className="button production-duplicate-create" type="button" disabled={saving} onClick={() => void saveEntry(pendingDuplicate.input, 'new')}>新增一筆</button>
       </div>
     </Modal>}
-    {showTimeCalculator && <ProductionTimeCalculatorModal initialHours={form.hours} initialMinutes={form.minutes} close={() => setShowTimeCalculator(false)} apply={(hours, minutes) => { setForm((current) => ({ ...current, hours, minutes })); setShowTimeCalculator(false) }} />}
+    {showTimeCalculator && <ProductionTimeCalculatorModal initialHours={form.hours ?? 0} initialMinutes={form.minutes ?? 0} close={() => setShowTimeCalculator(false)} apply={(hours, minutes) => { setForm((current) => ({ ...current, hours, minutes })); setShowTimeCalculator(false) }} />}
   </section>
 }
 
