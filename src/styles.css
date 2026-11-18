@@ -1071,7 +1071,7 @@ textarea:focus-visible {
   justify-content: center;
 }
 
-/* 網站共用按鈕、表單與彈出視窗｜加工重複登記及刀具條碼覆蓋的原資料與新資料 */
+/* 網站共用按鈕、表單與彈出視窗｜加工重複登記、刀具條碼覆蓋與盤點確認的原資料及新資料 */
 .modal-replacement-details {
   display: grid;
   gap: 10px;
@@ -6004,7 +6004,7 @@ textarea:focus-visible {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
       padding: 6px 8px;
-      border: 1px solid #2c363b;
+      border: 1px solid #52646d;
       border-radius: 7px;
       background: #11171a;
     }
@@ -6396,6 +6396,13 @@ textarea:focus-visible {
   cursor: not-allowed;
 }
 
+/* 庫存管理系統 → 庫存盤點確認視窗｜「確認更新」按鈕 */
+.button.stocktake-confirm-button {
+  border-color: #3b8e7e;
+  background: #1b493f;
+  color: #b1f2e4;
+}
+
 /* 庫存管理系統－庫存盤點｜已設定的單價數字 */
 .stocktake-table td.number .known-price {
   color: inherit !important;
@@ -6604,7 +6611,7 @@ textarea:focus-visible {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
       padding: 6px 8px;
-      border: 1px solid #2c363b;
+      border: 1px solid #52646d;
       border-radius: 7px;
       background: #11171a;
     }
@@ -7539,7 +7546,7 @@ textarea:focus-visible {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
       padding: 6px 8px;
-      border: 1px solid #2c363b;
+      border: 1px solid #52646d;
       border-radius: 7px;
       background: #11171a;
     }
@@ -8547,6 +8554,12 @@ textarea:focus-visible {
 .barcode-link-existing {
   width: 100%;
   margin-top: 10px;
+}
+
+/* 庫存管理系統 → 掃碼盤點｜「實際數量」與「盤點備註」上下間距 */
+.form-grid.barcode-stocktake-fields {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
 }
 
 /* 庫存管理系統－條碼掃描與產生 → 掃碼盤點｜「返回掃描結果」按鈕 */
