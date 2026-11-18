@@ -1609,7 +1609,7 @@ function StocktakePage({ products, loading, add, openScanner, onAdjust }: { prod
   }
 
   return <section className="page-content stocktake-page">
-    <PageTitle eyebrow="STOCKTAKE" title="庫存盤點" actions={<><ScanButton openScanner={openScanner}/><button className="button primary" onClick={add}><Plus />新增盤點品項</button></>} />
+    <PageTitle eyebrow="STOCKTAKE" title="庫存盤點" actions={<><ScanButton openScanner={openScanner}/><button className="button primary" onClick={add}><Plus />新增品項</button></>} />
     <div className="stocktake-summary">
       <div><span>目前顯示</span><strong>{formatNumber(filtered.length)}</strong><small>個品項</small></div>
       <div><span>未設定單價</span><strong>{formatNumber(noPriceCount)}</strong><small>仍可盤點</small></div>
@@ -1734,7 +1734,7 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, open
         || b.code.localeCompare(a.code)
     })
   return <section className="page-content">
-    <PageTitle eyebrow="TOOLS" title="刀具資料" actions={!readOnly ? <><ScanButton openScanner={openScanner}/><button className="button primary" onClick={add}><Plus />新增刀具</button></> : undefined} />
+    <PageTitle eyebrow="TOOLS" title="刀具資料" actions={!readOnly ? <><ScanButton openScanner={openScanner}/><button className="button primary" onClick={add}><Plus />新增品項</button></> : undefined} />
     <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商" scanProducts={products}/><label className="select-wrap"><select value={category} onChange={(e) => setCategory(e.target.value)}>{categories.map((c) => <option key={c}>{c}</option>)}</select><ChevronDown /></label></div>
     {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table product-table"><thead><tr><th>編號</th><th>品名</th><th>廠牌</th><th>供應商</th><th>分類</th><th className="number">數量</th><th className="number">單價</th><th className="number" aria-label="漲幅" /><th>購入日期</th><th aria-label="操作" /></tr></thead><tbody>
       {filtered.length === 0 ? <EmptyRow colSpan={10} label="沒有符合條件的刀具"/> : filtered.map((p) => {
@@ -2401,7 +2401,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
     setRescanOpen(false)
   }} />
 
-  return <Modal close={() => { if (!busy) close() }} title={product ? '編輯刀具' : '新增刀具'} size="large">
+  return <Modal close={() => { if (!busy) close() }} title={product ? '編輯刀具' : '新增品項'} size="large">
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="form-grid">
         <Field label="編號"><input disabled value={product?.code || '儲存後自動產生'} /></Field>

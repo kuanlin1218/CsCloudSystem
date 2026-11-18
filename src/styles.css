@@ -1413,6 +1413,7 @@ textarea:focus-visible {
   color: #e9eef1;
   padding: 10px 14px;
   outline: 0;
+  font-size: 16px;
 }
 
 /* 網站共用按鈕、表單與彈出視窗｜共用表單欄位（欄位名稱、輸入框、下拉選單、文字區或搜尋列） */
@@ -1461,6 +1462,7 @@ textarea:focus-visible {
   padding: 10px 14px;
   outline: 0;
   color-scheme: dark;
+  font-size: 16px;
 }
 
 /* 網站共用按鈕、表單與彈出視窗｜共用表單欄位（欄位名稱、輸入框、下拉選單、文字區或搜尋列） */
@@ -1864,12 +1866,12 @@ textarea:focus-visible {
 
   /* 網站共用按鈕、表單與彈出視窗｜共用表單欄位（欄位名稱、輸入框、下拉選單、文字區或搜尋列） */
   .field input {
-      font-size: 20px;
+      font-size:18px;
     }
 
   /* 網站共用按鈕、表單與彈出視窗｜共用表單欄位（欄位名稱、輸入框、下拉選單、文字區或搜尋列） */
   .field select {
-      font-size: 20px;
+      font-size: 18px;
     }
 
   /* 網站共用按鈕、表單與彈出視窗｜共用表單欄位（欄位名稱、輸入框、下拉選單、文字區或搜尋列） */
