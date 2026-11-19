@@ -1719,6 +1719,12 @@ GitHub Summary：更新電腦的公司圖示並增加 iPhone 主畫面圖示留�
 SQL：不需要執行。
 GitHub Summary：移除 PWA 安裝圖示的英文公司名並置中公司標誌。
 
+2026-11-19
+修改內容：分頁與 PWA 安裝圖示改為透明底，重新輸出多尺寸網站 ICO，並更新圖示網址版本。
+修改檔案：index.html、public/manifest.webmanifest、public/favicon.ico、public/icons/browser-tab-logo.png、public/icons/apple-touch-icon.png、public/icons/icon-192.png、public/icons/icon-512.png、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：改用透明公司標誌並更新 Windows 桌面捷徑用圖示。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
