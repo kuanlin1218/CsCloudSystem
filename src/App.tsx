@@ -550,7 +550,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
           {!guestMode && isOwnerUser(session?.user.id) && supportsPasskeys() && <PasskeySetup />}
           {canScanPhoneLogin && !guestMode && isOwnerUser(session?.user.id) && <button className="sidebar-phone-login" type="button"
             onClick={() => { setMobileNav(false); setPhoneScannerOpen(true) }}>
-            <Camera aria-hidden="true" />掃描電腦登入 QR Code
+            <Camera aria-hidden="true" />掃碼登入電腦
           </button>}
           <button className="sidebar-test-mode" type="button" onClick={switchTestMode}><FlaskConical aria-hidden="true" />{isTestMode ? '離開測試模式' : '進入測試模式'}</button>
           {!isLocalDataMode && <button className="sidebar-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出系統'}</button>}
@@ -841,7 +841,7 @@ function PasskeySetup() {
 
   return <>
     <button className="sidebar-passkey" type="button" onClick={() => void register()} disabled={busy}>
-      <LockKeyhole aria-hidden="true" />{busy ? '正在設定通行密鑰…' : '設定通行密鑰 Face ID'}
+      <LockKeyhole aria-hidden="true" />{busy ? '正在設定通行密鑰…' : '設定 Face ID'}
     </button>
     {feedback.text && <p role={feedback.success ? 'status' : 'alert'} className={`sidebar-passkey-feedback ${feedback.success ? 'form-message' : 'form-error'}`}>{feedback.text}</p>}
   </>
