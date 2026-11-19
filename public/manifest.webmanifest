@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "詮栩 CNC 雲端系統",
-  "short_name": "詮栩 CNC",
+  "name": "詮栩管理系統",
+  "short_name": "詮栩管理系統",
   "description": "加工數量與刀具庫存管理",
   "lang": "zh-Hant",
   "start_url": "./",
