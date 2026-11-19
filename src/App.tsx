@@ -3,10 +3,10 @@ import type { Session, User } from '@supabase/supabase-js'
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
   Calculator, Camera, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
-  FileSpreadsheet, FileUp, Keyboard, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, QrCode, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, WandSparkles, Wrench, X,
+  FileSpreadsheet, FileUp, FlaskConical, Keyboard, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, QrCode, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, WandSparkles, Wrench, X,
   ScanBarcode,Factory,LayoutDashboard,Layers,DatabaseBackup,Combine,ChartColumnBig,CalendarClock,LaptopMinimal
 } from 'lucide-react'
-import { isDemoMode, supabase } from './lib/supabase'
+import { dataStorage, isDemoMode, isLocalDataMode, isTestMode, supabase, TEST_MODE_KEY } from './lib/supabase'
 import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, registerOwnerPasskey, signInWithPasskey, supportsPasskeys, verifyOwnerPassword } from './lib/auth'
 import { composeProductName, formatDate, formatMoney, formatNumber, today } from './lib/format'
 import { hasTaiwanHolidayCalendar, isTaiwanPublicHoliday, TAIWAN_HOLIDAY_CALENDAR_YEARS } from './lib/taiwanHolidays'
@@ -68,18 +68,18 @@ const FORECAST_PRODUCT_STORAGE_KEY = 'cnc-production-forecast-product-v1'
 const forecastDraftStorageKey = (productCode: string) => `cnc-production-forecast-draft-v1:${productCode.trim().toUpperCase()}`
 const isForecastCapacityScope = (value: unknown): value is ForecastCapacityScope => value === 'all' || value === 'range'
 const readForecastProductSelection = () => {
-  try { return window.localStorage.getItem(FORECAST_PRODUCT_STORAGE_KEY) || '' }
+  try { return dataStorage.getItem(FORECAST_PRODUCT_STORAGE_KEY) || '' }
   catch { return '' }
 }
 const saveForecastProductSelection = (productCode: string) => {
   try {
-    if (productCode) window.localStorage.setItem(FORECAST_PRODUCT_STORAGE_KEY, productCode)
-    else window.localStorage.removeItem(FORECAST_PRODUCT_STORAGE_KEY)
+    if (productCode) dataStorage.setItem(FORECAST_PRODUCT_STORAGE_KEY, productCode)
+    else dataStorage.removeItem(FORECAST_PRODUCT_STORAGE_KEY)
   } catch { /* 瀏覽器禁止本機儲存時，仍維持目前畫面操作。 */ }
 }
 const readForecastDraft = (productCode: string): ForecastDraft | null => {
   try {
-    const raw = window.localStorage.getItem(forecastDraftStorageKey(productCode))
+    const raw = dataStorage.getItem(forecastDraftStorageKey(productCode))
     if (!raw) return null
     const value = JSON.parse(raw) as Partial<ForecastDraft>
     const legacy = value as Partial<ForecastDraft> & { scheduleMode?: string; dailyHours?: number }
@@ -95,7 +95,7 @@ const readForecastDraft = (productCode: string): ForecastDraft | null => {
   } catch { return null }
 }
 const saveForecastDraft = (productCode: string, draft: ForecastDraft) => {
-  try { window.localStorage.setItem(forecastDraftStorageKey(productCode), JSON.stringify(draft)) }
+  try { dataStorage.setItem(forecastDraftStorageKey(productCode), JSON.stringify(draft)) }
   catch { /* 瀏覽器禁止本機儲存時，仍維持目前畫面操作。 */ }
 }
 
@@ -130,6 +130,13 @@ const pageFromLocation = (): Page => {
   return PAGE_VALUES.includes(value) ? value : 'home'
 }
 const pageUrl = (page: Page) => `${window.location.pathname}${window.location.search}#${page}`
+function switchTestMode() {
+  if (isTestMode) window.sessionStorage.removeItem(TEST_MODE_KEY)
+  else window.sessionStorage.setItem(TEST_MODE_KEY, '1')
+  // 回首頁並重載，重新選定資料來源，也清掉舊模式畫面和表單狀態。
+  window.history.replaceState({ page: 'home' }, '', pageUrl('home'))
+  window.location.reload()
+}
 const GUEST_SESSION_KEY = 'cnc-cloud-guest-mode'
 const INITIAL_STOCK_NOTE = '建立時初庫存'
 const isInitialStockNote = (value: string) => value === INITIAL_STOCK_NOTE || value === '建立商品時的期初庫存'
@@ -156,13 +163,13 @@ const messageFor = (error: unknown) => error instanceof Error ? error.message : 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [guestMode, setGuestMode] = useState(() => window.sessionStorage.getItem(GUEST_SESSION_KEY) === '1')
-  const [authReady, setAuthReady] = useState(isDemoMode)
+  const [authReady, setAuthReady] = useState(isLocalDataMode)
   const [authMessage, setAuthMessage] = useState('')
   const [forcePasswordSetup, setForcePasswordSetup] = useState(false)
 
   useEffect(() => {
     const client = supabase
-    if (isDemoMode || !client) return
+    if (!client) return
     const acceptSession = async (nextSession: Session | null) => {
       if (nextSession && !isOwnerUser(nextSession.user.id)) {
         await client.auth.signOut()
@@ -201,7 +208,7 @@ export default function App() {
     setGuestMode(false)
   }
 
-  if (isDemoMode) return <AuthenticatedApp session={null} />
+  if (isLocalDataMode) return <AuthenticatedApp session={null} />
   if (guestMode) return <AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />
   if (!authReady) return <LoadingScreen label="正在確認安全登入狀態…" />
   if (!session) return <LoginScreen initialMessage={authMessage} onGuest={enterGuestMode} />
@@ -280,7 +287,7 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
       {supportsPasskeys() && <button className="button auth-passkey-button" type="button" onClick={() => void submitPasskey()} disabled={busy}><LockKeyhole />使用通行密鑰登入 Face ID</button>}
-      <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客查看</button>
+      <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客登入</button>
       <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
       <button className="auth-switch" type="button" onClick={() => { setResetOpen((value) => !value); setResetMessage(''); setResetSuccess(false) }} disabled={busy}>{resetOpen ? '取消重設密碼' : '忘記密碼或尚未設定密碼'}</button>
       {resetOpen && <form className="auth-reset-form" onSubmit={sendPasswordEmail}>
@@ -450,10 +457,10 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
     ...productionRecords.map((record) => record.product_code),
   ].filter(Boolean))].sort(), [productionEntryProductCodes, productionRecords])
   const productionMachines = useMemo(() => productionOptions.filter((option) => option.option_type === 'machine').map((option) => option.value).sort(), [productionOptions])
-  const portalExitButton = !isDemoMode && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>
+  const portalExitButton = !isLocalDataMode && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>
 
   return (
-    <div className={`app-shell ${isHome ? 'portal-shell' : ''} ${isSystem && !isProduction ? 'inventory-shell' : ''}`}>
+    <div className={`app-shell ${isHome ? 'portal-shell' : ''} ${isSystem && !isProduction ? 'inventory-shell' : ''}${isTestMode ? ' test-mode' : ''}`}>
       {!isHome && !isSystem && portalExitButton}
       {isSystem && <aside className={`sidebar ${isProduction ? 'production-sidebar' : ''} ${mobileNav ? 'is-open' : ''}`}>
         <div className={`brand ${isProduction ? 'production-brand' : ''}`}>
@@ -479,10 +486,11 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
           </>}
         </nav>
         <div className="sidebar-foot">
-          <span className="status-line">{guestMode ? <ShieldCheck /> : isDemoMode ? <ShieldCheck /> : <Database />} {guestMode ? '訪客唯讀模式' : isDemoMode ? '示範模式' : realtimeConnected ? '雲端即時同步' : '雲端連線中'}</span>
-          <span className="status-line"><UserRound /> {guestMode ? '僅供查看' : isDemoMode ? '本機示範資料' : session?.user.user_metadata?.username || OWNER_USERNAME}</span>
+          <span className="status-line">{isTestMode ? <FlaskConical /> : guestMode || isDemoMode ? <ShieldCheck /> : <Database />} {isTestMode ? '測試模式' : guestMode ? '訪客唯讀模式' : isDemoMode ? '示範模式' : realtimeConnected ? '雲端即時同步' : '雲端連線中'}</span>
+          <span className="status-line"><UserRound /> {isTestMode ? '本分頁測試資料' : guestMode ? '僅供查看' : isDemoMode ? '本機示範資料' : session?.user.user_metadata?.username || OWNER_USERNAME}</span>
           {!guestMode && isOwnerUser(session?.user.id) && supportsPasskeys() && <PasskeySetup />}
-          {!isDemoMode && <button className="sidebar-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出系統'}</button>}
+          <button className="sidebar-test-mode" type="button" onClick={switchTestMode}><FlaskConical aria-hidden="true" />{isTestMode ? '離開測試模式' : '進入測試模式'}</button>
+          {!isLocalDataMode && <button className="sidebar-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出系統'}</button>}
         </div>
       </aside>}
 
@@ -494,7 +502,8 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
           <strong>{isProduction ? '加工管理系統' : '庫存管理系統'}</strong>
           <span className="mobile-dot" />
         </header>}
-        {isSystem && isDemoMode && <div className="demo-banner"><ShieldCheck /> 目前是可操作的示範模式，資料儲存在這台裝置。設定 Supabase 後會自動切換為雲端模式。</div>}
+        {isTestMode && <div className="test-mode-banner"><FlaskConical aria-hidden="true" /><span><strong>測試模式</strong>｜變更只保留在目前分頁，不會寫入雲端。</span><button className="button test-mode-exit" type="button" onClick={switchTestMode}>離開測試模式</button></div>}
+        {isSystem && isDemoMode && !isTestMode && <div className="demo-banner"><ShieldCheck /> 目前是可操作的示範模式，資料儲存在這台裝置。設定 Supabase 後會自動切換為雲端模式。</div>}
         {guestMode && <div className="guest-banner"><ShieldCheck /> 訪客模式僅供查看，無法新增、修改、刪除、盤點、匯出或還原資料。</div>}
         {error && <div className="error-banner">{error}<button onClick={() => void refresh()}>重試</button></div>}
 
@@ -580,7 +589,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         await renameProductionProductCode(currentValue, nextValue)
         await afterSave(`產品編號已由 ${currentValue} 更新為 ${nextValue.trim().toUpperCase()}`)
       } : undefined} />}
-      {!guestMode && adminDataModal && <AdminDataModal close={() => setAdminDataModal(false)} afterImport={async () => {
+      {!guestMode && !isTestMode && adminDataModal && <AdminDataModal close={() => setAdminDataModal(false)} afterImport={async () => {
         await refresh(); setToast('Excel 資料已完整匯入')
       }} />}
       {!guestMode && adminDelete && <AdminDeleteModal request={adminDelete} close={(result) => {
@@ -611,7 +620,7 @@ function HomePage({ navigate, openAdmin, guestMode, showOperationLog, exitButton
     <div className="function-grid portal-functions">
       <FunctionCard icon={<Layers/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>
       <FunctionCard icon={<Boxes/>} title="庫存管理系統" description="刀具庫存、出入庫與價格管理" tone="green" onClick={() => navigate('dashboard')}/>
-      <FunctionCard icon={<DatabaseBackup/>} title="資料備份／還原" description={guestMode ? '訪客模式無法匯出或還原資料' : '匯出或整批匯入 Supabase Excel'} tone="purple" onClick={openAdmin} disabled={guestMode} disabledLabel="管理員限定"/>
+      {!isTestMode && <FunctionCard icon={<DatabaseBackup/>} title="資料備份／還原" description={guestMode ? '訪客模式無法匯出或還原資料' : '匯出或整批匯入 Supabase Excel'} tone="purple" onClick={openAdmin} disabled={guestMode} disabledLabel="管理員限定"/>}
       {showOperationLog && <FunctionCard icon={<History/>} title="操作紀錄" description="查看資料異動與登入登出" tone="yellow" onClick={() => navigate('operation-log')}/>}
     </div>
   </section>
@@ -1172,7 +1181,7 @@ function ProductionDataManagementPage({ records, productCodes, loading, onDelete
         <button className="query-button danger" type="button" onClick={() => void removeSelectedProduct()} disabled={!productCode || loading || deleting || exporting}><Trash2 />{deleting ? '刪除中…' : `永久刪除${productCode ? `（${recordCount} 筆）` : ''}`}</button>
       </div>
       {actionError && <div className="form-error production-error">{actionError}</div>}
-      <div className="production-delete-warning"><Trash2 /><div><strong>刪除會永久移除產品編號與全部加工紀錄</strong><span>「下載 EXCEL」只會下載資料，不會修改雲端內容；「永久刪除」仍需輸入登入密碼確認。</span></div></div>
+      <div className="production-delete-warning"><Trash2 /><div><strong>刪除會永久移除產品編號與全部加工紀錄</strong><span>{isTestMode ? '下載及刪除都只處理目前分頁的測試資料。' : '「下載 EXCEL」只會下載資料，不會修改雲端內容；「永久刪除」仍需輸入登入密碼確認。'}</span></div></div>
     </div>
     {loading ? <PageSkeleton /> : productCode ? <div className="production-results production-export-preview">
       <div className="result-title"><span>產品編號</span><strong>{productCode.trim().toUpperCase()}</strong><small>全部加工紀錄・共 {formatNumber(recordCount)} 筆</small></div>
@@ -1734,7 +1743,7 @@ function StocktakeHistoryModal({ product, close }: { product: Product; close: ()
         <section>
           <h3>修改與刪除紀錄</h3>
           {changeHistory?.status === 'rejected' && <p className="form-error" role="alert">無法讀取修改紀錄。{messageFor(changeHistory.reason)}</p>}
-          {changeHistory?.status === 'fulfilled' && !changes.length && <p>{isDemoMode ? '示範模式沒有雲端修改紀錄。' : '目前沒有這件刀具的修改或刪除紀錄。'}</p>}
+          {changeHistory?.status === 'fulfilled' && !changes.length && <p>{isTestMode ? '測試模式沒有雲端修改紀錄。' : isDemoMode ? '示範模式沒有雲端修改紀錄。' : '目前沒有這件刀具的修改或刪除紀錄。'}</p>}
           {changes.length > 0 && <ol className="operation-log-list">{changes.map((entry) => <OperationLogItem key={entry.id} entry={entry}/>)}</ol>}
         </section>
       </>}
@@ -2529,18 +2538,22 @@ function AdminDeleteModal({ request, close }: { request: AdminDeleteRequest; clo
   const [deleting, setDeleting] = useState(false)
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError('')
-    if (!/^\d{6,}$/.test(password)) { setError('請輸入至少 6 位數字登入密碼'); return }
+    if (!isTestMode && !/^\d{6,}$/.test(password)) { setError('請輸入至少 6 位數字登入密碼'); return }
     setDeleting(true)
-    try { await verifyOwnerPassword(password); await request.execute(); close(true) }
+    try {
+      if (!isTestMode) await verifyOwnerPassword(password)
+      await request.execute()
+      close(true)
+    }
     catch (submitError) { setError(messageFor(submitError)) }
     finally { setDeleting(false) }
   }
   return <Modal title={request.title} close={() => !deleting && close(false)}>
-    <div className="admin-delete-warning"><Trash2/><div><strong>此操作無法復原</strong><span>{request.description}</span></div></div>
+    <div className="admin-delete-warning"><Trash2/><div><strong>{isTestMode ? '刪除本分頁的測試資料' : '此操作無法復原'}</strong><span>{request.description}</span></div></div>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
-      <Field label="登入密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]{6,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={deleting}/></Field>
+      {!isTestMode && <Field label="登入密碼" wide><input autoFocus type="password" inputMode="numeric" pattern="[0-9]{6,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={deleting}/></Field>}
       {error && <div className="form-error">{error}</div>}
-      <button className="button outbound admin-action" type="submit" disabled={deleting || password.length < 4}><Trash2/>{deleting ? '正在驗證並刪除…' : '驗證登入密碼並刪除'}</button>
+      <button className="button outbound admin-action" type="submit" disabled={deleting || (!isTestMode && password.length < 4)}><Trash2/>{isTestMode ? deleting ? '正在刪除…' : '確認刪除測試資料' : deleting ? '正在驗證並刪除…' : '驗證登入密碼並刪除'}</button>
     </form>
   </Modal>
 }

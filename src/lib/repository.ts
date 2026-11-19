@@ -1,4 +1,4 @@
-import { supabase, isDemoMode } from './supabase'
+import { dataStorage, isLocalDataMode, supabase } from './supabase'
 import { composeProductName, today } from './format'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord, type StocktakeInput } from '../types'
 import { requireAuthenticatedUserId } from './auth'
@@ -92,12 +92,12 @@ const formatTaipeiDateTime = () => {
 }
 
 function readLocal<T>(key: string, fallback: T): T {
-  const value = localStorage.getItem(key)
-  if (!value) { localStorage.setItem(key, JSON.stringify(fallback)); return fallback }
+  const value = dataStorage.getItem(key)
+  if (!value) { dataStorage.setItem(key, JSON.stringify(fallback)); return fallback }
   try { return JSON.parse(value) as T } catch { return fallback }
 }
 
-function writeLocal(key: string, value: unknown) { localStorage.setItem(key, JSON.stringify(value)) }
+function writeLocal(key: string, value: unknown) { dataStorage.setItem(key, JSON.stringify(value)) }
 const id = () => crypto.randomUUID()
 
 async function runAdminDelete(functionName: string, values: Record<string, unknown>): Promise<void> {
@@ -108,7 +108,7 @@ async function runAdminDelete(functionName: string, values: Record<string, unkno
 }
 
 export async function loadInventory(): Promise<{ products: Product[]; movements: Movement[] }> {
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts).map((product) => ({ ...product, barcode: product.barcode || '', category: normalizeCategory(product.category) }))
     writeLocal(PRODUCT_KEY, products)
     return { products, movements: readLocal(MOVEMENT_KEY, seedMovements) }
@@ -123,7 +123,7 @@ export async function loadInventory(): Promise<{ products: Product[]; movements:
 }
 
 export async function loadProductMovements(productId: string): Promise<Movement[]> {
-  if (isDemoMode) return readLocal(MOVEMENT_KEY, seedMovements).filter((movement) => movement.product_id === productId)
+  if (isLocalDataMode) return readLocal(MOVEMENT_KEY, seedMovements).filter((movement) => movement.product_id === productId)
   const movements: Movement[] = []
   let lastId: string | undefined
   while (true) {
@@ -139,7 +139,7 @@ export async function loadProductMovements(productId: string): Promise<Movement[
 }
 
 export async function loadProductChanges(productCode: string, createdAt: string): Promise<OperationLogEntry[]> {
-  if (isDemoMode) return []
+  if (isLocalDataMode) return []
   const changes: OperationLogEntry[] = []
   let lastId: number | undefined
   while (true) {
@@ -157,7 +157,7 @@ export async function loadProductChanges(productCode: string, createdAt: string)
 }
 
 export async function loadProductionRecords(): Promise<ProductionRecord[]> {
-  if (isDemoMode) return readLocal(PRODUCTION_KEY, seedProductionRecords)
+  if (isLocalDataMode) return readLocal(PRODUCTION_KEY, seedProductionRecords)
   const records: ProductionRecord[] = []
   let lastId: string | undefined
   // 由上一批最後的紀錄 ID 繼續讀取，避免分頁期間增刪資料造成位置位移。
@@ -175,7 +175,7 @@ export async function loadProductionRecords(): Promise<ProductionRecord[]> {
 }
 
 export async function loadProductionOptions(): Promise<ProductionOption[]> {
-  if (isDemoMode) return readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
+  if (isLocalDataMode) return readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
   const { data, error } = await supabase!.from('production_options').select('id,option_type,value,created_at').order('option_type').order('value')
   if (error) throw error
   return data as ProductionOption[]
@@ -184,7 +184,7 @@ export async function loadProductionOptions(): Promise<ProductionOption[]> {
 export async function createProductionOption(optionType: ProductionOptionType, rawValue: string): Promise<void> {
   const value = rawValue.trim().toUpperCase()
   if (!value) throw new Error(optionType === 'product' ? '產品編號不能空白' : '機台名稱不能空白')
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
     if (options.some((option) => option.option_type === optionType && option.value.toLowerCase() === value.toLowerCase())) throw new Error('這筆資料已經存在')
     writeLocal(PRODUCTION_OPTION_KEY, [...options, { id: id(), option_type: optionType, value, created_at: new Date().toISOString() }])
@@ -199,7 +199,7 @@ export async function createProductionOption(optionType: ProductionOptionType, r
 }
 
 export async function deleteProductionOption(optionType: ProductionOptionType, value: string): Promise<void> {
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
     writeLocal(PRODUCTION_OPTION_KEY, options.filter((option) => !(option.option_type === optionType && option.value === value)))
     return
@@ -212,7 +212,7 @@ export async function renameProductionProductCode(currentValue: string, nextValu
   const next = nextValue.trim().toUpperCase()
   if (!current || !next) throw new Error('產品編號不能空白')
   if (current === next) return
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
     if (options.some((option) => option.option_type === 'product' && option.value.toUpperCase() === next)) throw new Error('新的產品編號已經存在')
     writeLocal(PRODUCTION_OPTION_KEY, options.map((option) => option.option_type === 'product' && option.value.toUpperCase() === current ? { ...option, value: next } : option))
@@ -224,7 +224,7 @@ export async function renameProductionProductCode(currentValue: string, nextValu
 }
 
 export async function findMatchingProductionRecord(input: Pick<ProductionInput, 'work_date' | 'product_code' | 'machine'>): Promise<ProductionRecord | null> {
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     return readLocal(PRODUCTION_KEY, seedProductionRecords)
       .filter((record) => record.work_date === input.work_date
         && record.product_code.trim().toUpperCase() === input.product_code
@@ -244,7 +244,7 @@ export async function createProductionRecord(input: ProductionInput): Promise<vo
     id: id(), ...input, product_code: input.product_code.trim().toUpperCase(), machine: input.machine.trim().toUpperCase(),
     total_minutes: input.hours * 60 + input.minutes, notes: input.notes.trim(), created_at: new Date().toISOString(),
   }
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     writeLocal(PRODUCTION_KEY, [record, ...readLocal(PRODUCTION_KEY, seedProductionRecords)])
     return
   }
@@ -271,7 +271,7 @@ export async function updateProductionRecord(recordId: string, input: Production
     notes: expected.notes,
   }
   const conflictMessage = '原登記已變更或刪除，請取消後重新送出。'
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const records = readLocal(PRODUCTION_KEY, seedProductionRecords)
     const current = records.find((record) => record.id === recordId)
     if (expectedFields && (!current || Object.entries(expectedFields).some(([key, value]) => current[key as keyof ProductionInput] !== value))) {
@@ -295,7 +295,7 @@ export async function updateProductionRecord(recordId: string, input: Production
 }
 
 export async function deleteProductionRecord(recordId: string): Promise<void> {
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     writeLocal(PRODUCTION_KEY, readLocal(PRODUCTION_KEY, seedProductionRecords).filter((record) => record.id !== recordId))
     return
   }
@@ -305,7 +305,7 @@ export async function deleteProductionRecord(recordId: string): Promise<void> {
 export async function deleteProductionProductData(productCode: string): Promise<void> {
   const normalized = productCode.trim().toUpperCase()
   if (!normalized) throw new Error('請先選擇產品編號')
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     writeLocal(PRODUCTION_KEY, readLocal(PRODUCTION_KEY, seedProductionRecords).filter((record) => record.product_code.toUpperCase() !== normalized))
     writeLocal(PRODUCTION_OPTION_KEY, readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions).filter((option) => !(option.option_type === 'product' && option.value.toUpperCase() === normalized)))
     return
@@ -314,7 +314,7 @@ export async function deleteProductionProductData(productCode: string): Promise<
 }
 
 export async function createProduct(input: ProductInput): Promise<void> {
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts)
     const movements = readLocal(MOVEMENT_KEY, seedMovements)
     const now = new Date().toISOString()
@@ -349,7 +349,7 @@ export async function createProduct(input: ProductInput): Promise<void> {
 
 export async function updateProduct(productId: string, input: ProductInput): Promise<void> {
   const changes = { barcode: input.barcode.trim(), specification: input.specification, size: input.size, chipbreaker: input.chipbreaker, material: input.material, name: composeProductName(input.category, input.specification, input.size, input.chipbreaker, input.material), brand: input.brand, supplier: input.supplier, category: input.category, unit: input.unit, notes: input.notes }
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts).map((p) => p.id === productId ? { ...p, ...changes, updated_at: new Date().toISOString() } : p)
     writeLocal(PRODUCT_KEY, products); return
   }
@@ -361,7 +361,7 @@ export async function updateProductBarcode(productId: string, rawBarcode: string
   const barcode = rawBarcode.trim()
   if (!barcode) throw new Error('條碼不能空白')
   const conflictMessage = '刀具條碼已變更或刀具已移除，請重新整理後再掃描綁定。'
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts)
     const product = products.find((item) => item.id === productId)
     if (!product || (product.barcode || '') !== expectedBarcode) throw new Error(conflictMessage)
@@ -377,7 +377,7 @@ export async function updateProductBarcode(productId: string, rawBarcode: string
 }
 
 export async function deleteProduct(productId: string): Promise<void> {
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     writeLocal(PRODUCT_KEY, readLocal(PRODUCT_KEY, seedProducts).filter((p) => p.id !== productId))
     writeLocal(MOVEMENT_KEY, readLocal(MOVEMENT_KEY, seedMovements).filter((m) => m.product_id !== productId)); return
   }
@@ -385,7 +385,7 @@ export async function deleteProduct(productId: string): Promise<void> {
 }
 
 export async function registerMovement(input: MovementInput): Promise<void> {
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts)
     const product = products.find((p) => p.id === input.product_id)
     if (!product) throw new Error('找不到商品')
@@ -408,7 +408,7 @@ export async function setStocktakeQuantity(input: StocktakeInput): Promise<void>
   if (!Number.isInteger(input.actual_quantity) || input.actual_quantity < 0) throw new Error('實際盤點數量必須是 0 以上的整數')
   const userNotes = input.notes.trim()
   const timestampedNotes = `盤點時間：${formatTaipeiDateTime()}${userNotes ? `｜${userNotes}` : ''}`
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts)
     const product = products.find((item) => item.id === input.product_id)
     if (!product) throw new Error('找不到刀具資料')
@@ -437,7 +437,7 @@ export async function setStocktakeQuantity(input: StocktakeInput): Promise<void>
 }
 
 export async function deleteMovement(movementId: string): Promise<void> {
-  if (isDemoMode) {
+  if (isLocalDataMode) {
     const products = readLocal(PRODUCT_KEY, seedProducts)
     const movements = readLocal(MOVEMENT_KEY, seedMovements)
     const target = movements.find((movement) => movement.id === movementId)

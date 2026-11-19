@@ -590,13 +590,13 @@ textarea:focus-visible {
   background: #ffc23a;
 }
 
-/* 網站共用版面｜左側選單（系統首頁、總覽、功能分頁、雲端同步、使用者與登出） */
+/* 加工與庫存管理系統｜側欄底部 → 狀態、帳號與操作按鈕的排列 */
 .sidebar-foot {
   margin-top: auto;
-  padding: 16px 12px 24px;
+  padding: 8px 12px 10px;
   border-top: 1px solid #252c31;
   display: grid;
-  gap: 9px;
+  gap: 3px;
 }
 
 /* 網站共用版面｜雲端同步、訪客狀態或使用者名稱 */
@@ -606,7 +606,7 @@ textarea:focus-visible {
   gap: 11px;
   color: #b6c0c6;
   font-size: 14px;
-  padding: 5px 8px;
+  padding: 3px 8px;
 }
 
 /* 網站共用版面｜雲端同步、訪客狀態或使用者名稱內的圖示 */
@@ -614,14 +614,14 @@ textarea:focus-visible {
   width: 18px;
 }
 
-/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、登出與返回登入按鈕 */
+/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式、登出與返回登入按鈕 */
 .sidebar-passkey,
+.sidebar-test-mode,
 .sidebar-logout {
-  min-height: 42px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   gap: 11px;
-  margin: 3px 0 0;
   padding: 0 8px;
   border: 0;
   border-radius: 6px;
@@ -633,15 +633,17 @@ textarea:focus-visible {
   cursor: pointer;
 }
 
-/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、登出與返回登入按鈕的滑鼠移入樣式 */
+/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式、登出與返回登入的滑鼠移入樣式 */
 .sidebar-passkey:not(:disabled):hover,
+.sidebar-test-mode:hover,
 .sidebar-logout:hover {
   background: #12171a;
   color: #fff;
 }
 
-/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定與登出按鈕圖示 */
+/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式與登出按鈕圖示 */
 .sidebar-passkey svg,
+.sidebar-test-mode svg,
 .sidebar-logout svg {
   width: 18px;
 }
@@ -730,6 +732,58 @@ textarea:focus-visible {
 /* 網站共用版面｜頁面最外層容器 */
 .portal-shell {
   background: radial-gradient(circle at 50% 15%, rgba(61,204,179,.06), transparent 36%), #080c0e;
+}
+
+/* 測試模式｜首頁、加工與庫存管理的全站暖色背景 */
+.app-shell.test-mode {
+  --test-page-bg: #221511;
+  --test-surface: #322019;
+  --test-raised: #42291f;
+  --test-border: #79513b;
+  --focus-ring: #ffb76b;
+  background: var(--test-page-bg);
+}
+
+.test-mode .main-panel {
+  background-color: var(--test-page-bg);
+  background-image: linear-gradient(rgba(255,174,111,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(255,174,111,.10) 1px, transparent 1px);
+}
+
+/* 測試模式｜側欄、手機頂部與導覽項目 */
+.test-mode :is(.sidebar, .mobile-header) {
+  background: var(--test-surface);
+  border-color: var(--test-border);
+}
+
+.test-mode :is(.sidebar-foot, .sidebar nav) {
+  border-color: var(--test-border);
+}
+
+.test-mode .nav-item:is(:hover, .active),
+.test-mode .sidebar-test-mode:hover {
+  background: var(--test-raised);
+}
+
+/* 測試模式｜首頁主卡、加工表單、庫存卡片與彈窗外框 */
+.test-mode :is(.home-hero, .function-card, .production-card, .production-setting-card, .production-results, .time-entry-panel, .stat-card, .chart-card, .filter-card, .scanner-settings-card, .modal) {
+  background: var(--test-surface);
+  border-color: var(--test-border);
+}
+
+.test-mode .home-hero {
+  background: radial-gradient(ellipse at top, #61402b, var(--test-surface) 72%);
+}
+
+/* 測試模式｜加工欄位與庫存表格表頭 */
+.test-mode .production-field-row {
+  background: var(--test-page-bg);
+  border-color: var(--test-border);
+}
+
+.test-mode .production-field-row > label:first-child,
+.test-mode :is(.data-table, .production-table) th {
+  background: var(--test-raised);
+  border-color: var(--test-border);
 }
 
 /* 網站共用版面｜主要內容與左右留白 */
@@ -989,6 +1043,38 @@ textarea:focus-visible {
 /* 網站共用按鈕、表單與彈出視窗｜示範模式提示列內的圖示 */
 .demo-banner svg {
   width: 17px;
+}
+
+/* 系統首頁、加工與庫存管理｜測試模式資訊與離開按鈕 */
+.test-mode-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid #755b30;
+  background: #262014;
+  color: #ffdc91;
+  font-size: 13px;
+}
+
+.test-mode-banner > svg {
+  width: 17px;
+  flex-shrink: 0;
+}
+
+.test-mode-banner > span {
+  min-width: 0;
+}
+
+.button.test-mode-exit {
+  min-height: 36px;
+  padding: 4px 10px;
+  border-color: #755b30;
+  background: #362915;
+  color: #ffdc91;
+  font-size: 13px;
 }
 
 /* 網站共用按鈕、表單與彈出視窗｜訪客唯讀提示列內的圖示 */
