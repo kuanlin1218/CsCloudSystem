@@ -99,7 +99,7 @@
 
 - iPhone：用 Safari 開啟正式網址，選擇「分享 → 加入主畫面」，啟用「開啟為網頁 App」，再從主畫面點選「詮栩管理系統」的公司 Logo 圖示。若舊捷徑仍顯示舊圖示，可移除該捷徑後重新加入。
 - Android Chrome、桌面 Chrome 或 Edge：開啟正式網址，使用網址列或瀏覽器選單中的安裝選項。安裝後可從裝置上的 App 圖示開啟獨立視窗。若電腦上的既有安裝仍顯示舊圖示，可重新開啟後留意瀏覽器是否提示更新圖示。若只有手動建立的桌面網址捷徑仍顯示舊圖示，可從新版網站重新建立捷徑。
-- PWA 安裝設定位於 `public/manifest.webmanifest`，其中啟動網址和作用範圍以相對路徑指向 GitHub Pages 的專案目錄。180、192、512 像素的安裝圖示使用 `public/icons/鈦金屬logo.png`，並在下方放入 `public/icons/詮栩-1000x1000.png` 的英文公司名。網址與瀏覽器分頁使用 `public/icons/titanium-favicon.ico`，舊版網址圖示保留在 `public/favicon.ico`。
+- PWA 安裝設定位於 `public/manifest.webmanifest`，其中啟動網址和作用範圍以相對路徑指向 GitHub Pages 的專案目錄。180、192、512 像素的安裝圖示使用 `public/icons/鈦金屬logo.png`，並在下方放入 `public/icons/詮栩-1000x1000.png` 的英文公司名。Chrome 和 Edge 的 PWA 安裝使用 Manifest 裡的 192、512 像素圓角 PNG，網址分頁使用相同外形的 `public/icons/titanium-favicon.ico`。舊版網址圖示保留在 `public/favicon.ico`。
 - Windows 桌面捷徑專用檔為 `public/icons/windows-desktop.ico`，使用同一張鈦金屬圖案，外緣模擬 iPhone 主畫面的圓角方形，四角透明。若捷徑的「內容」有「變更圖示」，可用「瀏覽」選取此檔。套用後請將 ICO 保留在原位置。
 - 正式的登入、查詢、加工登記和庫存作業仍需網路連線。目前未提供離線開啟、暫存或回補同步功能。
 

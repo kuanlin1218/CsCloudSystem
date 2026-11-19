@@ -1737,6 +1737,12 @@ GitHub Summary：新增獨立的 Windows 桌面捷徑圖示。
 SQL：不需要執行。
 GitHub Summary：更新鈦金屬版安裝、網址與桌面圖示，加入英文公司名。
 
+2026-11-19
+修改內容：網址用鈦金屬 ICO 與瀏覽器 PWA 安裝用 PNG 統一採 Windows 桌面圖示的圓角外形，並更新圖示網址版本。
+修改檔案：index.html、public/manifest.webmanifest、public/icons/titanium-favicon.ico、public/icons/icon-192.png、public/icons/icon-512.png、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：統一鈦金屬網址與瀏覽器安裝圖示的圓角外形。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
