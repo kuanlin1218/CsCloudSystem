@@ -13,7 +13,7 @@ import { hasTaiwanHolidayCalendar, isTaiwanPublicHoliday, TAIWAN_HOLIDAY_CALENDA
 import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
 import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
-import { LoginFeedback, OpenPhoneLoginScanner, PhoneLoginPanel, PhoneLoginScanner } from './PhoneLogin'
+import { LoginFeedback, PhoneLoginPanel, PhoneLoginScanner } from './PhoneLogin'
 import type { WorkbookPreview } from './lib/adminDataWorkbook'
 import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, findMatchingProductionRecord, loadInventory, loadOperationLog, loadProductChanges, loadProductMovements, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type OperationLogEntry, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
@@ -169,7 +169,6 @@ export default function App() {
   const [forcePasswordSetup, setForcePasswordSetup] = useState(false)
   const mobileQuery = '(max-width: 620px), (hover: none) and (pointer: coarse)'
   const [phoneLayout, setPhoneLayout] = useState(() => window.matchMedia(mobileQuery).matches)
-  const [phoneScannerOpen, setPhoneScannerOpen] = useState(false)
 
   useEffect(() => {
     const query = window.matchMedia(mobileQuery)
@@ -221,16 +220,15 @@ export default function App() {
   }
 
   if (isLocalDataMode) return <AuthenticatedApp session={null} />
-  if (phoneScannerOpen) return <PhoneLoginScanner onClose={() => setPhoneScannerOpen(false)} />
   if (guestMode) return <AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />
   if (!authReady) return <LoadingScreen label="正在確認安全登入狀態…" />
-  const openPhoneScanner = phoneLayout && supportsPasskeys() ? () => setPhoneScannerOpen(true) : undefined
+  const canScanPhoneLogin = phoneLayout && supportsPasskeys()
   if (!session) return <LoginScreen initialMessage={authMessage} onGuest={enterGuestMode}
-    phoneLayout={phoneLayout} canScanPhoneLogin={Boolean(openPhoneScanner)} />
+    phoneLayout={phoneLayout} canScanPhoneLogin={canScanPhoneLogin} />
   if (forcePasswordSetup || session.user.user_metadata?.password_configured !== true) {
     return <PasswordSetupScreen session={session} complete={(user) => { setForcePasswordSetup(false); setSession({ ...session, user }) }} />
   }
-  return <AuthenticatedApp session={session} openPhoneScanner={openPhoneScanner} />
+  return <AuthenticatedApp session={session} canScanPhoneLogin={canScanPhoneLogin} />
 }
 
 function LoadingScreen({ label }: { label: string }) {
@@ -303,7 +301,10 @@ function LoginScreen({ initialMessage, onGuest, phoneLayout, canScanPhoneLogin }
     <span className="auth-grid"/>
     <section className="auth-card auth-login-card" aria-label="登入系統">
       <div className="auth-brand">
-        <img className="auth-logo" src={`${import.meta.env.BASE_URL}company-logo.png`} alt="詮栩公司 Logo"/>
+        <div className="auth-login-logo">
+          <img className="auth-logo" src={`${import.meta.env.BASE_URL}icons/詮栩-1000x1000.png`}
+            width={1000} height={1000} alt="詮栩公司 Logo" />
+        </div>
         <p className="auth-copy">詮栩股份有限公司 Chyuan Sheu Co.,Ltd.</p>
         <h1>登入雲端系統</h1>
         <p className="auth-eyebrow">2026</p>
@@ -395,8 +396,8 @@ function PasswordSetupScreen({ session, complete }: { session: Session; complete
   </main>
 }
 
-function AuthenticatedApp({ session, guestMode = false, exitGuest, openPhoneScanner }: {
-  session: Session | null; guestMode?: boolean; exitGuest?: () => void; openPhoneScanner?: () => void
+function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneLogin = false }: {
+  session: Session | null; guestMode?: boolean; exitGuest?: () => void; canScanPhoneLogin?: boolean
 }) {
   const [page, setPage] = useState<Page>(pageFromLocation)
   const [products, setProducts] = useState<Product[]>([])
@@ -415,6 +416,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, openPhoneScan
   const [adminDataModal, setAdminDataModal] = useState(false)
   const [adminDelete, setAdminDelete] = useState<AdminDeleteRequest | null>(null)
   const [mobileNav, setMobileNav] = useState(false)
+  const [phoneScannerOpen, setPhoneScannerOpen] = useState(false)
   const [realtimeConnected, setRealtimeConnected] = useState(false)
 
   const refresh = async (showLoading = true) => {
@@ -459,6 +461,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, openPhoneScan
       const nextPage = pageFromLocation()
       setPage(nextPage)
       setMobileNav(false)
+      setPhoneScannerOpen(false)
       setStockModal(null); setProductModal(null); setScannerBarcode(null); setPendingBarcode(''); setPriceHistoryProduct(null)
       setProductionOptionModal(null); setAdminDataModal(false)
       setAdminDelete((request) => { request?.resolve(false); return null })
@@ -514,8 +517,9 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, openPhoneScan
   const productionMachines = useMemo(() => productionOptions.filter((option) => option.option_type === 'machine').map((option) => option.value).sort(), [productionOptions])
   const portalExitButton = !isLocalDataMode && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>
 
-  return (
-    <div className={`app-shell ${isHome ? 'portal-shell' : ''} ${isSystem && !isProduction ? 'inventory-shell' : ''}${isTestMode ? ' test-mode' : ''}`}>
+  return <>
+    <div className={`app-shell ${isHome ? 'portal-shell' : ''} ${isSystem && !isProduction ? 'inventory-shell' : ''}${isTestMode ? ' test-mode' : ''}`}
+      hidden={phoneScannerOpen}>
       {!isHome && !isSystem && portalExitButton}
       {isSystem && <aside className={`sidebar ${isProduction ? 'production-sidebar' : ''} ${mobileNav ? 'is-open' : ''}`}>
         <div className={`brand ${isProduction ? 'production-brand' : ''}`}>
@@ -544,6 +548,10 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, openPhoneScan
           <span className="status-line">{isTestMode ? <FlaskConical /> : guestMode || isDemoMode ? <ShieldCheck /> : <Database />} {isTestMode ? '測試模式' : guestMode ? '訪客唯讀模式' : isDemoMode ? '示範模式' : realtimeConnected ? '雲端即時同步' : '雲端連線中'}</span>
           <span className="status-line"><UserRound /> {isTestMode ? '本分頁測試資料' : guestMode ? '僅供查看' : isDemoMode ? '本機示範資料' : session?.user.user_metadata?.username || OWNER_USERNAME}</span>
           {!guestMode && isOwnerUser(session?.user.id) && supportsPasskeys() && <PasskeySetup />}
+          {canScanPhoneLogin && !guestMode && isOwnerUser(session?.user.id) && <button className="sidebar-phone-login" type="button"
+            onClick={() => { setMobileNav(false); setPhoneScannerOpen(true) }}>
+            <Camera aria-hidden="true" />掃描電腦登入 QR Code
+          </button>}
           <button className="sidebar-test-mode" type="button" onClick={switchTestMode}><FlaskConical aria-hidden="true" />{isTestMode ? '離開測試模式' : '進入測試模式'}</button>
           {!isLocalDataMode && <button className="sidebar-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出系統'}</button>}
         </div>
@@ -563,7 +571,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, openPhoneScan
         {error && <div className="error-banner">{error}<button onClick={() => void refresh()}>重試</button></div>}
 
         {isHome && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode}
-          showOperationLog={canReadOperationLog} exitButton={portalExitButton} openPhoneScanner={openPhoneScanner} />}
+          showOperationLog={canReadOperationLog} exitButton={portalExitButton} />}
         {activePage === 'operation-log' && <OperationLogPage goHome={() => nav('home')} />}
         {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
         {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} onSave={async (input, overwrite) => {
@@ -653,16 +661,17 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, openPhoneScan
       }} />}
       {toast && <div className="toast"><ShieldCheck />{toast}</div>}
     </div>
-  )
+    {phoneScannerOpen && <PhoneLoginScanner onClose={() => setPhoneScannerOpen(false)} />}
+  </>
 }
 
 function NavItem({ active, icon, onClick, children }: { active: boolean; icon: ReactNode; onClick: () => void; children: ReactNode }) {
   return <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>{icon}<span>{children}</span></button>
 }
 
-function HomePage({ navigate, openAdmin, guestMode, showOperationLog, exitButton, openPhoneScanner }: {
+function HomePage({ navigate, openAdmin, guestMode, showOperationLog, exitButton }: {
   navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean; showOperationLog: boolean;
-  exitButton: ReactNode; openPhoneScanner?: () => void
+  exitButton: ReactNode
 }) {
   return <section className="page-content home-page">
     <div className="home-hero">
@@ -675,7 +684,6 @@ function HomePage({ navigate, openAdmin, guestMode, showOperationLog, exitButton
       <h1>詮 栩 雲 端 系 統</h1>
       <p>加工資訊與庫存管理整合平台</p>
     </div>
-    {openPhoneScanner && <OpenPhoneLoginScanner onOpen={openPhoneScanner} />}
     <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div>{exitButton}</div>
     <div className="function-grid portal-functions">
       <FunctionCard icon={<Layers/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>

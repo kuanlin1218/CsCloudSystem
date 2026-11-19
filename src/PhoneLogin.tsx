@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Camera } from 'lucide-react'
 import { isOwnerUser } from './lib/auth'
 import { createQrCodeDataUrl } from './lib/barcode'
 import { supabase } from './lib/supabase'
@@ -297,8 +296,3 @@ export function PhoneLoginScanner({ onClose, feedbackTarget }: {
   </main>
 }
 
-export function OpenPhoneLoginScanner({ onOpen, disabled }: { onOpen: () => void; disabled?: boolean }) {
-  return <button className="button auth-qr-button" type="button" onClick={onOpen} disabled={disabled}>
-    <Camera aria-hidden="true" />掃描電腦登入 QR Code
-  </button>
-}

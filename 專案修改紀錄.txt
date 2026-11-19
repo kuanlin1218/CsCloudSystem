@@ -1791,6 +1791,18 @@ GitHub Summary：獨立設定帳密登入入口與送出按鈕的顏色。
 SQL：不需要執行。
 GitHub Summary：讓手機與電腦登入頁自適應滿版並拉開內容間距。
 
+2026-11-19
+修改內容：限制手機登入頁外框為可見視窗高度，避免整頁多出捲動與回彈，並增加安全區之外的四邊留白。登入頁改用放大的詮栩千像素 Logo，並加上白色圓形底。
+修改檔案：src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：調整 iPhone 登入頁留白與捲動並更新白底圓形 Logo。
+
+2026-11-19
+修改內容：將已登入管理員的電腦掃碼入口移到加工與庫存導覽列，保留原頁表單。登入頁 Logo 恢復透明底，並增加直排按鈕間距。
+修改檔案：src/App.tsx、src/PhoneLogin.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：移動手機掃碼登入入口並調整登入頁標誌與按鈕間距。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

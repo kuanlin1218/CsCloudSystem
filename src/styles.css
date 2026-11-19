@@ -470,6 +470,11 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   background-color: #080c0e; /* 手機與電腦共用｜網站共用版面 → 左側選單與右側內容的總外框 → 底色 */
 } /* 手機與電腦共用｜網站共用版面 → 左側選單與右側內容的總外框 → 結束此區設定 */
 
+/* 加工與庫存管理系統 → 導覽列開啟掃碼登入時的原頁 */
+.app-shell[hidden] {
+  display: none; /* 暫時收起原頁，返回後可繼續填寫原表單 */
+}
+
 /* 網站共用版面｜左側選單（系統首頁、總覽、功能分頁、雲端同步、使用者與登出） */
 .sidebar { /* 手機與電腦共用｜加工與庫存管理系統 → 導覽列 → 左側選單（系統首頁、總覽、功能分頁、雲端同步、使用者與登出） → 選取此元件 */
   position: fixed; /* 手機與電腦共用｜加工與庫存管理系統 → 導覽列 → 左側選單（系統首頁、總覽、功能分頁、雲端同步、使用者與登出） → 定位方式 */
@@ -614,8 +619,9 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   width: 18px; /* 手機與電腦共用｜網站共用版面 → 雲端同步、訪客狀態或使用者名稱內的圖示 → 寬度 */
 } /* 手機與電腦共用｜網站共用版面 → 雲端同步、訪客狀態或使用者名稱內的圖示 → 結束此區設定 */
 
-/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式、登出與返回登入按鈕 */
+/* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、掃碼登入、測試模式、登出與返回登入按鈕 */
 .sidebar-passkey, /* 手機與電腦共用｜通行密鑰（Face ID） → 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式、登出與返回登入按鈕 → 選取此元件 */
+.sidebar-phone-login, /* 手機版｜加工與庫存管理系統 → 導覽列底部的「掃描電腦登入 QR Code」 */
 .sidebar-test-mode, /* 手機與電腦共用｜測試模式 → 加工與庫存管理系統 → 導覽列 → 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式、登出與返回登入按鈕 → 選取此元件 */
 .sidebar-logout { /* 手機與電腦共用｜加工與庫存管理系統 → 導覽列 → 側欄底部 → 通行密鑰設定、測試模式、登出與返回登入按鈕 → 選取此元件 */
   min-height: 36px; /* 手機與電腦共用｜測試模式 → 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式、登出與返回登入按鈕 → 最小高度 */
@@ -635,6 +641,7 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 
 /* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式、登出與返回登入的滑鼠移入樣式 */
 .sidebar-passkey:not(:disabled):hover, /* 手機與電腦共用｜通行密鑰（Face ID） → 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式、登出與返回登入的滑鼠移入樣式 → 選取此元件 */
+.sidebar-phone-login:hover, /* 手機版｜加工與庫存管理系統 → 導覽列底部掃碼入口的移入樣式 */
 .sidebar-test-mode:hover, /* 手機與電腦共用｜測試模式 → 加工與庫存管理系統 → 導覽列 → 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式、登出與返回登入的滑鼠移入樣式 → 選取此元件 */
 .sidebar-logout:hover { /* 手機與電腦共用｜加工與庫存管理系統 → 導覽列 → 側欄底部 → 通行密鑰設定、測試模式、登出與返回登入的滑鼠移入樣式 → 選取此元件 */
   background: #12171a; /* 手機與電腦共用｜測試模式 → 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式、登出與返回登入的滑鼠移入樣式 → 背景 */
@@ -643,6 +650,7 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 
 /* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式與登出按鈕圖示 */
 .sidebar-passkey svg, /* 手機與電腦共用｜通行密鑰（Face ID） → 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式與登出按鈕圖示 → 選取此元件 */
+.sidebar-phone-login svg, /* 手機版｜加工與庫存管理系統 → 導覽列底部掃碼入口的相機圖示 */
 .sidebar-test-mode svg, /* 手機與電腦共用｜測試模式 → 加工與庫存管理系統 → 導覽列 → 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式與登出按鈕圖示 → 選取此元件 */
 .sidebar-logout svg { /* 手機與電腦共用｜加工與庫存管理系統 → 導覽列 → 側欄底部 → 通行密鑰設定、測試模式與登出按鈕圖示 → 選取此元件 */
   width: 18px; /* 手機與電腦共用｜測試模式 → 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、測試模式與登出按鈕圖示 → 寬度 */
@@ -2586,10 +2594,19 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   padding: 0; /* 和操作區的距離交由登入卡片分配 */
 }
 
-.auth-login-card .auth-logo {
-  width: clamp(46px, 10dvh, 64px); /* 短視窗仍保留原本登入頁的公司標誌 */
-  height: auto; /* 維持標誌原本比例 */
-  margin-bottom: clamp(10px, 2.4dvh, 20px); /* 在較高視窗拉開 Logo 與公司名稱的距離 */
+/* 登入畫面 → 詮栩公司透明 Logo 的位置與寬度 */
+.auth-login-card .auth-login-logo {
+  width: clamp(72px, 10dvh, 94px); /* 手機依視窗高度放大標誌，短視窗仍保留登入操作空間 */
+  aspect-ratio: 1; /* 保持 Logo 原圖的正方形比例 */
+  margin: 0 auto clamp(10px, 2.4dvh, 20px); /* Logo 置中並與公司名稱分隔 */
+}
+
+/* 登入畫面 → 詮栩千像素 Logo 原圖 */
+.auth-login-logo > .auth-logo {
+  width: 100%; /* 原圖使用登入標誌區的寬度 */
+  height: 100%; /* 原圖維持正方形的取像比例 */
+  margin: 0; /* 由標誌區在登入標題上方置中 */
+  transform: scale(1.14); /* 略放大原圖內的標誌，保留英文公司名 */
 }
 
 .auth-login-card .auth-brand h1 {
@@ -2630,10 +2647,10 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 .auth-login-options > .auth-qr-button,
 .auth-login-options > .auth-guest-button,
 .auth-login-options > .auth-switch {
-  margin-top: clamp(8px, 1.6dvh, 14px); /* 按鈕維持直排，留白依可用高度調整 */
+  margin-top: clamp(12px, 2dvh, 18px); /* 拉開直排登入按鈕，留白依可用高度調整 */
 }
 
-/* 功能選擇頁 → 從管理員首頁開啟掃碼時的標題與「返回」 */
+/* 加工與庫存管理系統 → 從導覽列開啟掃碼時的標題與「返回」 */
 .auth-method-heading {
   display: flex; /* 同一列呈現標題與返回入口 */
   align-items: center; /* 對齊標題及返回按鈕 */
@@ -2809,11 +2826,48 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
       padding: 24px 20px; /* 手機版｜登入畫面與系統首頁 → 中央登入卡片（公司 Logo、登入名稱、密碼與操作按鈕） → 內距 */
     } /* 手機版｜登入畫面與系統首頁 → 中央登入卡片（公司 Logo、登入名稱、密碼與操作按鈕） → 結束此區設定 */
 
+  /* 手機版｜登入畫面 → iPhone PWA 的文件高度與頁面回彈 */
+  html:has(.auth-login-page) {
+    overscroll-behavior-y: none; /* 在登入畫面消除整頁的垂直回彈 */
+  }
+
+  body:has(.auth-login-page) {
+    min-height: 0; /* 登入時改由可見視窗大小決定高度，避免全站 100vh 多出空白 */
+  }
+
+  .auth-screen.auth-login-page {
+    display: block; /* 手機登入內容可在固定高度的頁框內自然排列 */
+    height: 100dvh; /* 只占 iPhone 目前可見的螢幕高度 */
+    min-height: 0; /* 由可見高度設定頁框，避免另行撐高 */
+    overflow-y: auto; /* 展開欄位或叫出鍵盤後，空間不足時仍可操作 */
+    overscroll-behavior-y: none; /* 捲到登入內容邊緣時不拉動整頁 */
+  }
+
   /* 手機版｜登入畫面 → 自適應滿版的公司標誌、登入操作與頁尾 */
   .auth-login-page > .auth-login-card {
+    min-height: 100%; /* 從登入頁框取得高度，讓安全區內距包含在滿版高度中 */
     justify-content: space-between; /* 有空間時把標誌、操作與版權分散到頁面 */
-    padding-block: max(clamp(16px, 4dvh, 34px), env(safe-area-inset-top)) max(16px, env(safe-area-inset-bottom)); /* 避開頂部與底部的 iPhone 安全區 */
-    padding-inline: max(clamp(16px, 5vw, 28px), env(safe-area-inset-left)) max(clamp(16px, 5vw, 28px), env(safe-area-inset-right)); /* 保留按鈕和左右螢幕邊緣的間距 */
+    gap: clamp(10px, 2dvh, 20px); /* 短螢幕先縮短區塊間距，避免初次開啟就要捲動 */
+    padding-block: calc(env(safe-area-inset-top, 0px) + clamp(14px, 2.2dvh, 20px)) calc(env(safe-area-inset-bottom, 0px) + clamp(12px, 2dvh, 18px)); /* 在 iPhone 上下安全區之外再保留留白 */
+    padding-inline: calc(env(safe-area-inset-left, 0px) + clamp(24px, 7vw, 34px)) calc(env(safe-area-inset-right, 0px) + clamp(24px, 7vw, 34px)); /* 登入按鈕不貼齊手機左右邊緣 */
+  }
+
+  /* 手機版｜登入畫面 → 公司標誌與公司名稱間距 */
+  .auth-login-card .auth-login-logo {
+    margin-bottom: clamp(8px, 1.5dvh, 14px); /* 將額外空間留給安全區與登入按鈕 */
+  }
+
+  /* 手機版｜登入畫面 → 保留原有大小的直排登入入口 */
+  .auth-login-options > .auth-passkey-button,
+  .auth-login-options > .auth-qr-button,
+  .auth-login-options > .auth-guest-button,
+  .auth-login-options > .auth-switch {
+    margin-top: clamp(9px, 1.5dvh, 13px); /* 拉開手機登入按鈕，短螢幕仍可縮減留白 */
+  }
+
+  /* 手機版｜登入畫面 → 原地展開的掃碼相機預覽 */
+  .auth-login-page .auth-qr-camera {
+    width: min(190px, 100%, 29dvh); /* 短螢幕保留相機預覽和下方按鈕的位置 */
   }
 
   /* 登入畫面與系統首頁｜公司 Logo 下方的「CHYUAN SHEU CNC CLOUD」英文小標（目前畫面暫時隱藏） */
@@ -2901,8 +2955,8 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
     text-align: center; /* 品牌文字與 Logo 對齊 */
   }
 
-  .auth-login-card .auth-logo {
-    width: clamp(66px, 9vw, 124px); /* 左側品牌標誌隨視窗放大 */
+  .auth-login-card .auth-login-logo {
+    width: clamp(108px, 13vw, 176px); /* 左側透明品牌標誌隨視窗放大 */
   }
 
   .auth-login-card .auth-brand h1 {
