@@ -1731,6 +1731,12 @@ GitHub Summary：改用透明公司標誌並更新 Windows 桌面捷徑用圖示
 SQL：不需要執行。
 GitHub Summary：新增獨立的 Windows 桌面捷徑圖示。
 
+2026-11-19
+修改內容：手機、網址與 Windows 桌面專用圖示改用鈦金屬 Logo，標誌下方加入原本的英文公司名。桌面 ICO 模擬 iPhone 圓角外形，網址改指向新增 ICO，保留原本的 favicon.ico。
+修改檔案：index.html、public/manifest.webmanifest、public/icons/windows-desktop.ico、public/icons/titanium-favicon.ico、public/icons/apple-touch-icon.png、public/icons/icon-192.png、public/icons/icon-512.png、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：更新鈦金屬版安裝、網址與桌面圖示，加入英文公司名。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
