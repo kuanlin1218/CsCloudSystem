@@ -2525,6 +2525,42 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   color: #6fc3ff; /* 手機與電腦共用｜通行密鑰（Face ID） → 登入畫面｜「使用通行密鑰登入（Face ID）」按鈕 → 文字或圖示前景色 */
 } /* 手機與電腦共用｜通行密鑰（Face ID） → 登入畫面｜「使用通行密鑰登入（Face ID）」按鈕 → 結束此區設定 */
 
+/* 登入畫面 →「手機掃碼登入」與手機確認頁的取消／完成按鈕 */
+.auth-qr-button {
+  width: 100%; /* 與同一登入卡片內的按鈕等寬 */
+  margin-top: 12px; /* 與上一項登入操作隔開 */
+  border-color: #8065a4; /* 手機掃碼登入按鈕的外框色 */
+  background: #221a30; /* 手機掃碼登入按鈕的深紫底色 */
+  color: #e0c5ff; /* 手機掃碼登入按鈕的圖示和文字色 */
+}
+
+/* 電腦登入畫面 →「手機掃碼登入」的 QR Code、確認碼與等待狀態 */
+.auth-qr-panel {
+  display: grid; /* QR Code 和確認碼依序排列 */
+  justify-items: center; /* QR Code 和確認碼置中 */
+  gap: 8px; /* 掃碼提示、圖片、確認碼和動作的間距 */
+  margin-top: 12px; /* 與開啟掃碼區的按鈕隔開 */
+  padding: 12px; /* QR Code 和提示文字四周留白 */
+  border: 1px solid #433653; /* 掃碼登入面板的邊框 */
+  border-radius: 8px; /* 掃碼登入面板的圓角 */
+  text-align: center; /* 掃碼和有效時間提示置中 */
+}
+
+/* 電腦登入畫面 →「手機掃碼登入」的 QR Code 圖片 */
+.auth-qr-panel img {
+  width: min(200px, 100%); /* 讓窄視窗中的 QR Code 保持在登入卡片內 */
+  height: auto; /* 確保 QR Code 等比例縮放 */
+  padding: 12px; /* 為相機辨識補足 QR Code 周圍的白邊 */
+  background: #fff; /* QR Code 周圍的掃描留白以白底呈現 */
+}
+
+/* 電腦登入畫面 →「手機掃碼登入」的六位確認碼 */
+.auth-qr-code {
+  font-family: var(--font-family-monospace); /* 確認碼沿用全站等寬數字字型 */
+  font-size: 24px; /* 讓手機操作者能辨識電腦的六位確認碼 */
+  letter-spacing: .15em; /* 區分相鄰的確認碼數字 */
+}
+
 /* 登入畫面與系統首頁｜「訪客查看」按鈕 */
 .auth-guest-button { /* 手機與電腦共用｜登入畫面與系統首頁 → 「訪客查看」按鈕 → 選取此元件 */
   width: 100%; /* 手機與電腦共用｜登入畫面與系統首頁 → 「訪客查看」按鈕 → 寬度 */

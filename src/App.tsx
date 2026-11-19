@@ -13,6 +13,7 @@ import { hasTaiwanHolidayCalendar, isTaiwanPublicHoliday, TAIWAN_HOLIDAY_CALENDA
 import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
 import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
+import { PhoneLoginApproval, PhoneLoginButton, readPhoneLoginToken } from './PhoneLogin'
 import type { WorkbookPreview } from './lib/adminDataWorkbook'
 import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, findMatchingProductionRecord, loadInventory, loadOperationLog, loadProductChanges, loadProductMovements, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type OperationLogEntry, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
@@ -166,6 +167,21 @@ export default function App() {
   const [authReady, setAuthReady] = useState(isLocalDataMode)
   const [authMessage, setAuthMessage] = useState('')
   const [forcePasswordSetup, setForcePasswordSetup] = useState(false)
+  const [phoneLoginToken, setPhoneLoginToken] = useState(readPhoneLoginToken)
+
+  useEffect(() => {
+    if (!supabase) return
+    const handlePhoneLogin = () => {
+      const token = readPhoneLoginToken()
+      if (!token) return
+      setPhoneLoginToken(token)
+      // 掃描憑證留在目前頁面記憶體，從手機網址列及瀏覽紀錄移除。
+      window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`)
+    }
+    handlePhoneLogin()
+    window.addEventListener('hashchange', handlePhoneLogin)
+    return () => window.removeEventListener('hashchange', handlePhoneLogin)
+  }, [])
 
   useEffect(() => {
     const client = supabase
@@ -209,12 +225,14 @@ export default function App() {
   }
 
   if (isLocalDataMode) return <AuthenticatedApp session={null} />
-  if (guestMode) return <AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />
+  if (guestMode && !phoneLoginToken) return <AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />
   if (!authReady) return <LoadingScreen label="正在確認安全登入狀態…" />
-  if (!session) return <LoginScreen initialMessage={authMessage} onGuest={enterGuestMode} />
+  if (!session) return <LoginScreen initialMessage={authMessage} onGuest={enterGuestMode}
+    onCancelPhoneLogin={phoneLoginToken ? () => setPhoneLoginToken(null) : undefined} />
   if (forcePasswordSetup || session.user.user_metadata?.password_configured !== true) {
     return <PasswordSetupScreen session={session} complete={(user) => { setForcePasswordSetup(false); setSession({ ...session, user }) }} />
   }
+  if (phoneLoginToken) return <PhoneLoginApproval key={phoneLoginToken} token={phoneLoginToken} onClose={() => setPhoneLoginToken(null)} />
   return <AuthenticatedApp session={session} />
 }
 
@@ -222,7 +240,9 @@ function LoadingScreen({ label }: { label: string }) {
   return <main className="loading-screen"><span className="loader"/><p>{label}</p></main>
 }
 
-function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onGuest: () => void }) {
+function LoginScreen({ initialMessage, onGuest, onCancelPhoneLogin }: {
+  initialMessage?: string; onGuest: () => void; onCancelPhoneLogin?: () => void
+}) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState(initialMessage || '')
@@ -277,6 +297,7 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         <img className="auth-logo" src={`${import.meta.env.BASE_URL}company-logo.png`} alt="詮栩公司 Logo"/>
         <p className="auth-copy">詮栩股份有限公司 Chyuan Sheu Co.,Ltd.</p>
         <h1>登入雲端系統</h1>
+        {onCancelPhoneLogin && <p className="auth-copy">請先登入手機，再確認此次電腦登入。</p>}
         <p className="auth-eyebrow">2026</p>
       </div>
     <form onSubmit={submit}>
@@ -287,8 +308,11 @@ function LoginScreen({ initialMessage, onGuest }: { initialMessage?: string; onG
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
       {supportsPasskeys() && <button className="button auth-passkey-button" type="button" onClick={() => void submitPasskey()} disabled={busy}><LockKeyhole />使用通行密鑰登入 Face ID</button>}
-      <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客登入</button>
-      <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
+      {onCancelPhoneLogin ? <button className="button auth-qr-button" type="button" onClick={onCancelPhoneLogin} disabled={busy}>取消掃碼登入</button> : <>
+        <PhoneLoginButton disabled={busy} />
+        <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客登入</button>
+        <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
+      </>}
       <button className="auth-switch" type="button" onClick={() => { setResetOpen((value) => !value); setResetMessage(''); setResetSuccess(false) }} disabled={busy}>{resetOpen ? '取消重設密碼' : '忘記密碼或尚未設定密碼'}</button>
       {resetOpen && <form className="auth-reset-form" onSubmit={sendPasswordEmail}>
         <Field label="管理員 Email" wide><input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="email" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} placeholder="輸入後台設定的 Email" disabled={busy}/></Field>

@@ -1743,6 +1743,12 @@ GitHub Summary：更新鈦金屬版安裝、網址與桌面圖示，加入英文
 SQL：不需要執行。
 GitHub Summary：統一鈦金屬網址與瀏覽器安裝圖示的圓角外形。
 
+2026-11-19
+修改內容：加入不需藍牙的手機掃碼登入，包含電腦一次性 QR Code、管理員手機批准、六位確認碼及原分頁兌換。
+修改檔案：src/App.tsx、src/PhoneLogin.tsx、src/styles.css、supabase/config.toml、supabase/enable-phone-qr-login.sql、supabase/functions/phone-qr-login/index.ts、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：需要執行 supabase/enable-phone-qr-login.sql 以建立暫存表及掃碼登入函式。
+GitHub Summary：新增手機掃碼批准的電腦登入功能。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

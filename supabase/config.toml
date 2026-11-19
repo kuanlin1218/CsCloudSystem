@@ -1,0 +1,3 @@
+[functions.phone-qr-login]
+# 產生 QR Code 與領取狀態時電腦尚未登入。手機批准必須由函式查驗管理員身分。
+verify_jwt = false
