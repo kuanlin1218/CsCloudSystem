@@ -1999,36 +1999,40 @@ function BarcodeScannerModal(props: {
   const stocktakeProduct = stocktake && (products.find((product) => product.id === stocktake.product.id) || stocktake.product)
   const stocktakeQuantity = stocktake ? parseStocktakeQuantity(stocktake.quantity) : null
 
-  // 「掃描刀具條碼」的「掃描成功提示音」：相機按鈕或查詢按鈕觸發後才啟用，避免 iPhone 阻擋自動播放。
-  const prepareScanAudio = async () => {
+  // 掃描刀具條碼｜按下相機或查詢時先啟用提示音，音訊等待不阻擋掃描。
+  const prepareScanAudio = () => {
     try {
       const AudioContextConstructor = window.AudioContext
         || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
       if (!AudioContextConstructor) return
       if (!audioContextRef.current) audioContextRef.current = new AudioContextConstructor()
-      if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume()
+      const context = audioContextRef.current
+      if (context.state !== 'running') void context.resume().catch(() => undefined)
     } catch { /* 瀏覽器不支援提示音時仍保留視覺提示。 */ }
   }
 
-  const playScanFeedback = () => {
-    const audioContext = audioContextRef.current
-    if (audioContext?.state === 'running') {
-      const startAt = audioContext.currentTime
-      ;[880, 1175].forEach((frequency, index) => {
-        const oscillator = audioContext.createOscillator()
-        const gain = audioContext.createGain()
-        const toneStart = startAt + index * .09
-        oscillator.frequency.value = frequency
-        oscillator.type = 'sine'
-        gain.gain.setValueAtTime(.0001, toneStart)
-        gain.gain.exponentialRampToValueAtTime(.12, toneStart + .01)
-        gain.gain.exponentialRampToValueAtTime(.0001, toneStart + .08)
-        oscillator.connect(gain).connect(audioContext.destination)
-        oscillator.start(toneStart)
-        oscillator.stop(toneStart + .085)
-      })
-    }
+  const playScanFeedback = async () => {
     navigator.vibrate?.(70)
+    const audioContext = audioContextRef.current
+    if (!audioContext || audioContext.state === 'closed') return
+    try {
+      // 掃描成功畫面｜相機切換後再確認音訊已恢復，超過半秒就不補播。
+      const requestedAt = performance.now()
+      if (audioContext.state !== 'running') await audioContext.resume()
+      if (audioContextRef.current !== audioContext || audioContext.state !== 'running' || performance.now() - requestedAt > 500) return
+      const startAt = audioContext.currentTime
+      const oscillator = audioContext.createOscillator()
+      const gain = audioContext.createGain()
+      oscillator.frequency.value = 2400
+      oscillator.type = 'sine'
+      gain.gain.setValueAtTime(.0001, startAt)
+      gain.gain.exponentialRampToValueAtTime(.45, startAt + .004)
+      gain.gain.setValueAtTime(.45, startAt + .065)
+      gain.gain.exponentialRampToValueAtTime(.0001, startAt + .09)
+      oscillator.connect(gain).connect(audioContext.destination)
+      oscillator.start(startAt)
+      oscillator.stop(startAt + .09)
+    } catch { /* 提示音播放失敗時仍保留條碼結果和畫面提示。 */ }
   }
 
   // 「掃描刀具條碼」的「iPhone 後鏡頭連續對焦與適度變焦參數」：裝置不支援時會略過，不影響相機開啟。
@@ -2061,7 +2065,9 @@ function BarcodeScannerModal(props: {
     controlsRef.current?.stop()
     controlsRef.current = null
     if (videoRef.current?.srcObject instanceof MediaStream) videoRef.current.srcObject.getTracks().forEach((track) => track.stop())
-    if (audioContextRef.current) void audioContextRef.current.close().catch(() => undefined)
+    const audioContext = audioContextRef.current
+    audioContextRef.current = null
+    if (audioContext) void audioContext.close().catch(() => undefined)
   }, [])
 
   useEffect(() => {
@@ -2095,7 +2101,7 @@ function BarcodeScannerModal(props: {
     }
     controlsRef.current = controls
     try {
-      await prepareScanAudio()
+      prepareScanAudio()
       const [{ BrowserMultiFormatReader }, { DecodeHintType }] = await Promise.all([
         import('@zxing/browser'),
         import('@zxing/library'),
@@ -2192,7 +2198,7 @@ function BarcodeScannerModal(props: {
         stopCamera()
         setBarcode(value)
         setManualBarcode('')
-        playScanFeedback()
+        void playScanFeedback()
       }
       timer = window.setTimeout(scanFrame, 250)
     } catch (cameraError) {
@@ -2209,12 +2215,12 @@ function BarcodeScannerModal(props: {
     }
   }
 
-  const useManualBarcode = async () => {
+  const useManualBarcode = () => {
     const value = manualBarcode.trim()
     if (!value) { setError('請輸入條碼內容'); return }
-    await prepareScanAudio()
+    prepareScanAudio()
     stopCamera(); setError(''); setBarcode(value); setManualBarcode(''); setSelectedProductId('')
-    playScanFeedback()
+    void playScanFeedback()
   }
 
   const requestBinding = () => {
@@ -2361,7 +2367,7 @@ function BarcodeScannerModal(props: {
 
     <div className="barcode-manual-test">
       <span>電腦測試／相機無法辨識時</span>
-      <div><input value={manualBarcode} onChange={(event) => setManualBarcode(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), void useManualBarcode())} placeholder="輸入條碼後按查詢" autoComplete="off"/><button type="button" onClick={() => void useManualBarcode()}><Search/>查詢</button></div>
+      <div><input value={manualBarcode} onChange={(event) => setManualBarcode(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), useManualBarcode())} placeholder="輸入條碼後按查詢" autoComplete="off"/><button type="button" onClick={useManualBarcode}><Search/>查詢</button></div>
     </div>
 
     {error && <p className="form-error barcode-scanner-error" role="alert">{error}</p>}
