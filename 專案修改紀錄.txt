@@ -1707,6 +1707,18 @@ GitHub Summary：加入詮栩 CNC 的 PWA 安裝設定與公司 Logo 圖示。
 SQL：不需要執行。
 GitHub Summary：以高解析度公司 Logo 更新並放大 PWA 安裝圖示。
 
+2026-11-19
+修改內容：瀏覽器分頁改用公司標誌，更新 PWA 安裝圖示網址版本，並稍微縮小 iPhone 主畫面 Logo 以增加圓角留白。
+修改檔案：index.html、public/manifest.webmanifest、public/icons/browser-tab-logo.png、public/icons/apple-touch-icon.png、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：更新電腦的公司圖示並增加 iPhone 主畫面圖示留白。
+
+2026-11-19
+修改內容：從三個 PWA 安裝圖示移除英文公司名，將紅橘色標誌置中並更新圖示網址版本。iPhone 圖示保留圓角留白。
+修改檔案：index.html、public/manifest.webmanifest、public/icons/apple-touch-icon.png、public/icons/icon-192.png、public/icons/icon-512.png、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：移除 PWA 安裝圖示的英文公司名並置中公司標誌。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
