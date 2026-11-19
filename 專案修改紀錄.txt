@@ -1803,6 +1803,18 @@ GitHub Summary：調整 iPhone 登入頁留白與捲動並更新白底圓形 Log
 SQL：不需要執行。
 GitHub Summary：移動手機掃碼登入入口並調整登入頁標誌與按鈕間距。
 
+2026-11-19
+修改內容：從詮栩原圖製作登入專用的透明 Logo，保留紅橘輪廓、裁去多餘透明留白，並放大手機與電腦版顯示尺寸。
+修改檔案：public/icons/login-logo.png、src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：重製並放大登入頁專用的詮栩透明 Logo。
+
+2026-11-19
+修改內容：手機登入頁的 Logo、公司名稱、登入標題與年份整組往下移 8～14 像素，直排按鈕間距加大至 12～17 像素，依手機可見高度調整。
+修改檔案：src/styles.css、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：下移手機登入頁標誌與標題並加大按鈕間距。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

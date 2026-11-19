@@ -2596,17 +2596,15 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 
 /* 登入畫面 → 詮栩公司透明 Logo 的位置與寬度 */
 .auth-login-card .auth-login-logo {
-  width: clamp(72px, 10dvh, 94px); /* 手機依視窗高度放大標誌，短視窗仍保留登入操作空間 */
-  aspect-ratio: 1; /* 保持 Logo 原圖的正方形比例 */
+  width: clamp(88px, 12dvh, 116px); /* 放大手機標誌，短視窗仍保留操作空間 */
   margin: 0 auto clamp(10px, 2.4dvh, 20px); /* Logo 置中並與公司名稱分隔 */
 }
 
-/* 登入畫面 → 詮栩千像素 Logo 原圖 */
+/* 登入畫面 → 重新輸出的詮栩透明 Logo */
 .auth-login-logo > .auth-logo {
   width: 100%; /* 原圖使用登入標誌區的寬度 */
-  height: 100%; /* 原圖維持正方形的取像比例 */
+  height: auto; /* 維持裁邊後標誌的原始比例 */
   margin: 0; /* 由標誌區在登入標題上方置中 */
-  transform: scale(1.14); /* 略放大原圖內的標誌，保留英文公司名 */
 }
 
 .auth-login-card .auth-brand h1 {
@@ -2852,6 +2850,12 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
     padding-inline: calc(env(safe-area-inset-left, 0px) + clamp(24px, 7vw, 34px)) calc(env(safe-area-inset-right, 0px) + clamp(24px, 7vw, 34px)); /* 登入按鈕不貼齊手機左右邊緣 */
   }
 
+  /* 手機版｜登入畫面 → Logo、公司名稱、登入標題與年份整組的位置 */
+  .auth-login-card .auth-brand {
+    position: relative; /* 在原本版面位置調整上方品牌區的位置 */
+    inset-block-start: clamp(60px, 1.5dvh, 70px); /* 將品牌區稍往下移，位移小於與按鈕區的間距 */
+  }
+
   /* 手機版｜登入畫面 → 公司標誌與公司名稱間距 */
   .auth-login-card .auth-login-logo {
     margin-bottom: clamp(8px, 1.5dvh, 14px); /* 將額外空間留給安全區與登入按鈕 */
@@ -2862,7 +2866,7 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   .auth-login-options > .auth-qr-button,
   .auth-login-options > .auth-guest-button,
   .auth-login-options > .auth-switch {
-    margin-top: clamp(9px, 1.5dvh, 13px); /* 拉開手機登入按鈕，短螢幕仍可縮減留白 */
+    margin-top: clamp(25px, 1.9dvh, 30px); /* 加大手機直排登入按鈕間距，短視窗採較小間距 */
   }
 
   /* 手機版｜登入畫面 → 原地展開的掃碼相機預覽 */
@@ -2956,7 +2960,7 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   }
 
   .auth-login-card .auth-login-logo {
-    width: clamp(108px, 13vw, 176px); /* 左側透明品牌標誌隨視窗放大 */
+    width: clamp(124px, 16vw, 216px); /* 放大電腦登入頁左欄的品牌標誌 */
   }
 
   .auth-login-card .auth-brand h1 {

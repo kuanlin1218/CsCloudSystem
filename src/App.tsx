@@ -302,8 +302,8 @@ function LoginScreen({ initialMessage, onGuest, phoneLayout, canScanPhoneLogin }
     <section className="auth-card auth-login-card" aria-label="登入系統">
       <div className="auth-brand">
         <div className="auth-login-logo">
-          <img className="auth-logo" src={`${import.meta.env.BASE_URL}icons/詮栩-1000x1000.png`}
-            width={1000} height={1000} alt="詮栩公司 Logo" />
+          <img className="auth-logo" src={`${import.meta.env.BASE_URL}icons/login-logo.png`}
+            width={609} height={518} alt="詮栩公司 Logo" />
         </div>
         <p className="auth-copy">詮栩股份有限公司 Chyuan Sheu Co.,Ltd.</p>
         <h1>登入雲端系統</h1>
