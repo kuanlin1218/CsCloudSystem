@@ -1695,6 +1695,12 @@ GitHub Summary：移除未使用的加工摘要表格樣式與多餘欄名設定
 SQL：不需要執行。
 GitHub Summary：將庫存出入庫與新增品項的表單欄位標題改為金黃色。
 
+2026-11-19
+修改內容：加入 PWA 安裝設定與公司 Logo 圖示，支援從主畫面或應用程式清單以獨立視窗開啟；正式作業維持連線使用。
+修改檔案：index.html、public/manifest.webmanifest、public/icons/apple-touch-icon.png、public/icons/icon-192.png、public/icons/icon-512.png、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：加入詮栩 CNC 的 PWA 安裝設定與公司 Logo 圖示。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
