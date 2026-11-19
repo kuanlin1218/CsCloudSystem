@@ -226,10 +226,10 @@ Supabase 專案本身也有密碼最短長度設定。請在 Auth 的 Password S
 
 1. 確認 Supabase 專案正確後，在 SQL Editor 執行 [`supabase/enable-phone-qr-login.sql`](supabase/enable-phone-qr-login.sql)。此檔只新增掃碼登入的暫存表及相關函式。
 2. 在 Supabase Edge Functions 的 Secrets 設定 `QR_LOGIN_SITE_URL`（完整正式 HTTPS 網址，含專案目錄及結尾 `/`）與 `QR_LOGIN_OWNER_USER_ID`（和 `src/lib/auth.ts` 的 `OWNER_USER_ID` 相同）。瀏覽器只能使用專案的前端公開金鑰。Edge Function 使用 Supabase 執行環境內建的金鑰，勿將服務金鑰放進前端環境變數。
-3. 使用已連結該 Supabase 專案的 CLI 執行 `supabase functions deploy phone-qr-login --no-verify-jwt`，再部署新版網站。Edge Function 的帳號驗證由程式處理，手機批准時會向 Supabase Auth 查驗 JWT 及管理員 UID。
-4. 在電腦登入頁點「手機掃碼登入」，用 iPhone 相機掃描。手機須以管理員登入，輸入電腦畫面上單獨顯示的六位確認碼，按「允許登入」。QR Code 有效三分鐘且只可使用一次，成功後另一個電腦或分頁須重新發出請求。若掃碼開啟的 Safari 工作階段尚未登入，可先用通行密鑰或帳密登入。
+3. 使用已連結該 Supabase 專案的 CLI 執行 `supabase functions deploy phone-qr-login --no-verify-jwt`，或從 Dashboard 更新該函式的 `index.ts` 並關閉該函式的 Verify JWT，再部署新版網站。手機批准時，Edge Function 會將 Supabase Auth 通行密鑰挑戰綁定此次掃碼請求，並驗證通行密鑰與管理員 UID。
+4. 先在 iPhone 註冊管理員通行密鑰。在電腦登入頁點「手機掃碼登入」，再從 iPhone 主畫面打開詮栩 CNC，於手機登入頁或管理員的功能選擇頁點「掃描電腦登入 QR Code」。掃到後按「用 Face ID 確認」，依手機系統提示驗證。電腦原分頁會自動登入，手機維持原有登入狀態。
 
-電腦和手機都須連網，可使用不同網路。電腦的兌換憑證只留在發出請求的分頁記憶體。成功後由 Supabase Auth 另行發行電腦工作階段。關閉或重整電腦掃碼頁後，若還要掃碼登入，請重新產生 QR Code。
+電腦和手機都須連網，可使用不同網路。QR Code 僅供站內掃描、有效三分鐘且只可用一次。電腦的兌換憑證只留在發出請求的分頁。關閉或重整電腦掃碼頁後，請重新產生 QR Code。先前已套用掃碼登入 SQL 的環境只需更新 Edge Function 和網站。
 
 ## 部署到 GitHub Pages
 

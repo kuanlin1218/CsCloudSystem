@@ -1749,6 +1749,12 @@ GitHub Summary：統一鈦金屬網址與瀏覽器安裝圖示的圓角外形。
 SQL：需要執行 supabase/enable-phone-qr-login.sql 以建立暫存表及掃碼登入函式。
 GitHub Summary：新增手機掃碼批准的電腦登入功能。
 
+2026-11-19
+修改內容：將手機掃碼登入改為在 PWA 開啟相機並使用管理員通行密鑰確認，移除六位確認碼與掃碼開網頁流程。
+修改檔案：src/App.tsx、src/PhoneLogin.tsx、src/styles.css、supabase/functions/phone-qr-login/index.ts、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：已套用掃碼登入的環境無須重跑 SQL。
+GitHub Summary：改用手機站內掃碼與 Face ID 確認電腦登入。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

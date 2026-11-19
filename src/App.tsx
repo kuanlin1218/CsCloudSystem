@@ -13,7 +13,7 @@ import { hasTaiwanHolidayCalendar, isTaiwanPublicHoliday, TAIWAN_HOLIDAY_CALENDA
 import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
 import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
-import { PhoneLoginApproval, PhoneLoginButton, readPhoneLoginToken } from './PhoneLogin'
+import { OpenPhoneLoginScanner, PhoneLoginButton, PhoneLoginScanner } from './PhoneLogin'
 import type { WorkbookPreview } from './lib/adminDataWorkbook'
 import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, findMatchingProductionRecord, loadInventory, loadOperationLog, loadProductChanges, loadProductMovements, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type OperationLogEntry, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
@@ -167,21 +167,17 @@ export default function App() {
   const [authReady, setAuthReady] = useState(isLocalDataMode)
   const [authMessage, setAuthMessage] = useState('')
   const [forcePasswordSetup, setForcePasswordSetup] = useState(false)
-  const [phoneLoginToken, setPhoneLoginToken] = useState(readPhoneLoginToken)
+  const mobileQuery = '(max-width: 620px), (hover: none) and (pointer: coarse)'
+  const [phoneLayout, setPhoneLayout] = useState(() => window.matchMedia(mobileQuery).matches)
+  const [phoneScannerOpen, setPhoneScannerOpen] = useState(false)
 
   useEffect(() => {
-    if (!supabase) return
-    const handlePhoneLogin = () => {
-      const token = readPhoneLoginToken()
-      if (!token) return
-      setPhoneLoginToken(token)
-      // 掃描憑證留在目前頁面記憶體，從手機網址列及瀏覽紀錄移除。
-      window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`)
-    }
-    handlePhoneLogin()
-    window.addEventListener('hashchange', handlePhoneLogin)
-    return () => window.removeEventListener('hashchange', handlePhoneLogin)
-  }, [])
+    const query = window.matchMedia(mobileQuery)
+    const update = () => setPhoneLayout(query.matches)
+    update()
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [mobileQuery])
 
   useEffect(() => {
     const client = supabase
@@ -225,23 +221,24 @@ export default function App() {
   }
 
   if (isLocalDataMode) return <AuthenticatedApp session={null} />
-  if (guestMode && !phoneLoginToken) return <AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />
+  if (phoneScannerOpen) return <PhoneLoginScanner onClose={() => setPhoneScannerOpen(false)} />
+  if (guestMode) return <AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />
   if (!authReady) return <LoadingScreen label="正在確認安全登入狀態…" />
+  const openPhoneScanner = phoneLayout && supportsPasskeys() ? () => setPhoneScannerOpen(true) : undefined
   if (!session) return <LoginScreen initialMessage={authMessage} onGuest={enterGuestMode}
-    onCancelPhoneLogin={phoneLoginToken ? () => setPhoneLoginToken(null) : undefined} />
+    phoneLayout={phoneLayout} openPhoneScanner={openPhoneScanner} />
   if (forcePasswordSetup || session.user.user_metadata?.password_configured !== true) {
     return <PasswordSetupScreen session={session} complete={(user) => { setForcePasswordSetup(false); setSession({ ...session, user }) }} />
   }
-  if (phoneLoginToken) return <PhoneLoginApproval key={phoneLoginToken} token={phoneLoginToken} onClose={() => setPhoneLoginToken(null)} />
-  return <AuthenticatedApp session={session} />
+  return <AuthenticatedApp session={session} openPhoneScanner={openPhoneScanner} />
 }
 
 function LoadingScreen({ label }: { label: string }) {
   return <main className="loading-screen"><span className="loader"/><p>{label}</p></main>
 }
 
-function LoginScreen({ initialMessage, onGuest, onCancelPhoneLogin }: {
-  initialMessage?: string; onGuest: () => void; onCancelPhoneLogin?: () => void
+function LoginScreen({ initialMessage, onGuest, phoneLayout, openPhoneScanner }: {
+  initialMessage?: string; onGuest: () => void; phoneLayout: boolean; openPhoneScanner?: () => void
 }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -297,7 +294,6 @@ function LoginScreen({ initialMessage, onGuest, onCancelPhoneLogin }: {
         <img className="auth-logo" src={`${import.meta.env.BASE_URL}company-logo.png`} alt="詮栩公司 Logo"/>
         <p className="auth-copy">詮栩股份有限公司 Chyuan Sheu Co.,Ltd.</p>
         <h1>登入雲端系統</h1>
-        {onCancelPhoneLogin && <p className="auth-copy">請先登入手機，再確認此次電腦登入。</p>}
         <p className="auth-eyebrow">2026</p>
       </div>
     <form onSubmit={submit}>
@@ -308,11 +304,10 @@ function LoginScreen({ initialMessage, onGuest, onCancelPhoneLogin }: {
         <button className="button primary auth-submit" type="submit" disabled={busy}>{busy ? '正在驗證…' : '登入'}</button>
       </form>
       {supportsPasskeys() && <button className="button auth-passkey-button" type="button" onClick={() => void submitPasskey()} disabled={busy}><LockKeyhole />使用通行密鑰登入 Face ID</button>}
-      {onCancelPhoneLogin ? <button className="button auth-qr-button" type="button" onClick={onCancelPhoneLogin} disabled={busy}>取消掃碼登入</button> : <>
-        <PhoneLoginButton disabled={busy} />
-        <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客登入</button>
-        <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
-      </>}
+      {openPhoneScanner && <OpenPhoneLoginScanner onOpen={openPhoneScanner} disabled={busy} />}
+      {!phoneLayout && <PhoneLoginButton disabled={busy} />}
+      <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客登入</button>
+      <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
       <button className="auth-switch" type="button" onClick={() => { setResetOpen((value) => !value); setResetMessage(''); setResetSuccess(false) }} disabled={busy}>{resetOpen ? '取消重設密碼' : '忘記密碼或尚未設定密碼'}</button>
       {resetOpen && <form className="auth-reset-form" onSubmit={sendPasswordEmail}>
         <Field label="管理員 Email" wide><input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="email" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} placeholder="輸入後台設定的 Email" disabled={busy}/></Field>
@@ -366,7 +361,9 @@ function PasswordSetupScreen({ session, complete }: { session: Session; complete
   </main>
 }
 
-function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: Session | null; guestMode?: boolean; exitGuest?: () => void }) {
+function AuthenticatedApp({ session, guestMode = false, exitGuest, openPhoneScanner }: {
+  session: Session | null; guestMode?: boolean; exitGuest?: () => void; openPhoneScanner?: () => void
+}) {
   const [page, setPage] = useState<Page>(pageFromLocation)
   const [products, setProducts] = useState<Product[]>([])
   const [movements, setMovements] = useState<Movement[]>([])
@@ -531,7 +528,8 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest }: { session: 
         {guestMode && <div className="guest-banner"><ShieldCheck /> 訪客模式僅供查看，無法新增、修改、刪除、盤點、匯出或還原資料。</div>}
         {error && <div className="error-banner">{error}<button onClick={() => void refresh()}>重試</button></div>}
 
-        {isHome && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode} showOperationLog={canReadOperationLog} exitButton={portalExitButton} />}
+        {isHome && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode}
+          showOperationLog={canReadOperationLog} exitButton={portalExitButton} openPhoneScanner={openPhoneScanner} />}
         {activePage === 'operation-log' && <OperationLogPage goHome={() => nav('home')} />}
         {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
         {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} onSave={async (input, overwrite) => {
@@ -628,7 +626,10 @@ function NavItem({ active, icon, onClick, children }: { active: boolean; icon: R
   return <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>{icon}<span>{children}</span></button>
 }
 
-function HomePage({ navigate, openAdmin, guestMode, showOperationLog, exitButton }: { navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean; showOperationLog: boolean; exitButton: ReactNode }) {
+function HomePage({ navigate, openAdmin, guestMode, showOperationLog, exitButton, openPhoneScanner }: {
+  navigate: (page: Page) => void; openAdmin: () => void; guestMode: boolean; showOperationLog: boolean;
+  exitButton: ReactNode; openPhoneScanner?: () => void
+}) {
   return <section className="page-content home-page">
     <div className="home-hero">
       <img
@@ -640,6 +641,7 @@ function HomePage({ navigate, openAdmin, guestMode, showOperationLog, exitButton
       <h1>詮 栩 雲 端 系 統</h1>
       <p>加工資訊與庫存管理整合平台</p>
     </div>
+    {openPhoneScanner && <OpenPhoneLoginScanner onOpen={openPhoneScanner} />}
     <div className="home-section-head"><div><span>SYSTEM FUNCTIONS</span><h2>功能選擇</h2></div>{exitButton}</div>
     <div className="function-grid portal-functions">
       <FunctionCard icon={<Layers/>} title="加工管理系統" description={guestMode ? '查看加工總覽與歷史紀錄' : '加工數量登記、查詢與產量總覽'} tone="pink" onClick={() => navigate('production-dashboard')}/>
