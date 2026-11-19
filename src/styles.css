@@ -620,22 +620,23 @@ textarea:focus-visible {
   min-height: 42px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 3px 8px 0;
-  padding: 0 12px;
-  border: 1px solid #30393f;
+  gap: 11px;
+  margin: 3px 0 0;
+  padding: 0 8px;
+  border: 0;
   border-radius: 6px;
-  background: #11171a;
+  background: transparent;
   color: #c7d0d5;
   font: inherit;
   font-size: 14px;
+  text-align: left;
   cursor: pointer;
 }
 
 /* 加工與庫存管理系統｜側欄底部 → 通行密鑰設定、登出與返回登入按鈕的滑鼠移入樣式 */
 .sidebar-passkey:not(:disabled):hover,
 .sidebar-logout:hover {
-  border-color: #55636b;
+  background: #12171a;
   color: #fff;
 }
 
