@@ -932,8 +932,8 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
         </div>
       </div>
 
-      <div className="production-field-row"><label htmlFor="production-entry-quantity">數量</label><input id="production-entry-quantity" type="number" inputMode="numeric" enterKeyHint="done" pattern="[0-9]*" min="1" step="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: Math.max(0, Number(e.target.value)) })} placeholder="輸入完成數量" required /></div>
-      <div className="production-field-row note-row"><label htmlFor="production-entry-notes">備註</label><textarea id="production-entry-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="選填" /></div>
+      <div className="production-field-row"><label htmlFor="production-entry-quantity">數量</label><input id="production-entry-quantity" type="number" inputMode="numeric" enterKeyHint="done" pattern="[0-9]*" min="1" step="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: Math.max(0, Number(e.target.value)) })}  required /></div>
+      <div className="production-field-row note-row"><label htmlFor="production-entry-notes">備註</label><textarea id="production-entry-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}  /></div>
       {formError && !pendingDuplicate && <div className="form-error production-error" role="alert">{formError}</div>}
       <button className="production-action save-action" disabled={saving} type="submit"><Save />{saving ? '儲存中…' : '送出登記'}</button>
       <button className="production-action delete-action" disabled={loading || saving || !latest} type="button" onClick={() => latest && void onDeleteLast(latest)}><Trash2 />刪除最後一筆</button>
@@ -1220,7 +1220,7 @@ function ProductionRecordEditModal({ record, productCodes, machines, close, save
         <Field label="工時（分）"><input required type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="59" step="1" value={form.minutes} onChange={(event) => setForm({ ...form, minutes: Math.max(0, Number(event.target.value)) })} /></Field>
         <Field label="數量"><input required type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: Math.max(0, Number(event.target.value)) })} /></Field>
       </div>
-      <Field label="備註" wide><textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder="選填" /></Field>
+      <Field label="備註" wide><textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })}  /></Field>
       <div className="production-edit-total"><span>總加工時間</span><strong>{formatNumber(form.hours * 60 + form.minutes)} 分鐘</strong></div>
       {formError && <p className="form-error">{formError}</p>}
       <button className="button modal-submit primary" disabled={busy}>{busy ? '儲存中…' : '儲存修改'}</button>
@@ -1653,7 +1653,7 @@ function StocktakePage({ products, loading, add, openScanner, onAdjust }: { prod
     {noteProduct && <Modal title={`盤點備註 ${noteProduct.code}`} close={() => setNoteProduct(null)}>
       <form onSubmit={(event) => keepNote(event, noteProduct)}>
         <p className="modal-intro">{noteProduct.name}。按「更新」完成盤點時，備註會一併寫入歷史資料。</p>
-        <Field label="備註"><textarea name="note" defaultValue={noteDrafts[noteProduct.id] ?? ''} placeholder="選填"/></Field>
+        <Field label="備註"><textarea name="note" defaultValue={noteDrafts[noteProduct.id] ?? ''} /></Field>
         <div className="modal-tool-actions">
           <button className="button secondary" type="button" onClick={() => setNoteProduct(null)}>取消</button>
           <button className="button primary" type="submit">確定</button>
@@ -1852,7 +1852,7 @@ function StockModal({ type, initialProductId, products, close, switchType, save 
       <div className="form-grid"><Field label="數量"><input required min="1" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={type === 'in' ? '購入日期' : '出庫日期'}><input required type="date" value={date} onChange={(e) => setDate(e.target.value)}/></Field>
       {type === 'in' && <><Field label="單價"><input required min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={price} onChange={(e) => setPrice(e.target.value)}/></Field><Field label="供應商"><EditableCombo options={supplierOptions} value={supplier} onChange={setSupplier} placeholder="選擇或輸入新供應商"/></Field></>}</div>
       {type === 'in' && <TotalPreview quantity={Number(quantity || 0)} unitPrice={Number(price || 0)} total={totalPrice}/>} 
-      <Field label="備註" wide><textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={type === 'in' ? '選填' : '選填'}/></Field>
+      <Field label="備註" wide><textarea value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
       {formError && <p className="form-error">{formError}</p>}
       <button disabled={busy || products.length === 0} className={`button modal-submit ${type === 'in' ? 'inbound' : 'outbound'}`}>{busy ? '處理中…' : `確認${type === 'in' ? '入庫' : '出庫'}`}</button>
     </form>
@@ -2293,7 +2293,7 @@ function BarcodeScannerModal(props: {
       <form onSubmit={submitScanStocktake}>
         <div className="form-grid barcode-stocktake-fields">
           <Field label={`實際數量（${stocktakeProduct.unit}）`}><input type="text" inputMode="numeric" required disabled={stocktakeSaving} value={stocktake.quantity} onChange={(event) => { setStocktake({ ...stocktake, quantity: event.target.value }); setError('') }}/></Field>
-          <Field label="盤點備註"><input placeholder="選填" disabled={stocktakeSaving} value={stocktake.notes} onChange={(event) => setStocktake({ ...stocktake, notes: event.target.value })}/></Field>
+          <Field label="盤點備註"><input  disabled={stocktakeSaving} value={stocktake.notes} onChange={(event) => setStocktake({ ...stocktake, notes: event.target.value })}/></Field>
         </div>
         {error && <div className="form-error modal-tool-error" role="alert">{error}</div>}
         <div className="modal-tool-actions">
@@ -2478,7 +2478,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
         <Field label="單位"><EditableCombo options={unitOptions} required value={data.unit} onChange={(value) => set('unit', value)} placeholder="片"/></Field>
       </div>
       {!product && <fieldset className="initial-stock"><legend>目前庫存（可只填數量，單價找不到時可留空）</legend><div className="form-grid three"><Field label="數量"><input min="0" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_quantity || ''} onChange={(e) => set('initial_quantity', Number(e.target.value))}/></Field><Field label="單價"><input min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_unit_price || ''} onChange={(e) => set('initial_unit_price', Number(e.target.value))} placeholder="可留空"/></Field><Field label="購入日期"><input type="date" value={data.purchased_at} onChange={(e) => set('purchased_at', e.target.value)}/></Field></div><TotalPreview quantity={data.initial_quantity} unitPrice={data.initial_unit_price} total={initialTotalPrice}/></fieldset>}
-      <Field label="備註" wide><textarea value={data.notes} onChange={(e) => set('notes', e.target.value)} placeholder="選填"/></Field>
+      <Field label="備註" wide><textarea value={data.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
       {formError && <p className="form-error">{formError}</p>}
       <button disabled={busy} className="button modal-submit primary">{busy ? '儲存中…' : '儲存'}</button>
       {initialBarcode && <button disabled={busy} className="button modal-submit scan-button" type="button" onClick={close}>返回條碼掃描</button>}

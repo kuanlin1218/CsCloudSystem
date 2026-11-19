@@ -4501,13 +4501,26 @@ textarea:focus-visible {
       text-align: left;
     }
 
+  /* 手機版｜加工管理系統 → 加工數量登記 → 數量欄外框與置中的輸入文字 */
+  .entry-card .production-field-row:has(> #production-entry-quantity) {
+    min-height: 44px;
+    margin-bottom: 7px;
+  }
+
+  #production-entry-quantity {
+    padding-block: 6px;
+    text-align: center;
+  }
+
   .entry-card .production-field-row > select {
-      font-size: 17px;
+      font-size: 20px;
       text-overflow: ellipsis;
     }
 
-  .entry-card .production-field-row > textarea {
-      min-height: 62px;
+  /* 手機版｜加工管理系統 → 加工數量登記 → 備註輸入框 */
+  .entry-card .production-field-row.note-row > textarea {
+      min-height: 54px;
+      padding-block: 6px;
       font-size: 16px;
     }
 
@@ -4531,12 +4544,12 @@ textarea:focus-visible {
 
   /* 手機版｜加工管理系統 → 加工數量登記 → 工時輸入與下方總分鐘數 */
   .entry-card .time-entry-panel {
-      margin: 9px 0;
-      padding: 10px;
+      margin: 7px 0;
+      padding: 7px 10px;
     }
 
   .entry-card .duration-fields.compact {
-      gap: 8px;
+      gap: 6px 8px;
     }
 
   /* 手機版｜加工管理系統 → 加工數量登記 → 時數與分鐘的輸入框填滿標題右側 */
@@ -4557,7 +4570,7 @@ textarea:focus-visible {
 
   .entry-card .duration-fields input {
       min-width: 0;
-      min-height: 46px;
+      height: 42px;
       padding-inline: 3px;
     }
 
@@ -4566,7 +4579,7 @@ textarea:focus-visible {
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 6px 10px;
+      padding: 4px 10px;
     }
 
   .entry-card .duration-fields.compact > div strong {
@@ -4639,7 +4652,7 @@ textarea:focus-visible {
 
   .query-card .query-fields > .production-field-row > :is(input, select) {
       padding-block: 7px;
-      font-size: 17px;
+      font-size: 19px;
     }
 
   /* 手機版｜加工管理系統 → 加工數量查詢 → 產品編號與查詢按鈕之間的距離 */
@@ -4702,7 +4715,7 @@ textarea:focus-visible {
   /* 加工管理系統｜加工登記／查詢表單的「日期、產品編號、機台、數量、備註」各欄位 */
   .production-field-row > input {
       padding-inline: 10px;
-      font-size: 21px;
+      font-size: 20px;
     }
 
   /* 加工管理系統｜加工登記／查詢表單的「日期、產品編號、機台、數量、備註」各欄位 */
@@ -4713,7 +4726,7 @@ textarea:focus-visible {
 
   /* 加工管理系統｜加工登記／查詢表單的「日期、產品編號、機台、數量、備註」各欄位 */
   .production-field-row > input[type="date"] {
-      font-size: 18px;
+      font-size: 20px;
     }
 
   /* 加工管理系統｜加工登記／查詢表單的「日期、產品編號、機台、數量、備註」各欄位 */
@@ -4722,7 +4735,7 @@ textarea:focus-visible {
       text-align: left;
       text-align-last: left;
       background-position: calc(100% - 16px) 51%, calc(100% - 10px) 51%;
-      font-size: 21px;
+      font-size: 20px;
     }
 
   /* 加工管理系統｜加工登記／查詢表單的「日期、產品編號、機台、數量、備註」各欄位 */
@@ -4731,7 +4744,7 @@ textarea:focus-visible {
       padding-left: 10px;
       padding-right: 34px;
       text-align: left;
-      font-size: 22px;
+      font-size: 20px;
     }
 
   /* 加工管理系統｜「加工時間（時）」欄位標題文字 */
@@ -4741,7 +4754,7 @@ textarea:focus-visible {
 
   /* 加工管理系統｜「加工時間（時）」輸入框內的數字 */
   .duration-fields input.actual-hours-input {
-      font-size: 21px;
+      font-size: 20px;
     }
 
   /* 加工管理系統｜「加工時間（分）」欄位標題文字 */
@@ -4751,7 +4764,7 @@ textarea:focus-visible {
 
   /* 加工管理系統｜「加工時間（分）」輸入框內的數字 */
   .duration-fields input.actual-minutes-input {
-      font-size: 21px;
+      font-size: 20px;
     }
 
   /* 加工管理系統｜「實際總時間」文字標題 */
