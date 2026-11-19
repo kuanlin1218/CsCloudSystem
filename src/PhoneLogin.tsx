@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Camera, QrCode } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Camera } from 'lucide-react'
 import { isOwnerUser } from './lib/auth'
 import { createQrCodeDataUrl } from './lib/barcode'
 import { supabase } from './lib/supabase'
@@ -8,6 +9,15 @@ const loginQrPattern = /^cnc-phone-login:v2:([0-9a-f]{64})$/
 type StartedLogin = { desktopToken: string; qrPayload: string; expiresAt: string }
 type LoginStatus = { status: 'pending' | 'expired' } | {
   status: 'complete'; access_token: string; refresh_token: string
+}
+
+export function LoginFeedback({ message, success = false, target }: {
+  message: string; success?: boolean; target?: HTMLElement | null
+}) {
+  if (!message) return null
+  const notice = <p className="auth-login-feedback" data-tone={success ? 'success' : 'error'}
+    role={success ? 'status' : 'alert'}>{message}</p>
+  return target ? createPortal(notice, target) : notice
 }
 
 async function requestPhoneLogin<T>(body: object, signal?: AbortSignal): Promise<T> {
@@ -22,32 +32,45 @@ async function requestPhoneLogin<T>(body: object, signal?: AbortSignal): Promise
   throw new Error('手機掃碼登入暫時無法使用，請稍後重試或改用帳密登入。')
 }
 
-export function PhoneLoginButton({ disabled }: { disabled: boolean }) {
-  const [attempt, setAttempt] = useState<(StartedLogin & { image: string }) | null>(null)
-  const [starting, setStarting] = useState(false)
+export function PhoneLoginPanel({ feedbackTarget }: { feedbackTarget: HTMLElement | null }) {
+  const [image, setImage] = useState('')
+  const [generation, setGeneration] = useState(0)
   const [completing, setCompleting] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    if (!attempt || !supabase) return
+    if (!supabase) return
     const client = supabase
     let active = true
     let timer = 0
-    const poll = async () => {
+    let pendingToken: string | undefined
+    const cancelPending = () => {
+      if (!pendingToken) return
+      const token = pendingToken
+      pendingToken = undefined
+      void requestPhoneLogin({ action: 'cancel', token }).catch(() => {})
+    }
+    const fail = (text: string) => {
+      cancelPending()
+      if (!active) return
+      setImage('')
+      setCompleting(false)
+      setMessage(text)
+    }
+    const poll = async (attempt: StartedLogin) => {
       try {
         if (Date.now() >= Date.parse(attempt.expiresAt)) {
-          setAttempt(null)
-          setMessage('QR Code 已到期，請重新產生。')
+          fail('QR Code 已到期，請重新產生。')
           return
         }
         const result = await requestPhoneLogin<LoginStatus>({ action: 'poll', token: attempt.desktopToken })
         if (!active) return
         if (result.status === 'pending') {
-          timer = window.setTimeout(() => { void poll() }, 3000)
+          timer = window.setTimeout(() => { void poll(attempt) }, 3000)
         } else if (result.status === 'expired') {
-          setAttempt(null)
-          setMessage('這次登入請求已失效，請重新產生 QR Code。')
+          fail('這次登入請求已失效，請重新產生 QR Code。')
         } else if (result.status === 'complete') {
+          pendingToken = undefined
           setCompleting(true)
           const { data, error } = await client.auth.setSession({
             access_token: result.access_token, refresh_token: result.refresh_token,
@@ -55,54 +78,42 @@ export function PhoneLoginButton({ disabled }: { disabled: boolean }) {
           if (error || !isOwnerUser(data.user?.id)) throw new Error('登入未完成，請重新產生 QR Code。')
         }
       } catch (error) {
-        if (!active) return
-        setAttempt(null)
-        setCompleting(false)
-        setMessage(error instanceof Error ? error.message : '登入未完成，請重試。')
+        fail(error instanceof Error ? error.message : '登入未完成，請重試。')
       }
     }
-    timer = window.setTimeout(() => { void poll() }, 3000)
-    return () => { active = false; window.clearTimeout(timer) }
-  }, [attempt])
-
-  const start = async () => {
-    setStarting(true)
-    setMessage('')
-    try {
-      const result = await requestPhoneLogin<StartedLogin>({ action: 'start' })
-      if (!loginQrPattern.test(result.qrPayload) || !validExpiry(result.expiresAt)) {
-        throw new Error('無法取得新版掃碼登入請求，請確認 Edge Function 已更新。')
+    const start = async () => {
+      if (!active) return
+      try {
+        const attempt = await requestPhoneLogin<StartedLogin>({ action: 'start' })
+        pendingToken = attempt.desktopToken
+        if (!active) { cancelPending(); return }
+        const expiresAt = Date.parse(attempt.expiresAt)
+        if (!loginQrPattern.test(attempt.qrPayload) || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+          throw new Error('無法取得新版掃碼登入請求，請確認 Edge Function 已更新。')
+        }
+        const nextImage = await createQrCodeDataUrl(attempt.qrPayload, 240)
+        if (!active) return
+        setImage(nextImage)
+        timer = window.setTimeout(() => { void poll(attempt) }, 3000)
+      } catch (error) {
+        fail(error instanceof Error ? error.message : '無法產生 QR Code。')
       }
-      const image = await createQrCodeDataUrl(result.qrPayload, 240)
-      setAttempt({ ...result, image })
-    } catch (error) { setMessage(error instanceof Error ? error.message : '無法產生 QR Code。') }
-    finally { setStarting(false) }
-  }
+    }
+    // 切換登入方式時停止輪詢，並取消已建立的登入請求。
+    void Promise.resolve().then(start)
+    return () => { active = false; window.clearTimeout(timer); cancelPending() }
+  }, [generation])
 
-  const cancel = () => {
-    if (!attempt) return
-    setAttempt(null)
-    // 本分頁立即停止等待。若離線無法通知後端，原請求會自行到期。
-    void requestPhoneLogin({ action: 'cancel', token: attempt.desktopToken }).catch(() => {})
-  }
-
-  return <>
-    <button className="button auth-qr-button" type="button" onClick={() => void start()} disabled={disabled || starting || Boolean(attempt)}>
-      <QrCode aria-hidden="true" />{starting ? '正在產生 QR Code…' : '手機掃碼登入'}
-    </button>
-    {attempt && <section className="auth-qr-panel" aria-label="掃碼登入電腦">
-      <p>在手機開啟詮栩 CNC，點「掃描電腦登入 QR Code」。</p>
-      <img src={attempt.image} alt="手機掃碼登入 QR Code" />
+  return <section className="auth-qr-panel" aria-label="掃碼登入電腦">
+    {image ? <>
+      <p>在手機開啟詮栩管理系統，點「掃描電腦登入 QR Code」。</p>
+      <img src={image} alt="手機掃碼登入 QR Code" />
       <p role="status">{completing ? '正在登入…' : '等待手機通行密鑰確認，QR Code 有效 3 分鐘。'}</p>
-      <button className="button" type="button" disabled={completing} onClick={cancel}>取消掃碼登入</button>
-    </section>}
-    {message && <p className="form-error" role="alert">{message}</p>}
-  </>
-}
-
-function validExpiry(value: string) {
-  const deadline = Date.parse(value)
-  return Number.isFinite(deadline) && deadline > Date.now()
+    </> : message ? <>
+      <LoginFeedback message={message} target={feedbackTarget} />
+      <button className="button auth-qr-retry" type="button" onClick={() => { setMessage(''); setGeneration((value) => value + 1) }}>重新產生 QR Code</button>
+    </> : <p role="status">正在產生 QR Code…</p>}
+  </section>
 }
 
 type PasskeyChallenge = { challengeId: string; options: PublicKeyCredentialRequestOptionsJSON }
@@ -145,7 +156,9 @@ async function confirmPasskey(options: PublicKeyCredentialRequestOptionsJSON, si
   }
 }
 
-function LoginQrCamera({ onScan }: { onScan: (token: string) => void }) {
+function LoginQrCamera({ onScan, feedbackTarget }: {
+  onScan: (token: string) => void; feedbackTarget?: HTMLElement | null
+}) {
   const video = useRef<HTMLVideoElement>(null)
   const [message, setMessage] = useState('')
 
@@ -189,13 +202,15 @@ function LoginQrCamera({ onScan }: { onScan: (token: string) => void }) {
   }, [onScan])
 
   return <>
-    <p className="auth-copy">對準電腦登入頁顯示的 QR Code。</p>
+    <p className="auth-copy">對準你剛才在電腦登入頁產生的 QR Code，掃到後會啟動通行密鑰驗證。</p>
     <video className="auth-qr-camera" ref={video} muted playsInline aria-label="電腦登入 QR Code 相機預覽" />
-    {message && <p className="form-error" role="alert">{message}</p>}
+    <LoginFeedback message={message} target={feedbackTarget} />
   </>
 }
 
-export function PhoneLoginScanner({ onClose }: { onClose: () => void }) {
+export function PhoneLoginScanner({ onClose, feedbackTarget }: {
+  onClose?: () => void; feedbackTarget?: HTMLElement | null
+}) {
   const [token, setToken] = useState('')
   const [challenge, setChallenge] = useState<PasskeyChallenge | null>(null)
   const [busy, setBusy] = useState(false)
@@ -205,7 +220,20 @@ export function PhoneLoginScanner({ onClose }: { onClose: () => void }) {
 
   useEffect(() => () => operation.current?.abort(), [])
 
-  const prepare = useCallback(async (scannedToken: string) => {
+  const finish = useCallback(async (scannedToken: string, request: PasskeyChallenge, signal: AbortSignal, automatic = false) => {
+    let credential: unknown
+    try { credential = await confirmPasskey(request.options, signal) }
+    catch (error) {
+      // 部分 iPhone 需要先點一下才能顯示系統驗證，保留同一挑戰供按鈕重試。
+      if (automatic && error instanceof DOMException && ['NotAllowedError', 'SecurityError'].includes(error.name)) return
+      throw error
+    }
+    if (signal.aborted) return
+    await requestPhoneLogin({ action: 'approve', token: scannedToken, challengeId: request.challengeId, credential }, signal)
+    if (!signal.aborted) setApproved(true)
+  }, [])
+
+  const prepare = useCallback(async (scannedToken: string, automatic = false) => {
     const controller = new AbortController()
     operation.current?.abort()
     operation.current = controller
@@ -215,11 +243,17 @@ export function PhoneLoginScanner({ onClose }: { onClose: () => void }) {
     setBusy(true)
     try {
       const result = await requestPhoneLogin<PasskeyChallenge>({ action: 'prepare', token: scannedToken }, controller.signal)
-      if (!controller.signal.aborted) setChallenge(result)
+      if (controller.signal.aborted) return
+      setChallenge(result)
+      if (automatic) await finish(scannedToken, result, controller.signal, true)
     } catch (error) {
-      if (!controller.signal.aborted) setMessage(error instanceof Error ? error.message : '無法讀取登入請求。')
+      if (!controller.signal.aborted) {
+        setChallenge(null)
+        setMessage(error instanceof Error ? error.message : '無法讀取登入請求。')
+      }
     } finally { if (!controller.signal.aborted) setBusy(false) }
-  }, [])
+  }, [finish])
+  const scan = useCallback((scannedToken: string) => { void prepare(scannedToken, true) }, [prepare])
 
   const approve = async () => {
     if (!challenge || busy || approved) return
@@ -228,9 +262,7 @@ export function PhoneLoginScanner({ onClose }: { onClose: () => void }) {
     setBusy(true)
     setMessage('')
     try {
-      const credential = await confirmPasskey(challenge.options, controller.signal)
-      await requestPhoneLogin({ action: 'approve', token, challengeId: challenge.challengeId, credential }, controller.signal)
-      if (!controller.signal.aborted) setApproved(true)
+      await finish(token, challenge, controller.signal)
     } catch (error) {
       if (controller.signal.aborted) return
       setChallenge(null)
@@ -240,18 +272,27 @@ export function PhoneLoginScanner({ onClose }: { onClose: () => void }) {
     } finally { if (!controller.signal.aborted) setBusy(false) }
   }
 
-  return <main className="auth-screen">
+  const content = <>
+      {!token ? <LoginQrCamera onScan={scan} feedbackTarget={feedbackTarget} />
+        : approved ? <LoginFeedback message="已允許登入，電腦會自動進入系統。" success target={feedbackTarget} /> : <>
+        <LoginFeedback message={message} target={feedbackTarget} />
+        {busy && <p className="auth-copy" role="status">{challenge ? '正在驗證通行密鑰…' : '正在準備通行密鑰…'}</p>}
+        {!busy && <button className="button primary auth-method-action" type="button"
+          onClick={() => void (challenge ? approve() : prepare(token))}>
+          {challenge ? '用 Face ID 確認' : '重試通行密鑰'}
+        </button>}
+      </>}
+  </>
+
+  if (!onClose) return <section aria-label="掃描電腦登入 QR Code">{content}</section>
+  return <main className="auth-screen auth-login-screen">
     <span className="auth-grid" />
     <section className="auth-card" aria-labelledby="phone-login-title">
-      <h1 id="phone-login-title">{token ? '確認電腦登入' : '掃描電腦登入 QR Code'}</h1>
-      {!token ? <LoginQrCamera onScan={prepare} /> : approved ? <p className="auth-copy" role="status">已允許登入，電腦會自動進入系統。</p> : <>
-        <p className="auth-copy">請只批准你剛才在電腦發出的登入請求。</p>
-        {message && <p className="form-error" role="alert">{message}</p>}
-        {busy && <p className="auth-copy" role="status">{challenge ? '正在驗證通行密鑰…' : '正在準備通行密鑰…'}</p>}
-        {challenge && <button className="button primary auth-submit" type="button" disabled={busy} onClick={() => void approve()}>用 Face ID 確認</button>}
-        {!challenge && !busy && <button className="button primary auth-submit" type="button" onClick={() => void prepare(token)}>重試通行密鑰</button>}
-      </>}
-      <button className="button auth-qr-button" type="button" onClick={onClose} disabled={busy}>{approved ? '完成' : '取消'}</button>
+      <div className="auth-method-heading">
+        <h1 id="phone-login-title">掃碼登入</h1>
+        <button className="button auth-method-back" type="button" onClick={onClose}>{approved ? '完成' : '返回'}</button>
+      </div>
+      {content}
     </section>
   </main>
 }

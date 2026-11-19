@@ -1755,6 +1755,30 @@ GitHub Summary：新增手機掃碼批准的電腦登入功能。
 SQL：已套用掃碼登入的環境無須重跑 SQL。
 GitHub Summary：改用手機站內掃碼與 Face ID 確認電腦登入。
 
+2026-11-19
+修改內容：登入頁預設收起帳密，帳密、QR Code、相機與重設密碼改在同一區切換。掃到後自動啟動通行密鑰驗證，保留需要手動點按時的備用入口。
+修改檔案：src/App.tsx、src/PhoneLogin.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：收合登入表單並在手機掃碼後自動啟動通行密鑰驗證。
+
+2026-11-19
+修改內容：將帳密、電腦 QR Code、手機相機與重設密碼 Email 收在同一登入卡片。登入與寄信共用輸入區下方的主要按鈕，縮短畫面並以同一個「返回」切換方式。
+修改檔案：src/App.tsx、src/PhoneLogin.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：共用登入與重設密碼操作區並縮短登入頁。
+
+2026-11-19
+修改內容：登入頁保留原有標題、Logo 及直排按鈕，帳密、掃碼與重設密碼直接在按鈕上方原地展開，共用主要送出按鈕。
+修改檔案：src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：讓帳密、掃碼與重設密碼在登入頁原地展開。
+
+2026-11-19
+修改內容：登入錯誤與結果提示統一到標題下方。展開帳密或重設密碼時收起原入口，改用同位置的獨立送出按鈕，修正首次點擊誤送出並分開設定按鈕色彩。重新產生 QR Code 改為紫色。
+修改檔案：src/App.tsx、src/PhoneLogin.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：統一登入提示位置並修正帳密展開時誤送出。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

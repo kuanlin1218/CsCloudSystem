@@ -222,12 +222,16 @@ Supabase 專案本身也有密碼最短長度設定。請在 Auth 的 Password S
 
 通行密鑰綁定 Relying Party ID，日後變更此設定須重新註冊。
 
+登入頁會保留公司標誌、標題與原本直排的登入按鈕。點「帳號密碼登入」、「手機掃碼登入」或「忘記密碼或尚未設定密碼」，所需欄位或掃碼內容會直接展開在原頁按鈕上方。登入和寄送重設密碼郵件共用下方的主要按鈕。掃碼與重設密碼入口再按一次可收起，也可以直接改選其他方式。
+
+第一次點「帳號密碼登入」只會展開欄位，並在原位置改顯示獨立的「登入」按鈕。重設密碼在同一位置顯示青綠色寄信按鈕；「重新產生 QR Code」沿用掃碼入口的紫色。送出後的帳密驗證結果、通行密鑰錯誤、掃碼結果及重設密碼寄信提示，都顯示在登入標題與操作區之間。
+
 ### 啟用手機掃碼登入（不使用藍牙）
 
 1. 確認 Supabase 專案正確後，在 SQL Editor 執行 [`supabase/enable-phone-qr-login.sql`](supabase/enable-phone-qr-login.sql)。此檔只新增掃碼登入的暫存表及相關函式。
 2. 在 Supabase Edge Functions 的 Secrets 設定 `QR_LOGIN_SITE_URL`（完整正式 HTTPS 網址，含專案目錄及結尾 `/`）與 `QR_LOGIN_OWNER_USER_ID`（和 `src/lib/auth.ts` 的 `OWNER_USER_ID` 相同）。瀏覽器只能使用專案的前端公開金鑰。Edge Function 使用 Supabase 執行環境內建的金鑰，勿將服務金鑰放進前端環境變數。
 3. 使用已連結該 Supabase 專案的 CLI 執行 `supabase functions deploy phone-qr-login --no-verify-jwt`，或從 Dashboard 更新該函式的 `index.ts` 並關閉該函式的 Verify JWT，再部署新版網站。手機批准時，Edge Function 會將 Supabase Auth 通行密鑰挑戰綁定此次掃碼請求，並驗證通行密鑰與管理員 UID。
-4. 先在 iPhone 註冊管理員通行密鑰。在電腦登入頁點「手機掃碼登入」，再從 iPhone 主畫面打開詮栩 CNC，於手機登入頁或管理員的功能選擇頁點「掃描電腦登入 QR Code」。掃到後按「用 Face ID 確認」，依手機系統提示驗證。電腦原分頁會自動登入，手機維持原有登入狀態。
+4. 先在 iPhone 註冊管理員通行密鑰。在電腦登入頁點「手機掃碼登入」，再從 iPhone 主畫面打開詮栩 CNC，於手機登入頁或管理員的功能選擇頁點「掃描電腦登入 QR Code」。掃到自己剛才產生的 QR Code 後，網站會自動請 iPhone 驗證通行密鑰。若手機需要點按或使用者取消系統確認，可按「用 Face ID 確認」重試。驗證成功後，電腦原分頁會自動登入，手機維持原有登入狀態。
 
 電腦和手機都須連網，可使用不同網路。QR Code 僅供站內掃描、有效三分鐘且只可用一次。電腦的兌換憑證只留在發出請求的分頁。關閉或重整電腦掃碼頁後，請重新產生 QR Code。先前已套用掃碼登入 SQL 的環境只需更新 Edge Function 和網站。
 

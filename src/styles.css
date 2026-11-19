@@ -2525,30 +2525,134 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   color: #6fc3ff; /* 手機與電腦共用｜通行密鑰（Face ID） → 登入畫面｜「使用通行密鑰登入（Face ID）」按鈕 → 文字或圖示前景色 */
 } /* 手機與電腦共用｜通行密鑰（Face ID） → 登入畫面｜「使用通行密鑰登入（Face ID）」按鈕 → 結束此區設定 */
 
-/* 登入畫面 →「手機掃碼登入」與手機確認頁的取消／完成按鈕 */
-.auth-qr-button {
-  width: 100%; /* 與同一登入卡片內的按鈕等寬 */
-  margin-top: 12px; /* 與上一項登入操作隔開 */
-  border-color: #8065a4; /* 手機掃碼登入按鈕的外框色 */
-  background: #221a30; /* 手機掃碼登入按鈕的深紫底色 */
-  color: #e0c5ff; /* 手機掃碼登入按鈕的圖示和文字色 */
+/* 登入畫面 →「帳號密碼登入」入口與原位置的登入／寄信送出按鈕 */
+.auth-password-method,
+.auth-login-submit {
+  width: 100%; /* 入口和送出按鈕在卡片內共用相同寬度 */
+}
+
+/* 登入畫面 → 重設密碼 Email 欄位下方的「寄送重設密碼郵件」按鈕 */
+.auth-login-submit.auth-reset-submit {
+  border-color: #356656; /* 保留寄信按鈕自己的青綠色框 */
+  background: #142725; /* 以深青色區別寄信動作 */
+  color: #a0e7d2; /* 寄信按鈕使用淺青文字 */
+}
+
+/* 登入畫面 → 選擇登入方式與掃碼畫面的整頁外框 */
+.auth-login-screen {
+  min-height: 100dvh; /* 依可見視窗高度置中，避免瀏覽器工具列帶出多餘捲動 */
+}
+
+/* 登入畫面 → 選擇登入方式時的公司標誌區 */
+.auth-login-card .auth-brand {
+  padding-bottom: 12px; /* 保留標題下方的空間給原地展開的操作區 */
+}
+
+.auth-login-card .auth-logo {
+  width: clamp(46px, 10dvh, 64px); /* 短視窗仍保留原本登入頁的公司標誌 */
+  height: auto; /* 維持標誌原本比例 */
+  margin-bottom: 8px; /* 縮短標誌與公司名稱間距 */
+}
+
+.auth-login-card .auth-brand h1 {
+  font-size: 24px; /* 展開操作區時與初始畫面使用相同標題大小 */
+  margin-bottom: 4px; /* 縮短標題和年份間距 */
+}
+
+/* 登入畫面 → 標題下方的登入錯誤、掃碼及寄信結果 */
+.auth-login-feedback-area:empty {
+  display: none; /* 沒有提示時維持登入卡片的緊湊版面 */
+}
+
+.auth-login-feedback {
+  margin: 0 0 10px; /* 在提示與下方的欄位或按鈕之間留白 */
+  padding: 8px 10px; /* 提示文字四周留出易讀的空間 */
+  border: 1px solid #754543; /* 以暖色框標示登入或驗證問題 */
+  border-radius: 7px; /* 與登入卡片的其他欄位圓角一致 */
+  background: #2a191c; /* 深色提示底板 */
+  color: #ffb6b0; /* 錯誤訊息採淺紅文字 */
+  font-size: 14px; /* 手機與電腦使用相同的提示字級 */
+  line-height: 1.5; /* 多行登入提示保留行距 */
+  overflow-wrap: anywhere; /* 窄畫面遇到長提示可換行 */
+}
+
+.auth-login-feedback[data-tone="success"] {
+  border-color: #356656; /* 寄信與掃碼成功使用綠色框 */
+  background: #142725; /* 成功提示的深青底板 */
+  color: #a0e7d2; /* 成功提示的淺青文字 */
+}
+
+/* 登入畫面 → 原地展開的帳密、重設密碼或掃碼區 */
+.auth-method-panel:not([hidden]) {
+  margin-bottom: 10px; /* 保留輸入區與登入方式按鈕之間的留白 */
+}
+
+/* 登入畫面 → 通行密鑰、掃碼、訪客與重設密碼依原本順序直排 */
+.auth-login-card > .auth-passkey-button,
+.auth-login-card > .auth-qr-button,
+.auth-login-card > .auth-guest-button,
+.auth-login-card > .auth-switch {
+  margin-top: 8px; /* 縮短直排登入入口之間的留白 */
+}
+
+/* 功能選擇頁 → 從管理員首頁開啟掃碼時的標題與「返回」 */
+.auth-method-heading {
+  display: flex; /* 同一列呈現標題與返回入口 */
+  align-items: center; /* 對齊標題及返回按鈕 */
+  justify-content: space-between; /* 讓返回靠卡片右側 */
+  gap: 12px; /* 保留標題與按鈕之間的距離 */
+  margin-bottom: 12px; /* 與下方輸入或預覽區隔開 */
+}
+
+.auth-method-heading h1 {
+  margin: 0; /* 與返回按鈕共用標題列高度 */
+  font-size: 22px; /* 展開操作時使用較短的標題列 */
+}
+
+.auth-method-back {
+  min-height: 36px; /* 在窄螢幕保留可點擊高度 */
+  padding-inline: 12px; /* 保留「返回」文字兩側的點擊範圍 */
+}
+
+/* 登入畫面 → 共用操作區內的帳密與管理員 Email 欄位 */
+.auth-method-panel .field.wide {
+  margin-bottom: 10px; /* 縮短欄位之間以及欄位與操作按鈕的間距 */
+}
+
+/* 登入畫面 → 輸入或掃碼區下方的登入、寄信與掃碼重試按鈕 */
+.auth-method-action {
+  width: 100%; /* 各登入方式的主要操作採同一寬度 */
+  margin-top: 8px; /* 與操作說明、輸入或錯誤訊息隔開 */
+}
+
+/* 登入畫面 → 掃碼入口及 QR Code 失效時的「重新產生 QR Code」按鈕 */
+.auth-qr-button,
+.auth-qr-retry {
+  width: 100%; /* 掃碼入口與重新產生按鈕填滿各自所在的卡片 */
+  margin-top: 12px; /* 與上一項登入操作或提示隔開 */
+  border-color: #8065a4; /* 掃碼按鈕的外框色 */
+  background: #221a30; /* 掃碼按鈕的深紫底色 */
+  color: #e0c5ff; /* 掃碼按鈕的圖示和文字色 */
 }
 
 /* 電腦登入畫面 →「手機掃碼登入」的 QR Code 與等待狀態 */
 .auth-qr-panel {
   display: grid; /* 依序排列掃碼提示、QR Code 與按鈕 */
-  justify-items: center; /* QR Code 和取消按鈕置中 */
+  justify-items: center; /* QR Code 和重試按鈕置中 */
   gap: 8px; /* 掃碼提示、圖片和動作的間距 */
-  margin-top: 12px; /* 與開啟掃碼區的按鈕隔開 */
   padding: 12px; /* QR Code 和提示文字四周留白 */
   border: 1px solid #433653; /* 掃碼登入面板的邊框 */
   border-radius: 8px; /* 掃碼登入面板的圓角 */
   text-align: center; /* 掃碼和有效時間提示置中 */
 }
 
+.auth-qr-panel p {
+  margin: 0; /* 掃碼說明及狀態以面板的固定間距排列 */
+}
+
 /* 電腦登入畫面 →「手機掃碼登入」的 QR Code 圖片 */
 .auth-qr-panel img {
-  width: min(200px, 100%); /* 讓窄視窗中的 QR Code 保持在登入卡片內 */
+  width: min(200px, 100%, 36dvh); /* 短視窗中替下方登入入口保留空間 */
   height: auto; /* 確保 QR Code 等比例縮放 */
   padding: 12px; /* 為相機辨識補足 QR Code 周圍的白邊 */
   background: #fff; /* QR Code 周圍的掃描留白以白底呈現 */
@@ -2557,9 +2661,9 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 /* 手機登入畫面 →「掃描電腦登入 QR Code」的即時相機預覽 */
 .auth-qr-camera {
   display: block; /* 預覽在掃碼說明下方獨立一列 */
-  width: 100%; /* 填滿手機掃碼卡片的內寬 */
+  width: min(220px, 100%, 33dvh); /* 保留相機預覽與下方登入入口的可見空間 */
   aspect-ratio: 1; /* 以正方形預覽對準電腦畫面的 QR Code */
-  margin-top: 12px; /* 預覽與掃碼文字隔開 */
+  margin: 10px auto 0; /* 相機預覽置中並與掃碼文字隔開 */
   object-fit: cover; /* 相機保持比例並填滿預覽 */
   border-radius: 8px; /* 相機預覽的圓角 */
   background: #080c0e; /* 相機啟動前的預覽底色 */
@@ -2594,28 +2698,6 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   text-decoration: underline; /* 手機與電腦共用｜登入畫面與系統首頁 → 「忘記密碼或尚未設定密碼」按鈕 → 文字底線等裝飾 */
   cursor: pointer; /* 手機與電腦共用｜登入畫面與系統首頁 → 「忘記密碼或尚未設定密碼」按鈕 → 滑鼠游標外觀 */
 } /* 手機與電腦共用｜登入畫面與系統首頁 → 「忘記密碼或尚未設定密碼」按鈕 → 結束此區設定 */
-
-/* 登入畫面｜點選「忘記密碼」後顯示的管理員 Email 驗證區 */
-.auth-reset-form { /* 手機與電腦共用｜登入畫面與系統首頁 → 點選「忘記密碼」後顯示的管理員 Email 驗證區 → 選取此元件 */
-  margin-top: 14px; /* 手機與電腦共用｜登入畫面與系統首頁 → 點選「忘記密碼」後顯示的管理員 Email 驗證區 → 上外距 */
-  padding: 16px; /* 手機與電腦共用｜登入畫面與系統首頁 → 點選「忘記密碼」後顯示的管理員 Email 驗證區 → 內距 */
-  border: 1px solid rgba(61,204,179,.3); /* 手機與電腦共用｜登入畫面與系統首頁 → 點選「忘記密碼」後顯示的管理員 Email 驗證區 → 邊框 */
-  border-radius: 8px; /* 手機與電腦共用｜登入畫面與系統首頁 → 點選「忘記密碼」後顯示的管理員 Email 驗證區 → 邊角圓弧 */
-  background: rgba(61,204,179,.045); /* 手機與電腦共用｜登入畫面與系統首頁 → 點選「忘記密碼」後顯示的管理員 Email 驗證區 → 背景 */
-} /* 手機與電腦共用｜登入畫面與系統首頁 → 點選「忘記密碼」後顯示的管理員 Email 驗證區 → 結束此區設定 */
-
-/* 登入畫面｜管理員 Email 驗證區內的輸入欄位間距 */
-.auth-card .auth-reset-form .field.wide { /* 手機與電腦共用｜登入畫面與系統首頁 → 管理員 Email 驗證區內的輸入欄位間距 → 選取此元件 */
-  margin-bottom: 12px; /* 手機與電腦共用｜登入畫面與系統首頁 → 管理員 Email 驗證區內的輸入欄位間距 → 下外距 */
-} /* 手機與電腦共用｜登入畫面與系統首頁 → 管理員 Email 驗證區內的輸入欄位間距 → 結束此區設定 */
-
-/* 登入畫面｜「寄送重設密碼郵件」按鈕 */
-.auth-reset-submit { /* 手機與電腦共用｜登入畫面與系統首頁 → 「寄送重設密碼郵件」按鈕 → 選取此元件 */
-  width: 100%; /* 手機與電腦共用｜登入畫面與系統首頁 → 「寄送重設密碼郵件」按鈕 → 寬度 */
-  border-color: rgba(61,204,179,.48); /* 手機與電腦共用｜登入畫面與系統首頁 → 「寄送重設密碼郵件」按鈕 → 邊框顏色 */
-  background: rgba(61,204,179,.1); /* 手機與電腦共用｜登入畫面與系統首頁 → 「寄送重設密碼郵件」按鈕 → 背景 */
-  color: #8ee3d3; /* 手機與電腦共用｜登入畫面與系統首頁 → 「寄送重設密碼郵件」按鈕 → 文字或圖示前景色 */
-} /* 手機與電腦共用｜登入畫面與系統首頁 → 「寄送重設密碼郵件」按鈕 → 結束此區設定 */
 
 @media (max-width: 620px) { /* 手機版｜登入畫面與系統首頁 → 開始此條件的設定 */
   /* 登入畫面與系統首頁｜系統首頁整頁內容在手機主畫面中的寬度與位置 */
