@@ -1725,6 +1725,12 @@ GitHub Summary：移除 PWA 安裝圖示的英文公司名並置中公司標誌�
 SQL：不需要執行。
 GitHub Summary：改用透明公司標誌並更新 Windows 桌面捷徑用圖示。
 
+2026-11-19
+修改內容：新增獨立的 Windows 桌面捷徑專用透明 ICO，網站網址圖示維持原樣。
+修改檔案：public/icons/windows-desktop.ico、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：新增獨立的 Windows 桌面捷徑圖示。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
