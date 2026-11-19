@@ -1016,8 +1016,8 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 
 /* 網站共用按鈕、表單與彈出視窗｜一般操作按鈕 */
 .button.primary { /* 手機與電腦共用｜網站共用按鈕、表單與彈出視窗 → 一般操作按鈕 → 選取此元件 */
-  color: #ecbe4a; /* 手機與電腦共用｜網站共用按鈕、表單與彈出視窗 → 一般操作按鈕 → 文字或圖示前景色 */
-  background: #262014; /* 手機與電腦共用｜網站共用按鈕、表單與彈出視窗 → 一般操作按鈕 → 背景 */
+  color: #111; /* 手機與電腦共用｜網站共用按鈕、表單與彈出視窗 → 一般操作按鈕 → 文字或圖示前景色 */
+  background: linear-gradient(100deg, #ffbb37, #ffd64d); /* 手機與電腦共用｜網站共用按鈕、表單與彈出視窗 → 一般操作按鈕 → 背景 */
   border-color: #d99b21; /* 手機與電腦共用｜網站共用按鈕、表單與彈出視窗 → 一般操作按鈕 → 邊框顏色 */
 } /* 手機與電腦共用｜網站共用按鈕、表單與彈出視窗 → 一般操作按鈕 → 結束此區設定 */
 
@@ -2531,6 +2531,20 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   width: 100%; /* 入口和送出按鈕在卡片內共用相同寬度 */
 }
 
+/* 登入畫面 → 展開帳密欄位前的「帳號密碼登入」按鈕顏色 */
+.auth-password-method.button {
+  color: #f1cc83; /* 「帳號密碼登入」文字和人物圖示使用淺琥珀色 */
+  background: #292115; /* 「帳號密碼登入」的深琥珀底色 */
+  border-color: #775730; /* 「帳號密碼登入」的琥珀色細框 */
+}
+
+/* 登入畫面 → 展開帳密欄位後的「登入」送出按鈕顏色 */
+.auth-password-submit {
+  color: #111; /* 「登入」和驗證中狀態的文字顏色 */
+  background: linear-gradient(100deg, #ffbb37, #ffd64d); /* 「登入」的黃色漸層底色 */
+  border-color: #d99b21; /* 「登入」外框色 */
+}
+
 /* 登入畫面 → 重設密碼 Email 欄位下方的「寄送重設密碼郵件」按鈕 */
 .auth-login-submit.auth-reset-submit {
   border-color: #356656; /* 保留寄信按鈕自己的青綠色框 */
@@ -2543,15 +2557,39 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   min-height: 100dvh; /* 依可見視窗高度置中，避免瀏覽器工具列帶出多餘捲動 */
 }
 
+/* 登入畫面 → 滿版背景與登入內容外框 */
+.auth-screen.auth-login-page {
+  padding: 0; /* 將外層留白交給登入內容，背景延伸到視窗邊緣 */
+  place-items: stretch; /* 讓登入內容使用可見視窗的寬高 */
+}
+
+/* 登入畫面 → 分開排列的公司標誌、登入操作與頁尾 */
+.auth-login-card {
+  display: flex; /* 標誌、登入操作及頁尾分為三個垂直區塊 */
+  flex-direction: column; /* 保留登入頁從上到下的閱讀順序 */
+  width: 100%; /* 登入背景填滿目前視窗寬度 */
+  min-height: 100dvh; /* 填滿可見高度，內容較多時仍可自然延伸 */
+  gap: clamp(14px, 3dvh, 28px); /* 依可用高度分配各區的間距 */
+  border: 0; /* 滿版時以頁面邊緣取代原卡片邊框 */
+  border-radius: 0; /* 登入背景延伸到視窗四角 */
+  background: transparent; /* 讓登入頁底色與背景格線連續呈現 */
+  box-shadow: none; /* 滿版登入頁不需要卡片外陰影 */
+}
+
+/* 登入畫面 → 底部版權行 */
+.auth-login-card > .auth-login-footer {
+  margin: 0; /* 與登入操作區的距離交由外框調整 */
+}
+
 /* 登入畫面 → 選擇登入方式時的公司標誌區 */
 .auth-login-card .auth-brand {
-  padding-bottom: 12px; /* 保留標題下方的空間給原地展開的操作區 */
+  padding: 0; /* 和操作區的距離交由登入卡片分配 */
 }
 
 .auth-login-card .auth-logo {
   width: clamp(46px, 10dvh, 64px); /* 短視窗仍保留原本登入頁的公司標誌 */
   height: auto; /* 維持標誌原本比例 */
-  margin-bottom: 8px; /* 縮短標誌與公司名稱間距 */
+  margin-bottom: clamp(10px, 2.4dvh, 20px); /* 在較高視窗拉開 Logo 與公司名稱的距離 */
 }
 
 .auth-login-card .auth-brand h1 {
@@ -2588,11 +2626,11 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 }
 
 /* 登入畫面 → 通行密鑰、掃碼、訪客與重設密碼依原本順序直排 */
-.auth-login-card > .auth-passkey-button,
-.auth-login-card > .auth-qr-button,
-.auth-login-card > .auth-guest-button,
-.auth-login-card > .auth-switch {
-  margin-top: 8px; /* 縮短直排登入入口之間的留白 */
+.auth-login-options > .auth-passkey-button,
+.auth-login-options > .auth-qr-button,
+.auth-login-options > .auth-guest-button,
+.auth-login-options > .auth-switch {
+  margin-top: clamp(8px, 1.6dvh, 14px); /* 按鈕維持直排，留白依可用高度調整 */
 }
 
 /* 功能選擇頁 → 從管理員首頁開啟掃碼時的標題與「返回」 */
@@ -2625,14 +2663,20 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   margin-top: 8px; /* 與操作說明、輸入或錯誤訊息隔開 */
 }
 
-/* 登入畫面 → 掃碼入口及 QR Code 失效時的「重新產生 QR Code」按鈕 */
-.auth-qr-button,
+/* 登入畫面 →「手機掃碼登入」與「掃描電腦登入 QR Code」入口 */
+.auth-qr-button {
+  width: 100%; /* 與同一登入卡片內的按鈕等寬 */
+  margin-top: 12px; /* 與上一項登入操作隔開 */
+  border-color: #8065a4; /* 掃碼入口的紫色外框 */
+  background: #221a30; /* 掃碼入口的深紫底色 */
+  color: #e0c5ff; /* 掃碼入口的圖示與文字色 */
+}
+
+/* 電腦登入畫面 → QR Code 失效時的「重新產生 QR Code」按鈕 */
 .auth-qr-retry {
-  width: 100%; /* 掃碼入口與重新產生按鈕填滿各自所在的卡片 */
-  margin-top: 12px; /* 與上一項登入操作或提示隔開 */
-  border-color: #8065a4; /* 掃碼按鈕的外框色 */
-  background: #221a30; /* 掃碼按鈕的深紫底色 */
-  color: #e0c5ff; /* 掃碼按鈕的圖示和文字色 */
+  border-color: #8065a4; /* 重新產生按鈕的紫色外框 */
+  background: #221a30; /* 重新產生按鈕的深紫底色 */
+  color: #e0c5ff; /* 重新產生按鈕的淺紫文字 */
 }
 
 /* 電腦登入畫面 →「手機掃碼登入」的 QR Code 與等待狀態 */
@@ -2765,6 +2809,13 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
       padding: 24px 20px; /* 手機版｜登入畫面與系統首頁 → 中央登入卡片（公司 Logo、登入名稱、密碼與操作按鈕） → 內距 */
     } /* 手機版｜登入畫面與系統首頁 → 中央登入卡片（公司 Logo、登入名稱、密碼與操作按鈕） → 結束此區設定 */
 
+  /* 手機版｜登入畫面 → 自適應滿版的公司標誌、登入操作與頁尾 */
+  .auth-login-page > .auth-login-card {
+    justify-content: space-between; /* 有空間時把標誌、操作與版權分散到頁面 */
+    padding-block: max(clamp(16px, 4dvh, 34px), env(safe-area-inset-top)) max(16px, env(safe-area-inset-bottom)); /* 避開頂部與底部的 iPhone 安全區 */
+    padding-inline: max(clamp(16px, 5vw, 28px), env(safe-area-inset-left)) max(clamp(16px, 5vw, 28px), env(safe-area-inset-right)); /* 保留按鈕和左右螢幕邊緣的間距 */
+  }
+
   /* 登入畫面與系統首頁｜公司 Logo 下方的「CHYUAN SHEU CNC CLOUD」英文小標（目前畫面暫時隱藏） */
   .home-eyebrow { /* 手機版｜系統首頁 → 功能選擇 → 公司 Logo 下方的「CHYUAN SHEU CNC CLOUD」英文小標（目前畫面暫時隱藏） → 選取此元件 */
       font-size: 12px; /* 手機版｜系統首頁 → 功能選擇 → 公司 Logo 下方的「CHYUAN SHEU CNC CLOUD」英文小標（目前畫面暫時隱藏） → 字級 */
@@ -2830,6 +2881,44 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
       font-size: 14px; /* 手機版｜登入畫面與系統首頁 → 登入卡片內的公司名稱或首次設定密碼說明文字 → 字級 */
     } /* 手機版｜登入畫面與系統首頁 → 登入卡片內的公司名稱或首次設定密碼說明文字 → 結束此區設定 */
 } /* 手機版｜登入畫面與系統首頁 → 結束此區設定 */
+
+@media (min-width: 621px) { /* 電腦版｜登入畫面 → 開始此條件的設定 */
+  /* 電腦版｜登入畫面 → 左側品牌、右側登入操作，以及底部版權 */
+  .auth-login-page > .auth-login-card {
+    display: grid; /* 讓品牌與登入操作分欄顯示 */
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* 分配兩個區塊的水平空間 */
+    grid-template-rows: minmax(min-content, 1fr) auto; /* 內容區使用可用高度，頁尾保留自己的高度 */
+    align-items: center; /* 品牌和登入操作各在同一列垂直置中 */
+    justify-items: center; /* 各區塊在所屬欄內置中 */
+    column-gap: clamp(20px, 6vw, 112px); /* 依視窗寬度分開品牌與登入區 */
+    padding-block: clamp(20px, 5dvh, 64px) clamp(16px, 3dvh, 36px); /* 讓短視窗保有操作空間 */
+    padding-inline: clamp(24px, 6vw, 116px); /* 保留登入內容與兩側視窗的間距 */
+  }
+
+  /* 電腦版｜登入畫面 → 左側公司標誌與「登入雲端系統」 */
+  .auth-login-card > .auth-brand {
+    min-width: 0; /* 窄視窗允許較長的公司名稱換行 */
+    text-align: center; /* 品牌文字與 Logo 對齊 */
+  }
+
+  .auth-login-card .auth-logo {
+    width: clamp(66px, 9vw, 124px); /* 左側品牌標誌隨視窗放大 */
+  }
+
+  .auth-login-card .auth-brand h1 {
+    font-size: clamp(27px, 3.1vw, 48px); /* 寬視窗給主標題更清楚的層次 */
+  }
+
+  /* 電腦版｜登入畫面 → 右側帳密、QR Code 與登入按鈕 */
+  .auth-login-options {
+    width: min(100%, 460px); /* 輸入欄位與按鈕在寬螢幕保持易讀寬度 */
+  }
+
+  /* 電腦版｜登入畫面 → 底部置中的版權行 */
+  .auth-login-card > .auth-login-footer {
+    grid-column: 1 / -1; /* 版權橫跨品牌與登入操作兩欄 */
+  }
+} /* 電腦版｜登入畫面 → 結束此條件的設定 */
 
 
 /* ############################################################################

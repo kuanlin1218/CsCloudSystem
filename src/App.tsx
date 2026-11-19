@@ -299,7 +299,7 @@ function LoginScreen({ initialMessage, onGuest, phoneLayout, canScanPhoneLogin }
     finally { setBusy(false) }
   }
 
-  return <main className="auth-screen auth-login-screen">
+  return <main className="auth-screen auth-login-screen auth-login-page">
     <span className="auth-grid"/>
     <section className="auth-card auth-login-card" aria-label="登入系統">
       <div className="auth-brand">
@@ -308,45 +308,47 @@ function LoginScreen({ initialMessage, onGuest, phoneLayout, canScanPhoneLogin }
         <h1>登入雲端系統</h1>
         <p className="auth-eyebrow">2026</p>
       </div>
-      <div className="auth-login-feedback-area" ref={setFeedbackTarget}>
-        <LoginFeedback message={method === 'reset' ? resetMessage : message} success={method === 'reset' && resetSuccess} />
+      <div className="auth-login-options">
+        <div className="auth-login-feedback-area" ref={setFeedbackTarget}>
+          <LoginFeedback message={method === 'reset' ? resetMessage : message} success={method === 'reset' && resetSuccess} />
+        </div>
+        <div id="login-method-panel" className="auth-method-panel" hidden={!method}>
+          {method === 'password' && <form id="login-method-form" noValidate onSubmit={submit}>
+            {/* 「登入畫面」的「登入名稱輸入框」：允許桌面中文輸入法正常組字，送出時再驗證只能使用英文字母與數字。 */}
+            <Field label="登入名稱" wide><input type="text" inputMode="email" pattern="[A-Za-z0-9]*" lang="en" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" enterKeyHint="next" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入英文或數字登入名稱" disabled={busy}/></Field>
+            <Field label="密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{6,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={busy}/></Field>
+          </form>}
+          {method === 'qr' && (phoneLayout
+            ? canScanPhoneLogin && <PhoneLoginScanner feedbackTarget={feedbackTarget} />
+            : <PhoneLoginPanel feedbackTarget={feedbackTarget} />)}
+          {method === 'reset' && <form id="login-method-form" noValidate onSubmit={sendPasswordEmail}>
+            <Field label="管理員 Email" wide><input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="email" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} placeholder="輸入後台設定的管理員 Email" disabled={busy}/></Field>
+          </form>}
+        </div>
+        {formOpen ? <button key={method} className={`button auth-login-submit ${method === 'password' ? 'auth-password-submit' : 'auth-reset-submit'}`}
+          type="submit" form="login-method-form" disabled={busy}>
+          {method === 'password' ? (busy ? '正在驗證…' : '登入') : (busy ? '正在寄送…' : '寄送重設密碼郵件')}
+        </button> : <button key="open-password" className="button auth-password-method" type="button"
+          onClick={() => showMethod('password')} disabled={busy} aria-expanded={false} aria-controls="login-method-panel">
+          <UserRound aria-hidden="true" />帳號密碼登入
+        </button>}
+        {supportsPasskeys() && <button className="button auth-passkey-button" type="button" onClick={() => void submitPasskey()} disabled={busy}>
+          <LockKeyhole aria-hidden="true" />使用通行密鑰登入 Face ID
+        </button>}
+        {(!phoneLayout || canScanPhoneLogin) && <button className="button auth-qr-button" type="button"
+          onClick={() => showMethod(method === 'qr' ? null : 'qr')} disabled={busy}
+          aria-expanded={method === 'qr'} aria-controls="login-method-panel">
+          {phoneLayout ? <Camera aria-hidden="true" /> : <QrCode aria-hidden="true" />}
+          {method === 'qr' ? '收起掃碼' : phoneLayout ? '掃描電腦登入 QR Code' : '手機掃碼登入'}
+        </button>}
+        <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客登入</button>
+        <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
+        <button className="auth-switch" type="button" onClick={() => showMethod(method === 'reset' ? null : 'reset')} disabled={busy}
+          aria-expanded={method === 'reset'} aria-controls="login-method-panel">
+          {method === 'reset' ? '收起重設密碼' : '忘記密碼或尚未設定密碼'}
+        </button>
       </div>
-      <div id="login-method-panel" className="auth-method-panel" hidden={!method}>
-        {method === 'password' && <form id="login-method-form" noValidate onSubmit={submit}>
-          {/* 「登入畫面」的「登入名稱輸入框」：允許桌面中文輸入法正常組字，送出時再驗證只能使用英文字母與數字。 */}
-          <Field label="登入名稱" wide><input type="text" inputMode="email" pattern="[A-Za-z0-9]*" lang="en" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" enterKeyHint="next" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="輸入英文或數字登入名稱" disabled={busy}/></Field>
-          <Field label="密碼" wide><input type="password" inputMode="numeric" pattern="[0-9]{6,}" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value.replace(/\D/g, ''))} placeholder="至少 6 位數字" disabled={busy}/></Field>
-        </form>}
-        {method === 'qr' && (phoneLayout
-          ? canScanPhoneLogin && <PhoneLoginScanner feedbackTarget={feedbackTarget} />
-          : <PhoneLoginPanel feedbackTarget={feedbackTarget} />)}
-        {method === 'reset' && <form id="login-method-form" noValidate onSubmit={sendPasswordEmail}>
-          <Field label="管理員 Email" wide><input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="email" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} placeholder="輸入後台設定的管理員 Email" disabled={busy}/></Field>
-        </form>}
-      </div>
-      {formOpen ? <button key={method} className={`button auth-login-submit ${method === 'password' ? 'primary' : 'auth-reset-submit'}`}
-        type="submit" form="login-method-form" disabled={busy}>
-        {method === 'password' ? (busy ? '正在驗證…' : '登入') : (busy ? '正在寄送…' : '寄送重設密碼郵件')}
-      </button> : <button key="open-password" className="button primary auth-password-method" type="button"
-        onClick={() => showMethod('password')} disabled={busy} aria-expanded={false} aria-controls="login-method-panel">
-        <UserRound aria-hidden="true" />帳號密碼登入
-      </button>}
-      {supportsPasskeys() && <button className="button auth-passkey-button" type="button" onClick={() => void submitPasskey()} disabled={busy}>
-        <LockKeyhole aria-hidden="true" />使用通行密鑰登入 Face ID
-      </button>}
-      {(!phoneLayout || canScanPhoneLogin) && <button className="button auth-qr-button" type="button"
-        onClick={() => showMethod(method === 'qr' ? null : 'qr')} disabled={busy}
-        aria-expanded={method === 'qr'} aria-controls="login-method-panel">
-        {phoneLayout ? <Camera aria-hidden="true" /> : <QrCode aria-hidden="true" />}
-        {method === 'qr' ? '收起掃碼' : phoneLayout ? '掃描電腦登入 QR Code' : '手機掃碼登入'}
-      </button>}
-      <button className="button auth-guest-button" type="button" onClick={onGuest} disabled={busy}><UserRound />訪客登入</button>
-      <p className="auth-guest-note">訪客僅能查看，不能編輯資料。</p>
-      <button className="auth-switch" type="button" onClick={() => showMethod(method === 'reset' ? null : 'reset')} disabled={busy}
-        aria-expanded={method === 'reset'} aria-controls="login-method-panel">
-        {method === 'reset' ? '收起重設密碼' : '忘記密碼或尚未設定密碼'}
-      </button>
-      <p className="auth-guest-note">© 2026 KUAN LIN CHEN. All rights reserved.</p>
+      <footer className="auth-guest-note auth-login-footer">© 2026 KUAN LIN CHEN. All rights reserved.</footer>
     </section>
   </main>
 }
