@@ -1,5 +1,5 @@
 export type MovementType = 'in' | 'out'
-export type Page = 'home' | 'production-dashboard' | 'production-entry' | 'production-query' | 'production-forecast' | 'production-settings' | 'production-delete' | 'dashboard' | 'movements' | 'stocktake' | 'products' | 'scanner-settings' | 'operation-log'
+export type Page = 'home' | 'production-dashboard' | 'production-entry' | 'production-query' | 'production-forecast' | 'production-settings' | 'production-delete' | 'dashboard' | 'movements' | 'stocktake' | 'products' | 'scanner' | 'scanner-settings' | 'operation-log'
 
 export interface OperationLogEntry {
   id: string

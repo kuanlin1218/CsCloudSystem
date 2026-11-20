@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import {
-  ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
+  ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
   Calculator, Camera, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
   FileSpreadsheet, FileUp, FlaskConical, Keyboard, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, QrCode, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, WandSparkles, Wrench, X,
-  ScanBarcode,Factory,LayoutDashboard,Layers,DatabaseBackup,Combine,ChartColumnBig,CalendarClock,LaptopMinimal
+  Barcode,ScanBarcode,Factory,LayoutDashboard,Layers,DatabaseBackup,Combine,ChartColumnBig,CalendarClock,LaptopMinimal
 } from 'lucide-react'
 import { dataStorage, isDemoMode, isLocalDataMode, isTestMode, supabase, TEST_MODE_KEY } from './lib/supabase'
 import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, registerOwnerPasskey, signInWithPasskey, supportsPasskeys, verifyOwnerPassword } from './lib/auth'
@@ -120,7 +120,7 @@ const countForecastCalendarDays = (start: string, end: string) => {
   return count
 }
 
-const PAGE_VALUES: Page[] = ['home', 'production-dashboard', 'production-entry', 'production-query', 'production-forecast', 'production-settings', 'production-delete', 'dashboard', 'movements', 'stocktake', 'products', 'scanner-settings', 'operation-log']
+const PAGE_VALUES: Page[] = ['home', 'production-dashboard', 'production-entry', 'production-query', 'production-forecast', 'production-settings', 'production-delete', 'dashboard', 'movements', 'stocktake', 'products', 'scanner', 'scanner-settings', 'operation-log']
 const preventInputEnterSubmit = (event: ReactKeyboardEvent<HTMLFormElement>) => {
   if (event.key !== 'Enter' || event.nativeEvent.isComposing || !(event.target instanceof HTMLInputElement)) return
   event.preventDefault()
@@ -142,7 +142,7 @@ const GUEST_SESSION_KEY = 'cnc-cloud-guest-mode'
 const INITIAL_STOCK_NOTE = '建立時初庫存'
 const isInitialStockNote = (value: string) => value === INITIAL_STOCK_NOTE || value === '建立商品時的期初庫存'
 
-type StockModalState = { type: MovementType; productId?: string; scannerReturnBarcode?: string }
+type StockModalState = { type: MovementType; productId?: string }
 type AdminDeleteRequest = {
   title: string
   description: string
@@ -409,7 +409,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
   const [toast, setToast] = useState('')
   const [stockModal, setStockModal] = useState<StockModalState | null>(null)
   const [productModal, setProductModal] = useState<Product | 'new' | null>(null)
-  const [scannerBarcode, setScannerBarcode] = useState<string | null>(null)
+  const [scannerBarcode, setScannerBarcode] = useState('')
   const [pendingBarcode, setPendingBarcode] = useState('')
   const [priceHistoryProduct, setPriceHistoryProduct] = useState<Product | null>(null)
   const [productionOptionModal, setProductionOptionModal] = useState<ProductionOptionType | null>(null)
@@ -462,7 +462,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
       setPage(nextPage)
       setMobileNav(false)
       setPhoneScannerOpen(false)
-      setStockModal(null); setProductModal(null); setScannerBarcode(null); setPendingBarcode(''); setPriceHistoryProduct(null)
+      setStockModal(null); setProductModal(null); setScannerBarcode(''); setPendingBarcode(''); setPriceHistoryProduct(null)
       setProductionOptionModal(null); setAdminDataModal(false)
       setAdminDelete((request) => { request?.resolve(false); return null })
       void refresh()
@@ -485,7 +485,10 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
 
   const nav = (next: Page) => {
     if (guestMode && (next === 'production-entry' || next === 'production-settings' || next === 'production-delete' || next === 'stocktake')) return
-    if (window.location.hash !== `#${next}`) window.history.pushState({ page: next }, '', pageUrl(next))
+    if (window.location.hash !== `#${next}`) {
+      window.history.pushState({ page: next, returnFromScanner: next === 'scanner' }, '', pageUrl(next))
+      if (next === 'scanner') setScannerBarcode('')
+    }
     setPage(next)
     setMobileNav(false)
     void refresh()
@@ -503,9 +506,15 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
     setAdminDelete({ title, description, execute, resolve })
   })
   const canReadOperationLog = !guestMode && isOwnerUser(session?.user.id)
-  const activePage: Page = page === 'operation-log' && !canReadOperationLog ? 'home' : guestMode && (page === 'production-entry' || page === 'production-settings' || page === 'production-delete') ? 'production-dashboard' : guestMode && page === 'stocktake' ? 'dashboard' : page
+  const requestedPage = page === 'scanner-settings' ? 'scanner' : page
+  const activePage: Page = requestedPage === 'operation-log' && !canReadOperationLog ? 'home' : guestMode && (requestedPage === 'production-entry' || requestedPage === 'production-settings' || requestedPage === 'production-delete') ? 'production-dashboard' : guestMode && requestedPage === 'stocktake' ? 'dashboard' : requestedPage
   const isHome = activePage === 'home'
-  const isInventory = activePage === 'dashboard' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products' || activePage === 'scanner-settings'
+  const isInventory = activePage === 'dashboard' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products' || activePage === 'scanner'
+  const openScanner = () => activePage === 'scanner' ? setMobileNav(false) : nav('scanner')
+  const closeScanner = () => {
+    if (window.history.state?.returnFromScanner) window.history.back()
+    else nav('dashboard')
+  }
   const isProduction = activePage === 'production-dashboard' || activePage === 'production-entry' || activePage === 'production-query' || activePage === 'production-forecast' || activePage === 'production-settings' || activePage === 'production-delete'
   const isSystem = isInventory || isProduction
   const showTableScrollControls = activePage === 'production-query' || activePage === 'production-delete' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
@@ -541,7 +550,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
             <NavItem active={activePage === 'movements'} icon={<ArrowLeftRight />} onClick={() => nav('movements')}>出入庫</NavItem>
             {!guestMode && <NavItem active={activePage === 'stocktake'} icon={<ClipboardCheck />} onClick={() => nav('stocktake')}>庫存盤點</NavItem>}
             <NavItem active={activePage === 'products'} icon={<LaptopMinimal />} onClick={() => nav('products')}>刀具資料</NavItem>
-            <NavItem active={activePage === 'scanner-settings'} icon={<ScanBarcode />} onClick={() => nav('scanner-settings')}>掃描槍設定</NavItem>
+            <NavItem active={activePage === 'scanner'} icon={guestMode ? <Wrench /> : <ScanBarcode />} onClick={openScanner}>{guestMode ? '掃描槍設定' : '掃描條碼'}</NavItem>
           </>}
         </nav>
         <div className="sidebar-foot">
@@ -600,50 +609,46 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
           if (deleted) await afterSave(`${productCode} 的產品編號與全部加工紀錄已永久刪除`)
           return deleted
         }} />}
-        {activePage === 'dashboard' && <Dashboard products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} openScanner={() => setScannerBarcode('')} readOnly={guestMode} />}
-        {activePage === 'movements' && <MovementsPage products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} openScanner={() => setScannerBarcode('')} readOnly={guestMode} onDelete={async (movement) => {
+        {activePage === 'dashboard' && <Dashboard products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} openScanner={openScanner} readOnly={guestMode} />}
+        {activePage === 'movements' && <MovementsPage products={products} movements={movements} loading={loading} openStock={(type) => setStockModal({ type })} openScanner={openScanner} readOnly={guestMode} onDelete={async (movement) => {
           const product = movement.product || products.find((item) => item.id === movement.product_id)
           const deleted = await requestAdminDelete('刪除出入庫紀錄', `${formatDate(movement.movement_date)} 的${movement.movement_type === 'in' ? '入庫' : '出庫'}紀錄「${product?.name || ''}」。庫存會自動重新計算。`, () => deleteMovement(movement.id))
           if (deleted) await afterSave('出入庫紀錄已刪除，庫存已重新計算')
         }} />}
-        {activePage === 'stocktake' && !guestMode && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} openScanner={() => setScannerBarcode('')} onAdjust={adjustStocktake} />}
-        {activePage === 'products' && <ProductsPage products={products} movements={movements} loading={loading} add={() => setProductModal('new')} edit={setProductModal} openStock={(type, productId) => setStockModal({ type, productId })} openScanner={() => setScannerBarcode('')} viewHistory={setPriceHistoryProduct} readOnly={guestMode} onDelete={async (p) => {
+        {activePage === 'stocktake' && !guestMode && <StocktakePage products={products} loading={loading} add={() => setProductModal('new')} openScanner={openScanner} onAdjust={adjustStocktake} />}
+        {activePage === 'products' && <ProductsPage products={products} movements={movements} loading={loading} add={() => setProductModal('new')} edit={setProductModal} openStock={(type, productId) => setStockModal({ type, productId })} openScanner={openScanner} viewHistory={setPriceHistoryProduct} readOnly={guestMode} onDelete={async (p) => {
           const deleted = await requestAdminDelete('刪除刀具資料', `將刪除 ${p.code}「${p.name}」及其全部出入庫紀錄。`, () => deleteProduct(p.id))
           if (deleted) await afterSave('商品已刪除')
         }} />}
-        {activePage === 'scanner-settings' && <ScannerSettingsPage />}
+        {activePage === 'scanner' && !stockModal && !productModal && <BarcodeScanner key={page} products={products} initialBarcode={scannerBarcode} initialSettingsOpen={page === 'scanner-settings'} readOnly={guestMode} close={closeScanner} createWithBarcode={(barcode) => {
+          setScannerBarcode(barcode); setPendingBarcode(barcode); setProductModal('new')
+        }} linkBarcode={async (productId, barcode, expectedBarcode) => {
+          await updateProductBarcode(productId, barcode, expectedBarcode); await afterSave('條碼已綁定刀具')
+        }} openStock={(type, productId, barcode) => {
+          setScannerBarcode(barcode); setStockModal({ type, productId })
+        }} adjustStocktake={adjustStocktake} editProduct={(product, barcode) => {
+          setScannerBarcode(barcode); setProductModal(product)
+        }} />}
       </main>
 
       {showTableScrollControls && <TableScrollControls key={activePage} />}
 
-      {!guestMode && stockModal && <StockModal type={stockModal.type} initialProductId={stockModal.productId} products={products} close={() => {
-        if (stockModal.scannerReturnBarcode) setScannerBarcode(stockModal.scannerReturnBarcode)
-        setStockModal(null)
-      }} switchType={(type) => setStockModal((current) => current ? { ...current, type } : null)} save={async (input) => {
+      {!guestMode && stockModal && <StockModal type={stockModal.type} initialProductId={stockModal.productId} products={products} close={() => setStockModal(null)} switchType={(type) => setStockModal((current) => current ? { ...current, type } : null)} save={async (input) => {
         await registerMovement(input); setStockModal(null); await afterSave(input.movement_type === 'in' ? '入庫完成' : '出庫完成')
       }} />}
       {!guestMode && productModal && <ProductModal product={productModal === 'new' ? null : productModal} products={products} initialBarcode={productModal === 'new' ? pendingBarcode : ''} close={() => {
-        if (pendingBarcode) setScannerBarcode(pendingBarcode)
         setProductModal(null); setPendingBarcode('')
       }} save={async (input) => {
         if (productModal === 'new') await createProduct(input); else await updateProduct(productModal.id, input)
-        if (productModal === 'new' && pendingBarcode) {
-          // 從掃碼建立刀具時，先更新刀具清單，讓返回的掃描結果可以配對剛建立的刀具。
-          await afterSave('商品已建立')
+        const message = productModal === 'new' ? '商品已建立' : '商品已更新'
+        if (activePage === 'scanner') {
+          // 從掃描結果儲存刀具後，先更新清單，再顯示最新條碼與刀具資料。
+          await afterSave(message)
           setScannerBarcode(input.barcode.trim())
           setProductModal(null); setPendingBarcode('')
           return
         }
-        setProductModal(null); setPendingBarcode(''); await afterSave(productModal === 'new' ? '商品已建立' : '商品已更新')
-      }} />}
-      {!guestMode && scannerBarcode !== null && <BarcodeScannerModal products={products} initialBarcode={scannerBarcode} close={() => setScannerBarcode(null)} createWithBarcode={(barcode) => {
-        setScannerBarcode(null); setPendingBarcode(barcode); setProductModal('new')
-      }} linkBarcode={async (productId, barcode, expectedBarcode) => {
-        await updateProductBarcode(productId, barcode, expectedBarcode); await afterSave('條碼已綁定刀具')
-      }} openStock={(type, productId, barcode) => {
-        setScannerBarcode(null); setStockModal({ type, productId, scannerReturnBarcode: barcode })
-      }} adjustStocktake={adjustStocktake} editProduct={(product, barcode) => {
-        setScannerBarcode(null); setPendingBarcode(barcode); setProductModal(product)
+        setProductModal(null); setPendingBarcode(''); await afterSave(message)
       }} />}
       {priceHistoryProduct && <PriceHistoryModal product={priceHistoryProduct} movements={movements} close={() => setPriceHistoryProduct(null)} />}
       {!guestMode && productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={(productionOptionModal === 'product' ? productionEntryProductCodes : productionMachines)} close={() => setProductionOptionModal(null)} save={async (value) => {
@@ -1517,8 +1522,8 @@ function FunctionCard({ icon, title, description, tone, onClick, disabled = fals
   return <button type="button" className={`function-card ${tone} ${disabled && disabledLabel ? 'is-future' : ''}`} onClick={onClick} disabled={disabled}><span className="function-icon">{icon}</span><span className="function-copy"><strong>{title}</strong><small>{description}</small></span>{disabled ? (disabledLabel && <em>{disabledLabel}</em>) : <ChevronDown className="function-arrow"/>}</button>
 }
 
-function PageTitle({ eyebrow, title, actions }: { eyebrow: string; title: string; actions?: ReactNode }) {
-  return <div className="page-title"><div><span>{eyebrow}</span><h1>{title}</h1></div>{actions && <div className="title-actions">{actions}</div>}</div>
+function PageTitle({ eyebrow, title, titleId, actions }: { eyebrow: string; title: string; titleId?: string; actions?: ReactNode }) {
+  return <div className="page-title"><div><span>{eyebrow}</span><h1 id={titleId}>{title}</h1></div>{actions && <div className="title-actions">{actions}</div>}</div>
 }
 
 function StockButtons({ openStock }: { openStock: (type: MovementType) => void }) {
@@ -2001,15 +2006,19 @@ const SCANNER_SETTINGS = [
     { id: 'sound-medium', label: '中音' },
     { id: 'sound-low', label: '低音' },
   ] },
+  { title: 'iOS 鍵盤', options: [
+    { id: 'ios-keyboard-toggle', label: '顯示／隱藏 iOS 鍵盤' },
+  ] },
 ]
 
-function ScannerSettingsPage() {
+function ScannerSettings() {
   const [selection, setSelection] = useState({ groupIndex: 0, optionIndex: 0 })
   const group = SCANNER_SETTINGS[selection.groupIndex]
   const option = group.options[selection.optionIndex]
+  const keyboardSetting = option.id === 'ios-keyboard-toggle'
 
-  return <section className="page-content">
-    <PageTitle eyebrow="XB-6208-RB" title="掃描槍設定" />
+  return <section id="barcode-scanner-settings" aria-labelledby="barcode-scanner-settings-title">
+    <h2 id="barcode-scanner-settings-title">XB-6208-RB 掃描槍設定</h2>
     <div className="scanner-settings-card">
       <div>
         <div className="scanner-settings-buttons" role="group" aria-label="設定類別">
@@ -2019,12 +2028,13 @@ function ScannerSettingsPage() {
           <li>用掃描槍依序掃描「配對碼 I」和「配對碼 II」，直到藍燈閃爍。</li>
           <li>手機或平板請到藍牙設定選擇「R&amp;B40」。若使用 USB 接收器，此時插上接收器。藍燈恆亮表示配對完成。</li>
         </ol>}
-        <div className="scanner-settings-buttons" role="group" aria-label={group.title}>
+        {keyboardSetting && <p className="ios-keyboard-toggle-intro">掃描設定碼可切換 iPhone 鍵盤顯示狀態。若鍵盤沒有立刻出現，請返回掃描並重新點一下輸入框。</p>}
+        {group.options.length > 1 && <div className="scanner-settings-buttons" role="group" aria-label={group.title}>
           {group.options.map(({ id, label }, optionIndex) => <button key={id} type="button" className="button" aria-pressed={selection.optionIndex === optionIndex} onClick={() => setSelection({ ...selection, optionIndex })}>{label}</button>)}
-        </div>
+        </div>}
       </div>
       <figure className="scanner-settings-code">
-        <img src={`${import.meta.env.BASE_URL}scanner-settings/${option.id}.png`} width={256} height={256} alt={`${option.label} QR Code`} />
+        <img src={`${import.meta.env.BASE_URL}${keyboardSetting ? 'ios-keyboard-toggle-qr.png' : `scanner-settings/${option.id}.png`}`} width={256} height={256} alt={`${option.label} QR Code`} />
         <figcaption aria-live="polite">{option.label}</figcaption>
         <small>請用 XB-6208-RB 掃描畫面上的設定碼</small>
       </figure>
@@ -2032,7 +2042,7 @@ function ScannerSettingsPage() {
   </section>
 }
 
-function BarcodeScannerModal(props: {
+function BarcodeScanner(props: {
   products: Product[]
   initialBarcode: string
   close: () => void
@@ -2040,6 +2050,8 @@ function BarcodeScannerModal(props: {
   editingProductId: string
   applyBarcode: (barcode: string) => void
 } | {
+  initialSettingsOpen: boolean
+  readOnly: boolean
   createWithBarcode: (barcode: string) => void
   linkBarcode: (productId: string, barcode: string, expectedBarcode: string) => Promise<void>
   openStock: (type: MovementType, productId: string, barcode: string) => void
@@ -2048,10 +2060,12 @@ function BarcodeScannerModal(props: {
 })) {
   const { products, initialBarcode, close } = props
   const lookup = 'applyBarcode' in props ? null : props
+  const pageRef = useRef<HTMLElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const targetRef = useRef<HTMLSpanElement>(null)
   const resultRef = useRef<HTMLElement>(null)
   const cameraButtonRef = useRef<HTMLButtonElement>(null)
+  const barcodeInputRef = useRef<HTMLInputElement>(null)
   const returnToNextScanRef = useRef(false)
   const controlsRef = useRef<{ stop: () => void } | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -2063,12 +2077,14 @@ function BarcodeScannerModal(props: {
   const [linking, setLinking] = useState(false)
   const [bindingOpen, setBindingOpen] = useState(false)
   const [pendingOverwrite, setPendingOverwrite] = useState<Product | null>(null)
-  const stepRef = useRef<HTMLElement>(null)
+  const stocktakeDialogRef = useRef<HTMLElement>(null)
   const [stocktake, setStocktake] = useState<{ product: Product; quantity: string; notes: string } | null>(null)
   const [stocktakeConfirming, setStocktakeConfirming] = useState(false)
   const [stocktakeSaving, setStocktakeSaving] = useState(false)
   const stocktakeOpen = stocktake !== null
   const [keyboardQrOpen, setKeyboardQrOpen] = useState(false)
+  const [settingsExpanded, setSettingsExpanded] = useState(lookup?.initialSettingsOpen ?? false)
+  const settingsOpen = Boolean(lookup?.readOnly || settingsExpanded)
   const normalizedBarcode = barcode.trim().toLowerCase()
   const barcodeOwner = normalizedBarcode ? products.find((product) => product.barcode?.trim().toLowerCase() === normalizedBarcode) : undefined
   const matchedProduct = barcodeOwner || (lookup ? products.find((product) => product.code.toLowerCase() === normalizedBarcode) : undefined)
@@ -2148,8 +2164,15 @@ function BarcodeScannerModal(props: {
   }, [])
 
   useEffect(() => {
-    if (bindingOpen || stocktakeOpen) {
-      stepRef.current?.closest('.modal')?.scrollTo(0, 0)
+    if (pageRef.current) pageRef.current.inert = stocktakeOpen
+    if (stocktakeOpen) {
+      const dialog = stocktakeDialogRef.current?.closest('.modal')
+      dialog?.scrollTo(0, 0)
+      if (!dialog?.contains(document.activeElement)) dialog?.querySelector<HTMLButtonElement>('.modal-head button')?.focus({ preventScroll: true })
+      return
+    }
+    if (bindingOpen) {
+      pageRef.current?.scrollIntoView({ block: 'start' })
       return
     }
     if (!barcode) return
@@ -2159,12 +2182,12 @@ function BarcodeScannerModal(props: {
       target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [barcode, bindingOpen, pendingOverwrite, stocktakeOpen, stocktakeConfirming])
+  }, [barcode, bindingOpen, pendingOverwrite, stocktakeOpen, stocktakeConfirming, settingsOpen])
 
   const startCamera = async () => {
     setError(''); setBarcode(''); setSelectedProductId('')
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      setError('此瀏覽器無法開啟相機。請使用正式 HTTPS 網址，或先用下方手動輸入測試。')
+      setError('此瀏覽器無法開啟相機。請使用正式 HTTPS 網址，或手動輸入條碼。')
       return
     }
     stopCamera()
@@ -2374,10 +2397,13 @@ function BarcodeScannerModal(props: {
     else setStocktakeConfirming(true)
   }
 
-  return <Modal title={stocktakeConfirming ? '確認更新庫存數量' : stocktakeOpen ? '掃碼盤點' : pendingOverwrite ? '覆蓋刀具條碼' : bindingOpen ? '綁定現有刀具' : lookup ? '掃描刀具條碼' : '重新掃碼'} close={stocktakeConfirming ? cancelScanStocktakeConfirmation : stocktakeOpen ? closeScanStocktake : pendingOverwrite ? cancelOverwrite : bindingOpen ? returnToScan : () => { stopCamera(); close() }} size={pendingOverwrite || stocktakeOpen ? '' : 'barcode-scanner-modal'}>
-    {stocktakeConfirming && stocktakeProduct && stocktakeQuantity !== null ? <section ref={stepRef}>
-      <StocktakeConfirmation product={stocktakeProduct} actual={stocktakeQuantity} error={error} saving={stocktakeSaving} cancel={cancelScanStocktakeConfirmation} confirm={() => void saveScanStocktake()}/>
-    </section> : stocktake && stocktakeProduct ? <section ref={stepRef}>
+  const scanStep = !pendingOverwrite && !bindingOpen
+  const cameraButtonLabel = cameraActive ? '停止相機' : barcode ? '掃描下一筆' : '開啟相機掃描'
+  const scannerTitle = pendingOverwrite ? '覆蓋刀具條碼' : bindingOpen ? '綁定現有刀具' : lookup ? '掃描條碼' : '重新掃碼'
+  const closeStep = pendingOverwrite ? cancelOverwrite : bindingOpen ? returnToScan : () => { stopCamera(); close() }
+  const stocktakeDialog = stocktake && stocktakeProduct && <Modal title={stocktakeConfirming ? '確認更新庫存數量' : '掃碼盤點'} close={stocktakeConfirming ? cancelScanStocktakeConfirmation : closeScanStocktake}>
+    <section ref={stocktakeDialogRef}>
+      {stocktakeConfirming && stocktakeQuantity !== null ? <StocktakeConfirmation product={stocktakeProduct} actual={stocktakeQuantity} error={error} saving={stocktakeSaving} cancel={cancelScanStocktakeConfirmation} confirm={() => void saveScanStocktake()}/> : <>
       <div className="barcode-product-card">
         <div><span>{stocktakeProduct.code}</span><strong>{stocktakeProduct.name}</strong></div>
         <p>目前庫存 <b>{formatNumber(stocktakeProduct.stock_quantity)} {stocktakeProduct.unit}</b></p>
@@ -2393,7 +2419,10 @@ function BarcodeScannerModal(props: {
           <button className="button primary" type="submit" disabled={stocktakeQuantity === null || stocktakeSaving}><Save/>{stocktakeSaving ? '儲存中…' : '完成盤點'}</button>
         </div>
       </form>
-    </section> : pendingOverwrite ? <section ref={stepRef}>
+      </>}
+    </section>
+  </Modal>
+  const content = pendingOverwrite ? <section>
       <p className="modal-intro">此刀具已有條碼。確認覆蓋後，會改用下方的新條碼。</p>
       <div className="modal-replacement-details">
         <strong>{pendingOverwrite.code} · {pendingOverwrite.name}</strong>
@@ -2405,7 +2434,7 @@ function BarcodeScannerModal(props: {
         <button className="button modal-replacement-cancel" type="button" autoFocus disabled={linking} onClick={cancelOverwrite}>取消</button>
         <button className="button modal-replacement-confirm" type="button" disabled={linking} onClick={() => void bindExistingProduct(pendingOverwrite)}>{linking ? '覆蓋中…' : '確認覆蓋'}</button>
       </div>
-    </section> : bindingOpen ? <section ref={stepRef} className="barcode-binding-step">
+    </section> : bindingOpen ? <section className="barcode-binding-step">
       <p className="barcode-binding-code">待綁定條碼 <strong>{barcode}</strong></p>
       <div className="field wide">
         <span><label htmlFor="barcode-binding-product">搜尋刀具</label></span>
@@ -2416,12 +2445,12 @@ function BarcodeScannerModal(props: {
         <button className="button" type="button" disabled={linking} onClick={returnToScan}>返回掃描結果</button>
         <button className="button scan-button" type="button" disabled={!selectedProductId || linking} onClick={requestBinding}><Save/>{linking ? '綁定中…' : '確認綁定'}</button>
       </div>
-    </section> : <>
-    {/* <p className="barcode-scanner-intro">將條碼放在框線中央，建議先保持約 20～30 公分再慢慢靠近。第一次使用時，請允許網站使用 iPhone 相機。</p> */}
+    </section> : <div className="barcode-scan-flow">
+    {!lookup &&
     <button className="ios-keyboard-toggle-inline" type="button" onClick={() => setKeyboardQrOpen((current) => !current)} aria-expanded={keyboardQrOpen}>
       <Keyboard/><span>XB-6208-RB：顯示／隱藏 iOS 鍵盤</span>{keyboardQrOpen ? <ChevronUp/> : <ChevronDown/>}
-    </button>
-    {keyboardQrOpen && <section className="ios-keyboard-toggle-panel">
+    </button>}
+    {!lookup && keyboardQrOpen && <section className="ios-keyboard-toggle-panel">
       <p className="ios-keyboard-toggle-intro">使用 XB-6208-RB 掃描下方設定碼，即可切換 iPhone 鍵盤。</p>
       <figure className="ios-keyboard-toggle-figure">
         <img src={`${import.meta.env.BASE_URL}ios-keyboard-toggle-qr.png`} alt="XB-6208-RB 的 iOS 鍵盤顯示與隱藏設定 QR Code"/>
@@ -2429,27 +2458,28 @@ function BarcodeScannerModal(props: {
       </figure>
       <p className="ios-keyboard-toggle-help"><ShieldCheck/>這只是掃描器設定碼，不會新增、修改或刪除網站資料。掃描後若鍵盤沒有立刻出現，請重新點一下輸入框。</p>
     </section>}
-    <div className={`barcode-camera ${cameraActive ? 'is-active' : ''} ${barcode && !cameraActive ? matchedProduct ? 'is-success' : 'is-unmatched' : ''}`}>
-      <video ref={videoRef} muted playsInline aria-label="條碼掃描相機畫面" />
-      {cameraActive && <><span ref={targetRef} className="barcode-target" aria-hidden="true"/><span className="barcode-scanning-label"><ScanBarcode/>掃描中</span></>}
-      {!cameraActive && barcode && <div className={`barcode-scan-feedback ${matchedProduct ? 'success' : 'unmatched'}`}>
-        {matchedProduct ? <ShieldCheck/> : <Triangle/>}
-        <strong>{matchedProduct ? '掃描成功' : '已掃到條碼'}</strong>
-        <span>{barcode}</span>
-        <small>{matchedProduct ? `${matchedProduct.code}・${matchedProduct.name}` : '此條碼尚未綁定刀具'}</small>
-      </div>}
-      {!cameraActive && !barcode && <div className="barcode-camera-placeholder"><ScanBarcode/><span>點擊下方按鈕開始掃描</span></div>}
+    <div className="barcode-scan-area" role="group" aria-label="掃描區">
+      <div className={`barcode-camera ${cameraActive ? 'is-active' : ''}`} aria-hidden={!cameraActive}>
+        <video ref={videoRef} muted playsInline aria-label="條碼掃描相機畫面" />
+        {cameraActive && <><span ref={targetRef} className="barcode-target" aria-hidden="true"/><span className="barcode-scanning-label"><ScanBarcode/>掃描中</span></>}
+      </div>
+      <div className="barcode-manual-test">
+        <label htmlFor="scanner-barcode-input">條碼槍掃碼／手動輸入</label>
+        <div className="barcode-scan-controls">
+          <input ref={barcodeInputRef} id="scanner-barcode-input" value={manualBarcode} onChange={(event) => setManualBarcode(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), useManualBarcode())} placeholder="輸入條碼" autoComplete="off"/>
+          <div className="barcode-scan-buttons">
+            <button className="barcode-query-button" type="button" aria-label="查詢" title="查詢" onClick={useManualBarcode}><Search aria-hidden="true"/></button>
+            <button className="barcode-reader-button" type="button" aria-label="使用條碼槍" title="使用條碼槍" onClick={() => barcodeInputRef.current?.focus()}><Barcode aria-hidden="true"/></button>
+            <button ref={cameraButtonRef} className={`barcode-camera-button${cameraActive ? ' is-active' : ''}`} type="button" aria-label={cameraButtonLabel} title={cameraButtonLabel} onClick={() => cameraActive ? stopCamera() : void startCamera()}>{cameraActive ? <X aria-hidden="true"/> : <Camera aria-hidden="true"/>}</button>
+            {lookup && <button className="barcode-settings-button" type="button" aria-label="掃描槍設定" title="掃描槍設定" onClick={() => { stopCamera(); setSettingsExpanded(true) }}><Wrench aria-hidden="true"/></button>}
+          </div>
+        </div>
+      </div>
+      {!stocktakeOpen && error && <p className="form-error barcode-scanner-error" role="alert">{error}</p>}
     </div>
-    <button ref={cameraButtonRef} className={`button barcode-camera-button ${cameraActive ? 'outbound' : 'scan-button'}`} type="button" onClick={() => cameraActive ? stopCamera() : void startCamera()}>{cameraActive ? <X/> : barcode ? <History/> : <Camera/>}{cameraActive ? '停止相機' : barcode ? '掃描下一筆' : '開啟相機掃描'}</button>
 
-    <div className="barcode-manual-test">
-      <span>條碼槍掃碼輸入／手動輸入條碼</span>
-      <div><input value={manualBarcode} onChange={(event) => setManualBarcode(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), useManualBarcode())} placeholder="輸入條碼後按查詢" autoComplete="off"/><button type="button" onClick={useManualBarcode}><Search/>查詢</button></div>
-    </div>
-
-    {error && <p className="form-error barcode-scanner-error" role="alert">{error}</p>}
-    {barcode && <section ref={resultRef} className={`barcode-result ${matchedProduct ? 'matched' : 'unmatched'}`}>
-      <div className="barcode-result-code"><span>掃描結果</span><strong>{barcode}</strong></div>
+    {barcode && <section ref={resultRef} className={`barcode-result ${matchedProduct ? 'matched' : 'unmatched'}`} aria-label="掃描結果">
+      <div className="barcode-result-code"><span>{matchedProduct ? '掃描成功' : lookup ? '未綁定條碼' : '掃描結果'}</span><strong>{barcode}</strong></div>
       {'applyBarcode' in props ? (conflictingProduct
         ? <p className="form-error" role="alert">此條碼已綁定 {conflictingProduct.code}「{conflictingProduct.name}」，請掃描其他條碼。</p>
         : <button className="button primary barcode-apply-result" type="button" onClick={() => props.applyBarcode(barcode.trim())}><ClipboardCheck/>使用此條碼</button>)
@@ -2459,10 +2489,14 @@ function BarcodeScannerModal(props: {
           <p>目前庫存 <b>{formatNumber(matchedProduct.stock_quantity)} {matchedProduct.unit}</b></p>
         </div>
         <div className="barcode-result-actions">
-          <button className="button inbound" type="button" onClick={() => props.openStock('in', matchedProduct.id, barcode)}><ArrowDownToLine/>入庫</button>
-          <button className="button outbound" type="button" onClick={() => props.openStock('out', matchedProduct.id, barcode)}><ArrowUpFromLine/>出庫</button>
-          <button className="button stocktake-barcode-action" type="button" onClick={() => { setError(''); setStocktake({ product: matchedProduct, quantity: '', notes: '' }) }}><ClipboardCheck/>盤點</button>
-          <button className="button edit-barcode-action" type="button" onClick={() => props.editProduct(matchedProduct, barcode)}><Pencil/>編輯刀具</button>
+          <div>
+            <button className="button inbound" type="button" onClick={() => props.openStock('in', matchedProduct.id, barcode)}><ArrowDownToLine/>入庫</button>
+            <button className="button outbound" type="button" onClick={() => props.openStock('out', matchedProduct.id, barcode)}><ArrowUpFromLine/>出庫</button>
+          </div>
+          <div>
+            <button className="button stocktake-barcode-action" type="button" onClick={() => { stopCamera(); setError(''); setStocktake({ product: matchedProduct, quantity: '', notes: '' }) }}><ClipboardCheck/>盤點</button>
+            <button className="button edit-barcode-action" type="button" onClick={() => props.editProduct(matchedProduct, barcode)}><Pencil/>編輯</button>
+          </div>
         </div>
       </> : <>
         <div className="barcode-unmatched-message"><ScanBarcode/><div><strong>尚未綁定任何刀具</strong><span>可以建立新刀具，或從現有刀具中選擇一筆綁定。</span></div></div>
@@ -2470,8 +2504,20 @@ function BarcodeScannerModal(props: {
         <button className="button scan-button barcode-link-existing" type="button" onClick={() => { setError(''); setBindingOpen(true) }}>綁定現有刀具</button>
       </>}
     </section>}
-    </>}
-  </Modal>
+    </div>
+
+  if (!lookup) return <Modal title={scannerTitle} close={closeStep} size="barcode-scanner-modal">{content}</Modal>
+
+  const returnToScanner = settingsOpen && !lookup.readOnly
+  const backLabel = returnToScanner ? '返回掃描' : scanStep ? '返回' : '上一步'
+  return <><section className="page-content barcode-scanner-page" ref={pageRef} aria-labelledby="barcode-scanner-title">
+    <PageTitle eyebrow="BARCODE SCAN" title={scannerTitle} titleId="barcode-scanner-title" actions={
+      <button className="button barcode-scanner-back" type="button" aria-label={backLabel} title={backLabel} onClick={returnToScanner ? () => setSettingsExpanded(false) : closeStep} disabled={stocktakeSaving || linking}><ArrowLeft aria-hidden="true"/><span>{backLabel}</span></button>
+    } />
+    <div className="barcode-scanner-surface">{settingsOpen ? <ScannerSettings /> : content}</div>
+  </section>
+  {stocktakeDialog}
+  </>
 }
 
 function ProductModal({ product, products, initialBarcode = '', close, save }: { product: Product | null; products: Product[]; initialBarcode?: string; close: () => void; save: (input: ProductInput) => Promise<void> }) {
@@ -2547,7 +2593,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
     setBusy(true)
     try { await save(product ? data : { ...data, initial_quantity: initialQuantity }) } catch (err) { setFormError(messageFor(err)); setBusy(false) }
   }
-  if (product && rescanOpen) return <BarcodeScannerModal products={products} editingProductId={product.id} initialBarcode="" close={() => setRescanOpen(false)} applyBarcode={(barcode) => {
+  if (product && rescanOpen) return <BarcodeScanner products={products} editingProductId={product.id} initialBarcode="" close={() => setRescanOpen(false)} applyBarcode={(barcode) => {
     set('barcode', barcode)
     setFormError('')
     setRescanOpen(false)
