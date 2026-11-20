@@ -2053,11 +2053,25 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   --product-identity-border-color: #3dccb3; /* 手機與電腦共用｜庫存管理系統 → 新增品項 → 編號、條碼及品名的輸入框邊框色 */
 } /* 手機與電腦共用｜庫存管理系統 → 新增品項 → 自訂編號、條碼及品名的顏色 */
 
+.product-create-modal .modal-head h2 {
+  color: #f1aa82; /* 換成你要的色碼 */
+}
+
+.product-create-modal .modal-submit.primary { /* 手機與電腦共用｜庫存管理系統 → 新增品項 → 底部「儲存」按鈕 */
+  color: #58321c; /* 手機與電腦共用｜庫存管理系統 → 新增品項 → 儲存按鈕的文字 */
+  background: #f1aa82; /* 手機與電腦共用｜庫存管理系統 → 新增品項 → 儲存按鈕的色底 */
+  border-color: #f1aa82; /* 手機與電腦共用｜庫存管理系統 → 新增品項 → 儲存按鈕的邊框色 */
+} /* 手機與電腦共用｜庫存管理系統 → 新增品項 → 底部「儲存」按鈕 */
+
 .product-edit-modal { /* 手機與電腦共用｜庫存管理系統 → 編輯刀具 → 自訂欄位及儲存按鈕的紫色配色 */
   --inventory-entry-label-color: #a6c0f5; /* 手機與電腦共用｜庫存管理系統 → 編輯刀具 → 一般欄位標題顏色 */
   --product-identity-label-color: #a6c0f5; /* 手機與電腦共用｜庫存管理系統 → 編輯刀具 → 編號、條碼、品名標題及條碼聚焦邊框色 */
   --product-identity-border-color: #3dccb3; /* 手機與電腦共用｜庫存管理系統 → 編輯刀具 → 編號、條碼、品名的輸入框邊框色 */
 } /* 手機與電腦共用｜庫存管理系統 → 編輯刀具 → 自訂欄位及儲存按鈕的紫色配色 */
+
+.product-edit-modal .modal-head h2 {
+  color: #a6c0f5; /* 換成你要的色碼 */
+}
 
 .product-edit-modal .modal-submit.primary { /* 手機與電腦共用｜庫存管理系統 → 編輯刀具 → 底部「儲存」按鈕 */
   color: #24142d; /* 手機與電腦共用｜庫存管理系統 → 編輯刀具 → 儲存按鈕的深紫色文字 */
@@ -4807,6 +4821,24 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 /* 加工管理系統 → 加工數量查詢 → 編輯加工紀錄 → 視窗標題列 */
 .production-edit-modal .modal-head {
   margin-bottom: 8px; /* 縮短「編輯加工紀錄」標題與第一列欄位的距離 */
+}
+
+/* 視窗主標題 */
+.production-edit-modal .modal-head h2 {
+  color: #b69ad9;
+}
+
+/* 左側欄位標題，含「加工時間」 */
+.production-edit-modal .production-field-row > label:first-child,
+.production-edit-modal .duration-fields > .entry-time-label {
+  color: #b69ad9;
+}
+
+/* 加工管理系統 → 加工數量查詢 → 編輯加工紀錄 → 儲存按鈕 */
+.production-edit-modal .modal-submit {
+  color: #172025;
+  border-color: #b69ad9; 
+  background: #b69ad9;
 }
 
 /* 加工管理系統 → 加工數量查詢 → 編輯加工紀錄 → 錯誤提示及儲存按鈕 */
