@@ -3,7 +3,7 @@ import type { Session, User } from '@supabase/supabase-js'
 import {
   ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
   Calculator, Camera, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
-  FileSpreadsheet, FileUp, FlaskConical, Keyboard, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, QrCode, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, WandSparkles, Wrench, X,
+  FileSpreadsheet, FileUp, FlaskConical, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, QrCode, RefreshCw, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, WandSparkles, Wrench, X,
   Barcode,ScanBarcode,Factory,LayoutDashboard,Layers,DatabaseBackup,Combine,ChartColumnBig,CalendarClock,LaptopMinimal
 } from 'lucide-react'
 import { dataStorage, isDemoMode, isLocalDataMode, isTestMode, supabase, TEST_MODE_KEY } from './lib/supabase'
@@ -2082,7 +2082,6 @@ function BarcodeScanner(props: {
   const [stocktakeConfirming, setStocktakeConfirming] = useState(false)
   const [stocktakeSaving, setStocktakeSaving] = useState(false)
   const stocktakeOpen = stocktake !== null
-  const [keyboardQrOpen, setKeyboardQrOpen] = useState(false)
   const [settingsExpanded, setSettingsExpanded] = useState(lookup?.initialSettingsOpen ?? false)
   const settingsOpen = Boolean(lookup?.readOnly || settingsExpanded)
   const normalizedBarcode = barcode.trim().toLowerCase()
@@ -2446,18 +2445,6 @@ function BarcodeScanner(props: {
         <button className="button scan-button" type="button" disabled={!selectedProductId || linking} onClick={requestBinding}><Save/>{linking ? '綁定中…' : '確認綁定'}</button>
       </div>
     </section> : <div className="barcode-scan-flow">
-    {!lookup &&
-    <button className="ios-keyboard-toggle-inline" type="button" onClick={() => setKeyboardQrOpen((current) => !current)} aria-expanded={keyboardQrOpen}>
-      <Keyboard/><span>XB-6208-RB：顯示／隱藏 iOS 鍵盤</span>{keyboardQrOpen ? <ChevronUp/> : <ChevronDown/>}
-    </button>}
-    {!lookup && keyboardQrOpen && <section className="ios-keyboard-toggle-panel">
-      <p className="ios-keyboard-toggle-intro">使用 XB-6208-RB 掃描下方設定碼，即可切換 iPhone 鍵盤。</p>
-      <figure className="ios-keyboard-toggle-figure">
-        <img src={`${import.meta.env.BASE_URL}ios-keyboard-toggle-qr.png`} alt="XB-6208-RB 的 iOS 鍵盤顯示與隱藏設定 QR Code"/>
-        <figcaption>鍵盤隱藏時掃描會顯示；鍵盤顯示時再次掃描會隱藏。</figcaption>
-      </figure>
-      <p className="ios-keyboard-toggle-help"><ShieldCheck/>這只是掃描器設定碼，不會新增、修改或刪除網站資料。掃描後若鍵盤沒有立刻出現，請重新點一下輸入框。</p>
-    </section>}
     <div className="barcode-scan-area" role="group" aria-label="掃描區">
       <div className={`barcode-camera ${cameraActive ? 'is-active' : ''}`} aria-hidden={!cameraActive}>
         <video ref={videoRef} muted playsInline aria-label="條碼掃描相機畫面" />
@@ -2471,7 +2458,7 @@ function BarcodeScanner(props: {
             <button className="barcode-query-button" type="button" aria-label="查詢" title="查詢" onClick={useManualBarcode}><Search aria-hidden="true"/></button>
             <button className="barcode-reader-button" type="button" aria-label="使用條碼槍" title="使用條碼槍" onClick={() => barcodeInputRef.current?.focus()}><Barcode aria-hidden="true"/></button>
             <button ref={cameraButtonRef} className={`barcode-camera-button${cameraActive ? ' is-active' : ''}`} type="button" aria-label={cameraButtonLabel} title={cameraButtonLabel} onClick={() => cameraActive ? stopCamera() : void startCamera()}>{cameraActive ? <X aria-hidden="true"/> : <Camera aria-hidden="true"/>}</button>
-            {lookup && <button className="barcode-settings-button" type="button" aria-label="掃描槍設定" title="掃描槍設定" onClick={() => { stopCamera(); setSettingsExpanded(true) }}><Wrench aria-hidden="true"/></button>}
+            <button className="barcode-settings-button" type="button" aria-label="掃描槍設定" title="掃描槍設定" onClick={() => { stopCamera(); setSettingsExpanded(true) }}><Wrench aria-hidden="true"/></button>
           </div>
         </div>
       </div>
@@ -2506,15 +2493,20 @@ function BarcodeScanner(props: {
     </section>}
     </div>
 
-  if (!lookup) return <Modal title={scannerTitle} close={closeStep} size="barcode-scanner-modal">{content}</Modal>
+  const closeSettings = () => setSettingsExpanded(false)
+  const scannerContent = settingsOpen ? <ScannerSettings /> : content
+  if (!lookup) return <Modal title={scannerTitle} close={settingsOpen ? closeSettings : closeStep} size="barcode-scanner-modal">
+    {scannerContent}
+    {settingsOpen && <div className="modal-tool-actions"><button className="button" type="button" onClick={closeSettings}><ArrowLeft aria-hidden="true"/>返回掃描</button></div>}
+  </Modal>
 
   const returnToScanner = settingsOpen && !lookup.readOnly
   const backLabel = returnToScanner ? '返回掃描' : scanStep ? '返回' : '上一步'
   return <><section className="page-content barcode-scanner-page" ref={pageRef} aria-labelledby="barcode-scanner-title">
     <PageTitle eyebrow="BARCODE SCAN" title={scannerTitle} titleId="barcode-scanner-title" actions={
-      <button className="button barcode-scanner-back" type="button" aria-label={backLabel} title={backLabel} onClick={returnToScanner ? () => setSettingsExpanded(false) : closeStep} disabled={stocktakeSaving || linking}><ArrowLeft aria-hidden="true"/><span>{backLabel}</span></button>
+      <button className="button barcode-scanner-back" type="button" aria-label={backLabel} title={backLabel} onClick={returnToScanner ? closeSettings : closeStep} disabled={stocktakeSaving || linking}><ArrowLeft aria-hidden="true"/><span>{backLabel}</span></button>
     } />
-    <div className="barcode-scanner-surface">{settingsOpen ? <ScannerSettings /> : content}</div>
+    <div className="barcode-scanner-surface">{scannerContent}</div>
   </section>
   {stocktakeDialog}
   </>
@@ -2528,6 +2520,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
   const [qrPreview, setQrPreview] = useState('')
   const [qrPreviewError, setQrPreviewError] = useState('')
   const [rescanOpen, setRescanOpen] = useState(false)
+  const [regenerateConfirming, setRegenerateConfirming] = useState(false)
   const set = <K extends keyof ProductInput>(key: K, value: ProductInput[K]) => setData((old) => ({ ...old, [key]: value }))
   const name = composeProductName(data.category, data.specification, data.size, data.chipbreaker, data.material)
   const initialQuantity = Number(initialQuantityInput)
@@ -2553,12 +2546,15 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
     })
     return () => { cancelled = true }
   }, [data.barcode])
-  const generateBarcode = () => {
-    const currentBarcode = data.barcode.trim()
-    if (product && currentBarcode && !window.confirm(`目前條碼：${currentBarcode}\n\n確定要重新產生條碼嗎？儲存後才會更新刀具。`)) return
+  const generateBarcode = (currentBarcode: string) => {
     setFormError('')
     try { set('barcode', generateUniqueToolBarcode([...products.map((item) => item.barcode), currentBarcode])) }
     catch (error) { setFormError(messageFor(error)) }
+  }
+  const requestGenerateBarcode = () => {
+    const currentBarcode = data.barcode.trim()
+    if (product && currentBarcode) setRegenerateConfirming(true)
+    else generateBarcode(currentBarcode)
   }
   const changeCategory = (category: ProductCategory) => setData((old) => ({
     ...old,
@@ -2599,6 +2595,22 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
     setRescanOpen(false)
   }} />
 
+  if (regenerateConfirming) {
+    const cancel = () => setRegenerateConfirming(false)
+    return <Modal title="確認重新產生條碼" close={cancel}>
+      <p className="modal-intro">確認後，新條碼會填入編輯表單。按下「儲存」後才會更新刀具。</p>
+      <div className="modal-replacement-details">
+        <div className="modal-replacement-original"><strong>目前條碼</strong><br />{data.barcode.trim()}</div>
+      </div>
+      <div className="modal-tool-actions">
+        <button className="button modal-replacement-cancel" type="button" autoFocus onClick={cancel}>取消</button>
+        <button className="button modal-replacement-confirm" type="button" onClick={() => { generateBarcode(data.barcode.trim()); setRegenerateConfirming(false) }}>確認重新產生</button>
+      </div>
+    </Modal>
+  }
+
+  const hasBarcode = Boolean(data.barcode.trim())
+  const generateBarcodeLabel = hasBarcode ? '重新產生條碼' : '自動產生條碼'
   return <Modal close={() => { if (!busy) close() }} title={product ? '編輯刀具' : '新增品項'} size={`large product-form-modal ${product ? 'product-edit-modal' : 'product-create-modal'}`}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="form-grid">
@@ -2612,11 +2624,11 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
               {/* {!product && <small className="product-create-field-hint">可掃描、手動輸入或自動產生</small>} */}
             </div>
             <div className="barcode-generator-actions">
-              <button className="button barcode-generate-button" type="button" onClick={generateBarcode} disabled={busy}><WandSparkles/>{data.barcode.trim() ? '重新產生條碼' : '自動產生條碼'}</button>
-              {product && <button className="button barcode-rescan-button" type="button" onClick={() => setRescanOpen(true)} disabled={busy}><Camera/>重新掃碼</button>}
+              <button className={`button ${hasBarcode ? 'barcode-regenerate-button' : 'barcode-generate-button'}`} type="button" aria-label={generateBarcodeLabel} title={generateBarcodeLabel} onClick={requestGenerateBarcode} disabled={busy}>{hasBarcode ? <RefreshCw aria-hidden="true"/> : <WandSparkles aria-hidden="true"/>}</button>
+              {product && <button className="button barcode-rescan-button" type="button" aria-label="重新掃碼" title="重新掃碼" onClick={() => setRescanOpen(true)} disabled={busy}><Camera aria-hidden="true"/></button>}
             </div>
           </div>
-          {data.barcode.trim() && <figure className="product-qr-preview">
+          {hasBarcode && <figure className="product-qr-preview">
             <div>{qrPreview ? <img src={qrPreview} alt={`條碼 ${data.barcode.trim()} 的 QR Code`}/> : <QrCode aria-hidden="true"/>}</div>
             <figcaption><strong>QR Code 預覽</strong><span>{data.barcode.trim()}</span><small>QR Code 與條碼號碼使用相同內容</small></figcaption>
           </figure>}
