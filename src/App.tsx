@@ -302,8 +302,8 @@ function LoginScreen({ initialMessage, onGuest, phoneLayout, canScanPhoneLogin }
     <section className="auth-card auth-login-card" aria-label="登入系統">
       <div className="auth-brand">
         <div className="auth-login-logo">
-          <img className="auth-logo" src={`${import.meta.env.BASE_URL}icons/login-logo.png`}
-            width={609} height={518} alt="詮栩公司 Logo" />
+          <img className="auth-logo" src={`${import.meta.env.BASE_URL}icons/login-logo.png?v=4`}
+            width={1010} height={845} alt="詮栩公司 Logo" />
         </div>
         <p className="auth-copy">詮栩股份有限公司 Chyuan Sheu Co.,Ltd.</p>
         <h1>登入雲端系統</h1>
@@ -989,23 +989,24 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
     <PageTitle eyebrow="PRODUCTION ENTRY" title="加工數量登記" />
     <form className="production-card entry-card" onSubmit={submit} onKeyDown={handleEntryKeyDown}>
       <div className="production-field-row"><label htmlFor="production-entry-date">日期</label><input id="production-entry-date" type="date" value={form.work_date} onChange={(e) => setForm({ ...form, work_date: e.target.value })} required /></div>
-      <div className="production-field-row entry-product-field"><label htmlFor="production-entry-product">產品編號</label><select id="production-entry-product" value={form.product_code} onChange={(e) => setForm({ ...form, product_code: e.target.value })} required><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+      <div className="production-field-row"><label htmlFor="production-entry-product">產品編號</label><select id="production-entry-product" value={form.product_code} onChange={(e) => setForm({ ...form, product_code: e.target.value })} required><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
       <div className="production-field-row"><label htmlFor="production-entry-machine">機台</label><select id="production-entry-machine" value={form.machine} onChange={(e) => setForm({ ...form, machine: e.target.value })} required><option value="">請選擇機台</option>{machines.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
 
       <div className="time-entry-panel">
-        <div className="duration-fields compact">
-          <label className="actual-hours-field">
-            <span className="entry-duration-label">加工時間（時）</span><span className="entry-duration-label-mobile">加工時數</span>
-            <input id="production-entry-hours" className="actual-hours-input" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} value={form.hours ?? ''} onChange={(e) => {
+        <div className="duration-fields">
+          <span className="entry-time-label">加工時間</span>
+          <label>
+            <input id="production-entry-hours" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} value={form.hours ?? ''} onChange={(e) => {
               const digits = e.target.value.replace(/\D/g, '').slice(0, 2)
               setForm((current) => ({ ...current, hours: digits ? Number(digits) : null }))
             }} aria-label="加工時數" required />
+            <span aria-hidden="true">時</span>
           </label>
-          <label className="actual-minutes-field">
-            <span className="entry-duration-label">加工時間（分）</span><span className="entry-duration-label-mobile">加工分鐘</span>
-            <input id="production-entry-minutes" className="actual-minutes-input" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} value={form.minutes ?? ''} onChange={(e) => updateEntryMinutes(e.target.value)} aria-label="加工分鐘" required />
+          <label>
+            <input id="production-entry-minutes" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} value={form.minutes ?? ''} onChange={(e) => updateEntryMinutes(e.target.value)} aria-label="加工分鐘" required />
+            <span aria-hidden="true">分</span>
           </label>
-          <div><span>實際總時間</span><strong>{formatNumber((form.hours ?? 0) * 60 + (form.minutes ?? 0))} 分鐘</strong></div>
+          <div><span>總時間</span><strong>{formatNumber((form.hours ?? 0) * 60 + (form.minutes ?? 0))} 分鐘</strong></div>
         </div>
       </div>
 
