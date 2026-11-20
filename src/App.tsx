@@ -381,7 +381,7 @@ function PasswordSetupScreen({ session, complete }: { session: Session; complete
     <span className="auth-grid"/>
     <section className="auth-card" aria-label="設定登入密碼">
       <div className="auth-brand">
-        <img className="auth-logo" src={`${import.meta.env.BASE_URL}company-logo.png`} alt="詮栩公司 Logo"/>
+        <img className="auth-logo" src={`${import.meta.env.BASE_URL}icons/login-logo.png?v=4`} alt="詮栩公司 Logo"/>
         <p className="auth-eyebrow">FIRST-TIME SECURITY SETUP</p>
         <h1>設定登入密碼</h1>
         <p className="auth-copy">登入名稱固定為 <b>{OWNER_USERNAME}</b>。請設定至少 6 位數字的新密碼。</p>
@@ -677,7 +677,8 @@ function HomePage({ navigate, openAdmin, guestMode, showOperationLog, exitButton
     <div className="home-hero">
       <img
           className="home-company-logo"
-          src={`${import.meta.env.BASE_URL}company-logo.png`}
+          // src={`${import.meta.env.BASE_URL}company-logo.png`}
+          src={`${import.meta.env.BASE_URL}icons/login-logo.png?v=4`}
           alt="詮栩公司 Logo"
         />
       {/* <span className="home-eyebrow">CHYUAN SHEU CNC CLOUD</span> */}
@@ -987,28 +988,19 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
 
   return <section className="page-content production-system-page production-entry-page">
     <PageTitle eyebrow="PRODUCTION ENTRY" title="加工數量登記" />
-    <form className="production-card entry-card" onSubmit={submit} onKeyDown={handleEntryKeyDown}>
+    <form className="production-card entry-card production-record-form" onSubmit={submit} onKeyDown={handleEntryKeyDown}>
       <div className="production-field-row"><label htmlFor="production-entry-date">日期</label><input id="production-entry-date" type="date" value={form.work_date} onChange={(e) => setForm({ ...form, work_date: e.target.value })} required /></div>
       <div className="production-field-row"><label htmlFor="production-entry-product">產品編號</label><select id="production-entry-product" value={form.product_code} onChange={(e) => setForm({ ...form, product_code: e.target.value })} required><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
       <div className="production-field-row"><label htmlFor="production-entry-machine">機台</label><select id="production-entry-machine" value={form.machine} onChange={(e) => setForm({ ...form, machine: e.target.value })} required><option value="">請選擇機台</option>{machines.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
 
-      <div className="time-entry-panel">
-        <div className="duration-fields">
-          <span className="entry-time-label">加工時間</span>
-          <label>
-            <input id="production-entry-hours" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} value={form.hours ?? ''} onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, '').slice(0, 2)
-              setForm((current) => ({ ...current, hours: digits ? Number(digits) : null }))
-            }} aria-label="加工時數" required />
-            <span aria-hidden="true">時</span>
-          </label>
-          <label>
-            <input id="production-entry-minutes" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} value={form.minutes ?? ''} onChange={(e) => updateEntryMinutes(e.target.value)} aria-label="加工分鐘" required />
-            <span aria-hidden="true">分</span>
-          </label>
-          <div><span>總時間</span><strong>{formatNumber((form.hours ?? 0) * 60 + (form.minutes ?? 0))} 分鐘</strong></div>
-        </div>
-      </div>
+      <ProductionDurationFields
+        hoursInput={<input id="production-entry-hours" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} value={form.hours ?? ''} onChange={(e) => {
+          const digits = e.target.value.replace(/\D/g, '').slice(0, 2)
+          setForm((current) => ({ ...current, hours: digits ? Number(digits) : null }))
+        }} aria-label="加工時數" required />}
+        minutesInput={<input id="production-entry-minutes" type="text" inputMode="numeric" enterKeyHint="next" maxLength={2} value={form.minutes ?? ''} onChange={(e) => updateEntryMinutes(e.target.value)} aria-label="加工分鐘" required />}
+        totalMinutes={(form.hours ?? 0) * 60 + (form.minutes ?? 0)}
+      />
 
       <div className="production-field-row"><label htmlFor="production-entry-quantity">數量</label><input id="production-entry-quantity" type="number" inputMode="numeric" enterKeyHint="done" pattern="[0-9]*" min="1" step="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: Math.max(0, Number(e.target.value)) })}  required /></div>
       <div className="production-field-row note-row"><label htmlFor="production-entry-notes">備註</label><textarea id="production-entry-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}  /></div>
@@ -1033,6 +1025,17 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
     </Modal>}
     {showTimeCalculator && <ProductionTimeCalculatorModal initialHours={form.hours ?? 0} initialMinutes={form.minutes ?? 0} close={() => setShowTimeCalculator(false)} apply={(hours, minutes) => { setForm((current) => ({ ...current, hours, minutes })); setShowTimeCalculator(false) }} />}
   </section>
+}
+
+function ProductionDurationFields({ hoursInput, minutesInput, totalMinutes }: { hoursInput: ReactNode; minutesInput: ReactNode; totalMinutes: number }) {
+  return <div className="time-entry-panel">
+    <div className="duration-fields">
+      <span className="entry-time-label">加工時間</span>
+      <label>{hoursInput}<span aria-hidden="true">時</span></label>
+      <label>{minutesInput}<span aria-hidden="true">分</span></label>
+      <div><span>總時間</span><strong>{formatNumber(totalMinutes)} 分鐘</strong></div>
+    </div>
+  </div>
 }
 
 type ProductionQueryMode = 'range' | 'latest' | 'all'
@@ -1289,17 +1292,17 @@ function ProductionRecordEditModal({ record, productCodes, machines, close, save
   }
 
   return <Modal title="編輯加工紀錄" close={close} size="production-edit-modal">
-    <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
-      <div className="form-grid production-edit-grid">
-        <Field label="日期"><input required type="date" value={form.work_date} onChange={(event) => setForm({ ...form, work_date: event.target.value })} /></Field>
-        <Field label="產品編號"><select required value={form.product_code} onChange={(event) => setForm({ ...form, product_code: event.target.value })}>{availableProductCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></Field>
-        <Field label="機台"><select required value={form.machine} onChange={(event) => setForm({ ...form, machine: event.target.value })}>{availableMachines.map((value) => <option key={value} value={value}>{value}</option>)}</select></Field>
-        <Field label="工時（時）"><input required type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={form.hours} onChange={(event) => setForm({ ...form, hours: Math.max(0, Number(event.target.value)) })} /></Field>
-        <Field label="工時（分）"><input required type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="59" step="1" value={form.minutes} onChange={(event) => setForm({ ...form, minutes: Math.max(0, Number(event.target.value)) })} /></Field>
-        <Field label="數量"><input required type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: Math.max(0, Number(event.target.value)) })} /></Field>
-      </div>
-      <Field label="備註" wide><textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })}  /></Field>
-      <div className="production-edit-total"><span>總加工時間</span><strong>{formatNumber(form.hours * 60 + form.minutes)} 分鐘</strong></div>
+    <form className="production-record-form" onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
+      <div className="production-field-row"><label htmlFor="production-edit-date">日期</label><input id="production-edit-date" required type="date" value={form.work_date} onChange={(event) => setForm({ ...form, work_date: event.target.value })} /></div>
+      <div className="production-field-row"><label htmlFor="production-edit-product">產品編號</label><select id="production-edit-product" required value={form.product_code} onChange={(event) => setForm({ ...form, product_code: event.target.value })}>{availableProductCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+      <div className="production-field-row"><label htmlFor="production-edit-machine">機台</label><select id="production-edit-machine" required value={form.machine} onChange={(event) => setForm({ ...form, machine: event.target.value })}>{availableMachines.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+      <ProductionDurationFields
+        hoursInput={<input aria-label="加工時數" required type="number" inputMode="numeric" pattern="[0-9]*" min="0" step="1" value={form.hours} onChange={(event) => setForm({ ...form, hours: Math.max(0, Number(event.target.value)) })} />}
+        minutesInput={<input aria-label="加工分鐘" required type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="59" step="1" value={form.minutes} onChange={(event) => setForm({ ...form, minutes: Math.max(0, Number(event.target.value)) })} />}
+        totalMinutes={form.hours * 60 + form.minutes}
+      />
+      <div className="production-field-row"><label htmlFor="production-edit-quantity">數量</label><input id="production-edit-quantity" required type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: Math.max(0, Number(event.target.value)) })} /></div>
+      <div className="production-field-row note-row"><label htmlFor="production-edit-notes">備註</label><textarea id="production-edit-notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></div>
       {formError && <p className="form-error">{formError}</p>}
       <button className="button modal-submit primary" disabled={busy}>{busy ? '儲存中…' : '儲存修改'}</button>
     </form>
@@ -2437,7 +2440,7 @@ function BarcodeScannerModal(props: {
     <button ref={cameraButtonRef} className={`button barcode-camera-button ${cameraActive ? 'outbound' : 'scan-button'}`} type="button" onClick={() => cameraActive ? stopCamera() : void startCamera()}>{cameraActive ? <X/> : barcode ? <History/> : <Camera/>}{cameraActive ? '停止相機' : barcode ? '掃描下一筆' : '開啟相機掃描'}</button>
 
     <div className="barcode-manual-test">
-      <span>電腦測試／相機無法辨識時</span>
+      <span>條碼槍掃碼輸入／手動輸入條碼</span>
       <div><input value={manualBarcode} onChange={(event) => setManualBarcode(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && (event.preventDefault(), useManualBarcode())} placeholder="輸入條碼後按查詢" autoComplete="off"/><button type="button" onClick={useManualBarcode}><Search/>查詢</button></div>
     </div>
 
