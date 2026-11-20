@@ -401,6 +401,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
 }) {
   const [page, setPage] = useState<Page>(pageFromLocation)
   const [products, setProducts] = useState<Product[]>([])
+  const [inventoryLoaded, setInventoryLoaded] = useState(false)
   const [movements, setMovements] = useState<Movement[]>([])
   const [productionRecords, setProductionRecords] = useState<ProductionRecord[]>([])
   const [productionOptions, setProductionOptions] = useState<ProductionOption[]>([])
@@ -425,6 +426,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
     try {
       const [data, productionData, optionData] = await Promise.all([loadInventory(), loadProductionRecords(), loadProductionOptions()])
       setProducts(data.products); setMovements(data.movements)
+      setInventoryLoaded(true)
       setProductionRecords(productionData)
       setProductionOptions(optionData)
     } catch (e) { setError(messageFor(e)) }
@@ -636,7 +638,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
       {!guestMode && stockModal && <StockModal type={stockModal.type} initialProductId={stockModal.productId} products={products} close={() => setStockModal(null)} switchType={(type) => setStockModal((current) => current ? { ...current, type } : null)} save={async (input) => {
         await registerMovement(input); setStockModal(null); await afterSave(input.movement_type === 'in' ? '入庫完成' : '出庫完成')
       }} />}
-      {!guestMode && productModal && <ProductModal product={productModal === 'new' ? null : productModal} products={products} initialBarcode={productModal === 'new' ? pendingBarcode : ''} close={() => {
+      {!guestMode && productModal && <ProductModal product={productModal === 'new' ? null : productModal} products={products} inventoryLoaded={inventoryLoaded} initialBarcode={productModal === 'new' ? pendingBarcode : ''} close={() => {
         setProductModal(null); setPendingBarcode('')
       }} save={async (input) => {
         if (productModal === 'new') await createProduct(input); else await updateProduct(productModal.id, input)
@@ -1629,7 +1631,9 @@ function MovementTable({ movements, products, readOnly, onDelete }: { movements:
     {movements.length === 0 ? <EmptyRow colSpan={readOnly ? 9 : 10} label="沒有符合條件的出入庫紀錄" /> : movements.map((m) => {
       const p = m.product || products.find((item) => item.id === m.product_id)
       const initialStock = isInitialStockNote(m.notes)
-      return <tr key={m.id}><td><span className={`tag ${m.movement_type}`}>{m.movement_type === 'in' ? '入庫' : '出庫'}</span></td><td className="muted nowrap">{formatDate(m.movement_date)}</td><td className="code">{p?.code}</td><td className="product-name">{p?.name}</td><td className={`number ${m.movement_type === 'in' ? 'green-text' : 'red-text'}`}>{m.movement_type === 'in' ? '+' : '-'}{formatNumber(m.quantity)} <small>{p?.unit}</small></td><td className="number">{m.unit_price ? formatMoney(m.unit_price) : '—'}</td><td className="number muted">{m.unit_price ? formatMoney(m.quantity * m.unit_price) : '—'}</td><td>{m.supplier || '—'}</td><td className="muted note-cell">{initialStock ? INITIAL_STOCK_NOTE : m.notes || '—'}{initialStock && <small className="movement-record-time">{formatTaipeiRecordTime(m.created_at, true)}</small>}</td>{!readOnly && <td><div className="row-actions"><button className="danger-icon" onClick={() => onDelete(m)} aria-label={`刪除 ${formatDate(m.movement_date)} ${p?.name || ''} ${m.movement_type === 'in' ? '入庫' : '出庫'}紀錄`} title="刪除紀錄並重算庫存"><Trash2 /></button></div></td>}</tr>
+      return <tr key={m.id}><td><span className={`tag ${m.movement_type}`}>{m.movement_type === 'in' ? '入庫' : '出庫'}</span></td><td className="muted nowrap">{formatDate(m.movement_date)}</td><td className="code">{p?.code}</td><td className="product-name">{p?.name}</td><td className={`number ${m.movement_type === 'in' ? 'green-text' : 'red-text'}`}>{m.movement_type === 'in' ? '+' : '-'}{formatNumber(m.quantity)} <small>{p?.unit}</small></td><td className="number">{m.unit_price ? formatMoney(m.unit_price) : '—'}</td><td className="number muted">{m.unit_price ? formatMoney(m.quantity * m.unit_price) : '—'}</td><td>{m.supplier || '—'}</td>
+        <td className="muted note-cell"><span>{initialStock ? INITIAL_STOCK_NOTE : m.notes || '—'}{initialStock && <small className="movement-record-time">{formatTaipeiRecordTime(m.created_at, true)}</small>}</span></td>
+        {!readOnly && <td><div className="row-actions"><button className="danger-icon" onClick={() => onDelete(m)} aria-label={`刪除 ${formatDate(m.movement_date)} ${p?.name || ''} ${m.movement_type === 'in' ? '入庫' : '出庫'}紀錄`} title="刪除紀錄並重算庫存"><Trash2 /></button></div></td>}</tr>
     })}
   </tbody></table></div>
 }
@@ -2512,12 +2516,12 @@ function BarcodeScanner(props: {
   </>
 }
 
-function ProductModal({ product, products, initialBarcode = '', close, save }: { product: Product | null; products: Product[]; initialBarcode?: string; close: () => void; save: (input: ProductInput) => Promise<void> }) {
+function ProductModal({ product, products, inventoryLoaded, initialBarcode = '', close, save }: { product: Product | null; products: Product[]; inventoryLoaded: boolean; initialBarcode?: string; close: () => void; save: (input: ProductInput) => Promise<void> }) {
   const [data, setData] = useState<ProductInput>(() => product ? { barcode: product.barcode || '', specification: product.specification, size: product.size, chipbreaker: product.chipbreaker, material: product.material, brand: product.brand, supplier: product.supplier, category: product.category, unit: product.unit, notes: product.notes, initial_quantity: 0, initial_unit_price: 0, purchased_at: product.purchased_at || today() } : { ...blankProduct(), barcode: initialBarcode })
   const [initialQuantityInput, setInitialQuantityInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState('')
-  const [qrPreview, setQrPreview] = useState('')
+  const [qrPreview, setQrPreview] = useState<{ barcode: string; image: string } | null>(null)
   const [qrPreviewError, setQrPreviewError] = useState('')
   const [rescanOpen, setRescanOpen] = useState(false)
   const [regenerateConfirming, setRegenerateConfirming] = useState(false)
@@ -2534,18 +2538,23 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
   const brandOptions = uniqueValues(products, 'brand')
   const supplierOptions = uniqueValues(products, 'supplier')
   const unitOptions = uniqueValues(products, 'unit')
+  const barcode = data.barcode.trim()
+  const normalizedBarcode = barcode.toLowerCase()
+  const barcodeOwner = normalizedBarcode ? products.find((item) => item.id !== product?.id && item.barcode?.trim().toLowerCase() === normalizedBarcode) : undefined
+  const checkingBarcode = !product && Boolean(barcode) && !inventoryLoaded
+  const duplicateBarcode = !product ? barcodeOwner : undefined
+  const previewBarcode = checkingBarcode || duplicateBarcode ? '' : barcode
   useEffect(() => {
     let cancelled = false
-    const barcode = data.barcode.trim()
-    setQrPreview(''); setQrPreviewError('')
-    if (!barcode) return () => { cancelled = true }
-    void createQrCodeDataUrl(barcode).then((image) => {
-      if (!cancelled) setQrPreview(image)
+    setQrPreview(null); setQrPreviewError('')
+    if (!previewBarcode) return
+    void createQrCodeDataUrl(previewBarcode).then((image) => {
+      if (!cancelled) setQrPreview({ barcode: previewBarcode, image })
     }).catch(() => {
       if (!cancelled) setQrPreviewError('QR Code 產生失敗，請重新產生或重新輸入條碼')
     })
     return () => { cancelled = true }
-  }, [data.barcode])
+  }, [previewBarcode])
   const generateBarcode = (currentBarcode: string) => {
     setFormError('')
     try { set('barcode', generateUniqueToolBarcode([...products.map((item) => item.barcode), currentBarcode])) }
@@ -2566,6 +2575,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
   }))
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setFormError('')
+    if (checkingBarcode || duplicateBarcode) return
     if (!product) {
       const missingFields = [
         { label: '廠牌', value: data.brand },
@@ -2583,7 +2593,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
       }
     }
     if (!data.specification.trim()) { setFormError('規格為必填欄位'); return }
-    if (data.barcode.trim() && products.some((item) => item.id !== product?.id && item.barcode?.trim().toLowerCase() === data.barcode.trim().toLowerCase())) { setFormError('這個條碼已綁定其他刀具'); return }
+    if (barcodeOwner) { setFormError('這個條碼已綁定其他刀具'); return }
     if ((data.category === '刀片' || data.category === '鑽銑刀') && !data.size.trim()) { setFormError('此分類需要輸入尺寸'); return }
     if ((data.category === '刀片' || data.category === '鑽銑刀') && !data.material.trim()) { setFormError('此分類需要輸入材質'); return }
     setBusy(true)
@@ -2609,7 +2619,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
     </Modal>
   }
 
-  const hasBarcode = Boolean(data.barcode.trim())
+  const hasBarcode = Boolean(barcode)
   const generateBarcodeLabel = hasBarcode ? '重新產生條碼' : '自動產生條碼'
   return <Modal close={() => { if (!busy) close() }} title={product ? '編輯刀具' : '新增品項'} size={`large product-form-modal ${product ? 'product-edit-modal' : 'product-create-modal'}`}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
@@ -2620,7 +2630,7 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
         <div className="barcode-generator">
           <div className="barcode-generator-entry">
             <div>
-              <div className="barcode-input"><ScanBarcode/><input value={data.barcode} onChange={(event) => set('barcode', event.target.value.trimStart())} placeholder="可掃描、手動輸入或自動產生" autoComplete="off" /></div>
+              <div className="barcode-input"><ScanBarcode/><input value={data.barcode} onChange={(event) => set('barcode', event.target.value.trimStart())} placeholder="可掃描、手動輸入或自動產生" autoComplete="off" aria-invalid={duplicateBarcode ? true : undefined} aria-describedby={duplicateBarcode || checkingBarcode ? 'product-barcode-status' : undefined} /></div>
               {/* {!product && <small className="product-create-field-hint">可掃描、手動輸入或自動產生</small>} */}
             </div>
             <div className="barcode-generator-actions">
@@ -2628,11 +2638,13 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
               {product && <button className="button barcode-rescan-button" type="button" aria-label="重新掃碼" title="重新掃碼" onClick={() => setRescanOpen(true)} disabled={busy}><Camera aria-hidden="true"/></button>}
             </div>
           </div>
-          {hasBarcode && <figure className="product-qr-preview">
-            <div>{qrPreview ? <img src={qrPreview} alt={`條碼 ${data.barcode.trim()} 的 QR Code`}/> : <QrCode aria-hidden="true"/>}</div>
-            <figcaption><strong>QR Code 預覽</strong><span>{data.barcode.trim()}</span><small>QR Code 與條碼號碼使用相同內容</small></figcaption>
+          {checkingBarcode && <p id="product-barcode-status" className="product-create-field-hint" role="status">刀具清單尚未載入，暫時無法確認條碼。</p>}
+          {duplicateBarcode && <p id="product-barcode-status" className="form-error barcode-qr-error" role="alert">這個條碼已綁定其他刀具（{duplicateBarcode.code}）。</p>}
+          {previewBarcode && <figure className="product-qr-preview">
+            <div>{qrPreview?.barcode === previewBarcode ? <img src={qrPreview.image} alt={`條碼 ${previewBarcode} 的 QR Code`}/> : <QrCode aria-hidden="true"/>}</div>
+            <figcaption><strong>QR Code 預覽</strong><span>{previewBarcode}</span><small>QR Code 與條碼號碼使用相同內容</small></figcaption>
           </figure>}
-          {qrPreviewError && <p className="form-error barcode-qr-error">{qrPreviewError}</p>}
+          {previewBarcode && qrPreviewError && <p className="form-error barcode-qr-error">{qrPreviewError}</p>}
         </div>
       </Field>
       <div className="form-grid">

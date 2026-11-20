@@ -2085,6 +2085,7 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 
 .product-form-modal .product-identity-field input { /* 手機與電腦共用｜庫存管理系統 → 新增品項與編輯刀具 → 編號、條碼及品名的輸入框 */
   border-color: var(--product-identity-border-color); /* 手機與電腦共用｜庫存管理系統 → 新增品項與編輯刀具 → 套用自訂輸入框邊框色 */
+  color: #64ff45ea; /* 換成你要的文字色 */
 } /* 手機與電腦共用｜庫存管理系統 → 新增品項與編輯刀具 → 編號、條碼及品名的輸入框 */
 
 .product-form-modal .product-identity-field input:disabled { /* 手機與電腦共用｜庫存管理系統 → 新增品項與編輯刀具 → 不可編輯的編號及品名 */
@@ -6265,18 +6266,24 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
       overflow-wrap: anywhere; /* 手機版｜庫存管理系統 → 出入庫 → 每筆資料列中的文字、數字、單位與狀態內容 → 過長文字的換行方式 */
     } /* 手機版｜庫存管理系統 → 出入庫 → 每筆資料列中的文字、數字、單位與狀態內容 → 結束此區設定 */
 
-  /* 手機版｜庫存管理系統 → 出入庫 →「備註」單行顯示，過長時可左右滑動 */
-  .data-table.movement-table tbody td.note-cell { /* 手機版｜庫存管理系統 → 出入庫 → 「備註」單行顯示，過長時可左右滑動 → 選取此元件 */
-      white-space: nowrap; /* 手機版｜庫存管理系統 → 出入庫 → 「備註」單行顯示，過長時可左右滑動 → 文字維持單行 */
-      overflow-x: auto; /* 手機版｜庫存管理系統 → 出入庫 → 「備註」單行顯示，過長時可左右滑動 → 橫向超出時的處理 */
-      overflow-wrap: normal; /* 手機版｜庫存管理系統 → 出入庫 → 「備註」單行顯示，過長時可左右滑動 → 過長文字的換行方式 */
-    } /* 手機版｜庫存管理系統 → 出入庫 → 「備註」單行顯示，過長時可左右滑動 → 結束此區設定 */
+  /* 手機版｜庫存管理系統 → 出入庫 → 資料卡「備註」標題靠左，內容換行時對齊第一行 */
+  .data-table.movement-table tbody td.note-cell {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: start;
+    gap: 0;
+  }
+
+  .movement-table .note-cell > span {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
 
   /* 手機版｜庫存管理系統 → 出入庫 → 期初庫存的日期時間接在備註後方 */
   .movement-table .movement-record-time { /* 手機版｜庫存管理系統 → 出入庫 → 期初庫存的日期時間接在備註後方 → 選取此元件 */
       display: inline; /* 手機版｜庫存管理系統 → 出入庫 → 期初庫存的日期時間接在備註後方 → 顯示與排版方式 */
       margin-inline-start: 8px; /* 手機版｜庫存管理系統 → 出入庫 → 期初庫存的日期時間接在備註後方 → 行內起點外距（一般為左側） */
-      white-space: nowrap; /* 手機版｜庫存管理系統 → 出入庫 → 期初庫存的日期時間接在備註後方 → 文字維持單行 */
+      white-space: normal; /* 手機版｜庫存管理系統 → 出入庫 → 期初庫存的日期時間接在備註後方 → 空間不足時可換行 */
     } /* 手機版｜庫存管理系統 → 出入庫 → 期初庫存的日期時間接在備註後方 → 結束此區設定 */
 
   /* 庫存管理系統－出入庫｜每個欄位左側的欄位名稱 手機版出入庫標題 */
@@ -8230,7 +8237,7 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 /* 庫存管理系統－條碼掃描與產生｜「條碼（可掃描、手動輸入或自動產生）」的條碼號碼輸入框 */
 .barcode-input > input { /* 手機與電腦共用｜庫存管理系統－條碼掃描與產生 → 「條碼（可掃描、手動輸入或自動產生）」的條碼號碼輸入框 → 選取此元件 */
   width: 100%; /* 手機與電腦共用｜庫存管理系統－條碼掃描與產生 → 「條碼（可掃描、手動輸入或自動產生）」的條碼號碼輸入框 → 寬度 */
-  padding-left: 45px !important; /* 手機與電腦共用｜庫存管理系統－條碼掃描與產生 → 「條碼（可掃描、手動輸入或自動產生）」的條碼號碼輸入框 → 左內距 */
+  padding-left: var(--barcode-input-left-padding, 45px) !important; /* 手機與電腦共用｜庫存管理系統－條碼掃描與產生 → 「條碼（可掃描、手動輸入或自動產生）」的條碼號碼輸入框 → 左內距 */
   font-family: var(--font-family-monospace); /* 手機與電腦共用｜庫存管理系統－條碼掃描與產生 → 「條碼（可掃描、手動輸入或自動產生）」的條碼號碼輸入框 → 字型 */
 } /* 手機與電腦共用｜庫存管理系統－條碼掃描與產生 → 「條碼（可掃描、手動輸入或自動產生）」的條碼號碼輸入框 → 結束此區設定 */
 
@@ -8931,10 +8938,31 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 } /* 手機與電腦共用｜庫存管理系統 → 刀具資料 → 品名下方條碼號碼 → 結束此區設定 */
 
 @media (max-width: 620px) { /* 手機版｜庫存管理系統－條碼掃描與產生 → 開始此條件的設定 */
-  /* 庫存管理系統－條碼掃描與產生｜條碼號碼輸入框與「自動產生條碼／重新產生條碼」按鈕的上下排列 */
-  .barcode-generator-entry { /* 手機版｜庫存管理系統－條碼掃描與產生 → 條碼號碼輸入框與「自動產生條碼／重新產生條碼」按鈕的上下排列 → 選取此元件 */
-      grid-template-columns: 1fr; /* 手機版｜庫存管理系統－條碼掃描與產生 → 條碼號碼輸入框與「自動產生條碼／重新產生條碼」按鈕的上下排列 → 網格欄的數量及寬度 */
-    } /* 手機版｜庫存管理系統－條碼掃描與產生 → 條碼號碼輸入框與「自動產生條碼／重新產生條碼」按鈕的上下排列 → 結束此區設定 */
+  /* 手機版｜庫存管理系統 → 新增品項與編輯刀具 → 條碼輸入框右側的圖示按鈕間距 */
+  .barcode-generator-entry,
+  .barcode-generator-actions {
+    gap: 6px;
+  }
+
+  /* 手機版｜庫存管理系統 → 新增品項與編輯刀具 → 條碼輸入框右側操作圖示寬度 */
+  .barcode-generator-actions > .button {
+    flex-basis: 40px;
+    width: 40px;
+  }
+
+  /* 手機版｜庫存管理系統 → 新增品項與編輯刀具 → 條碼輸入框內圖示與文字的留白 */
+  .barcode-input {
+    --barcode-input-left-padding: 28px;
+  }
+
+  .barcode-input > svg {
+    left: 8px;
+    width: 14px;
+  }
+
+  .barcode-input > input {
+    min-width: 0;
+  }
 
   /* 庫存管理系統－條碼掃描與產生｜主要操作按鈕排列區內的按鈕 */
   .title-actions .scan-button { /* 手機版｜庫存管理系統 → 掃描刀具條碼 → 主要操作按鈕排列區內的按鈕 → 選取此元件 */
