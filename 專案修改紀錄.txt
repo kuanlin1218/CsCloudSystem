@@ -1852,6 +1852,24 @@ GitHub Summary：微調金屬烤漆浮雕圖示的高光。
 SQL：不需要執行。
 GitHub Summary：更新手機與電腦安裝用的金屬浮雕圖示。
 
+2026-11-20
+修改內容：將登入頁圖示改成透明底、無英文文字的水平尾端金屬浮雕標誌，更新圖檔尺寸與網址版本。
+修改檔案：public/icons/login-logo.png、src/App.tsx、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：將登入頁 Logo 換成透明底金屬浮雕。
+
+2026-11-20
+修改內容：參考原始公司標誌比例修正紅橘浮雕，移除尾段溢出的亮邊，重出所有安裝圖示及 1010 × 845 高解析透明登入圖，更新圖示網址版本。
+修改檔案：public/icons/metal-enamel-logo.png、public/icons/apple-touch-icon.png、public/icons/icon-192.png、public/icons/icon-512.png、public/icons/metal-enamel-windows.ico、public/icons/login-logo.png、index.html、public/manifest.webmanifest、src/App.tsx、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：修正浮雕圖示輪廓與比例並提高登入圖解析度。
+
+2026-11-20
+修改內容：直接擷取原公司 Logo 的橘色旋紋輪廓等比例套用金屬浮雕，重出手機、電腦與高解析登入圖示。
+修改檔案：public/icons/metal-enamel-logo.png、public/icons/apple-touch-icon.png、public/icons/icon-192.png、public/icons/icon-512.png、public/icons/metal-enamel-windows.ico、public/icons/login-logo.png、index.html、public/manifest.webmanifest、src/App.tsx、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：以公司原圖修正浮雕圖示的橘色旋紋比例。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
