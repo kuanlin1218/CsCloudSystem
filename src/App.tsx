@@ -1970,8 +1970,10 @@ function ProductPicker({ products, value, onChange, inline = false, disabled = f
   </div>
 }
 
-function TotalPreview({ quantity, unitPrice, total }: { quantity: number; unitPrice: number; total: number }) {
-  return <div className="total-preview"><span>採購總價</span><strong>${formatMoney(total)}</strong><small>{formatNumber(quantity)} × ${formatMoney(unitPrice)}</small></div>
+function TotalPreview({ quantity, unitPrice, total, alignWithFields = false }: { quantity: number; unitPrice: number; total: number; alignWithFields?: boolean }) {
+  const values = <><strong>${formatMoney(total)}</strong><small>{formatNumber(quantity)} × ${formatMoney(unitPrice)}</small></>
+  if (alignWithFields) return <div className="field"><span>採購總價</span><div className="total-preview">{values}</div></div>
+  return <div className="total-preview"><span>採購總價</span>{values}</div>
 }
 
 // 設定碼取自 XB-6208RB 說明書。頁面一次只顯示一張，避免掃到相鄰選項。
@@ -2468,6 +2470,7 @@ function BarcodeScannerModal(props: {
 
 function ProductModal({ product, products, initialBarcode = '', close, save }: { product: Product | null; products: Product[]; initialBarcode?: string; close: () => void; save: (input: ProductInput) => Promise<void> }) {
   const [data, setData] = useState<ProductInput>(() => product ? { barcode: product.barcode || '', specification: product.specification, size: product.size, chipbreaker: product.chipbreaker, material: product.material, brand: product.brand, supplier: product.supplier, category: product.category, unit: product.unit, notes: product.notes, initial_quantity: 0, initial_unit_price: 0, purchased_at: product.purchased_at || today() } : { ...blankProduct(), barcode: initialBarcode })
+  const [initialQuantityInput, setInitialQuantityInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState('')
   const [qrPreview, setQrPreview] = useState('')
@@ -2475,7 +2478,8 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
   const [rescanOpen, setRescanOpen] = useState(false)
   const set = <K extends keyof ProductInput>(key: K, value: ProductInput[K]) => setData((old) => ({ ...old, [key]: value }))
   const name = composeProductName(data.category, data.specification, data.size, data.chipbreaker, data.material)
-  const initialTotalPrice = data.initial_quantity * data.initial_unit_price
+  const initialQuantity = Number(initialQuantityInput)
+  const initialTotalPrice = initialQuantity * data.initial_unit_price
   const categoryProducts = products.filter((item) => item.category === data.category)
   const uniqueValues = (items: Product[], key: 'specification' | 'size' | 'chipbreaker' | 'material' | 'brand' | 'supplier' | 'unit') => Array.from(new Set(items.map((item) => item[key].trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hant', { numeric: true }))
   const specificationOptions = uniqueValues(categoryProducts, 'specification')
@@ -2514,12 +2518,28 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
   }))
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setFormError('')
+    if (!product) {
+      const missingFields = [
+        { label: '廠牌', value: data.brand },
+        { label: '供應商', value: data.supplier },
+        { label: '單位', value: data.unit },
+        { label: '購入日期', value: data.purchased_at },
+      ].filter(({ value }) => !value.trim())
+      if (missingFields.length) {
+        setFormError(`請填寫${missingFields.map(({ label }) => label).join('、')}`)
+        return
+      }
+      if (!initialQuantityInput || !Number.isInteger(initialQuantity) || initialQuantity < 0) {
+        setFormError('請輸入 0 或大於 0 的整數數量')
+        return
+      }
+    }
     if (!data.specification.trim()) { setFormError('規格為必填欄位'); return }
     if (data.barcode.trim() && products.some((item) => item.id !== product?.id && item.barcode?.trim().toLowerCase() === data.barcode.trim().toLowerCase())) { setFormError('這個條碼已綁定其他刀具'); return }
     if ((data.category === '刀片' || data.category === '鑽銑刀') && !data.size.trim()) { setFormError('此分類需要輸入尺寸'); return }
     if ((data.category === '刀片' || data.category === '鑽銑刀') && !data.material.trim()) { setFormError('此分類需要輸入材質'); return }
     setBusy(true)
-    try { await save(data) } catch (err) { setFormError(messageFor(err)); setBusy(false) }
+    try { await save(product ? data : { ...data, initial_quantity: initialQuantity }) } catch (err) { setFormError(messageFor(err)); setBusy(false) }
   }
   if (product && rescanOpen) return <BarcodeScannerModal products={products} editingProductId={product.id} initialBarcode="" close={() => setRescanOpen(false)} applyBarcode={(barcode) => {
     set('barcode', barcode)
@@ -2527,16 +2547,18 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
     setRescanOpen(false)
   }} />
 
-  return <Modal close={() => { if (!busy) close() }} title={product ? '編輯刀具' : '新增品項'} size={product ? 'large' : 'large product-create-modal'}>
+  return <Modal close={() => { if (!busy) close() }} title={product ? '編輯刀具' : '新增品項'} size={`large product-form-modal ${product ? 'product-edit-modal' : 'product-create-modal'}`}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       <div className="form-grid">
-        <Field label="編號"><input disabled value={product?.code || '儲存後自動產生'} /></Field>
-        <Field label="分類 *"><select required value={data.category} onChange={(e) => { changeCategory(e.target.value as ProductCategory); e.currentTarget.blur() }}>{PRODUCT_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
+        <Field label="編號" className="product-identity-field"><input disabled value={product?.code || '儲存後自動產生'} /></Field>
       </div>
-      <Field label="條碼（可掃描、手動輸入或自動產生）" wide>
+      <Field label="條碼" className="product-identity-field" wide>
         <div className="barcode-generator">
           <div className="barcode-generator-entry">
-            <div className="barcode-input"><ScanBarcode/><input value={data.barcode} onChange={(event) => set('barcode', event.target.value.trimStart())} placeholder="尚未綁定條碼，可手動輸入" autoComplete="off" /></div>
+            <div>
+              <div className="barcode-input"><ScanBarcode/><input value={data.barcode} onChange={(event) => set('barcode', event.target.value.trimStart())} placeholder="可掃描、手動輸入或自動產生" autoComplete="off" /></div>
+              {/* {!product && <small className="product-create-field-hint">可掃描、手動輸入或自動產生</small>} */}
+            </div>
             <div className="barcode-generator-actions">
               <button className="button barcode-generate-button" type="button" onClick={generateBarcode} disabled={busy}><WandSparkles/>{data.barcode.trim() ? '重新產生條碼' : '自動產生條碼'}</button>
               {product && <button className="button barcode-rescan-button" type="button" onClick={() => setRescanOpen(true)} disabled={busy}><Camera/>重新掃碼</button>}
@@ -2549,19 +2571,29 @@ function ProductModal({ product, products, initialBarcode = '', close, save }: {
           {qrPreviewError && <p className="form-error barcode-qr-error">{qrPreviewError}</p>}
         </div>
       </Field>
-      <Field label="品名（自動組合）" wide><input className="composed-name" disabled value={name || (data.category === '刀片' ? '規格-尺寸-斷屑槽-材質' : data.category === '鑽銑刀' ? '規格-尺寸-材質' : '規格')} /></Field>
+      <div className="form-grid">
+        <Field label="品名" className="product-identity-field"><input className="composed-name" disabled value={name || '自動組合'} /></Field>
+        <Field label="分類"><select required value={data.category} onChange={(e) => { changeCategory(e.target.value as ProductCategory); e.currentTarget.blur() }}>{PRODUCT_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
+      </div>
       <div className="form-grid dynamic-fields">
-        <Field label="規格 *"><EditableCombo options={specificationOptions} required value={data.specification} onChange={(value) => set('specification', value.toUpperCase())} placeholder={data.category === '刀片' ? 'ex. VNMG' : data.category === '鑽銑刀' ? 'ex. EMM4100' : '選擇或輸入新規格'}/></Field>
-        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="尺寸 *"><EditableCombo options={sizeOptions} required value={data.size} onChange={(value) => set('size', value.toUpperCase())} placeholder={data.category === '刀片' ? 'ex. 160404' : '輸入切削直徑值'}/></Field>}
-        {data.category === '刀片' && <Field label="斷屑槽（無則留空）"><EditableCombo options={chipbreakerOptions} value={data.chipbreaker} onChange={(value) => set('chipbreaker', value.toUpperCase())} placeholder="ex. MS"/></Field>}
-        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="材質 *"><EditableCombo options={materialOptions} required value={data.material} onChange={(value) => set('material', value.toUpperCase())} placeholder={data.category === '刀片' ? 'ex. PR1535' : 'ex. 鎢鋼'}/></Field>}
+        <Field label="規格"><EditableCombo options={specificationOptions} required value={data.specification} onChange={(value) => set('specification', value.toUpperCase())} placeholder={data.category === '刀片' ? 'ex. VNMG' : data.category === '鑽銑刀' ? 'ex. EMM4100' : '選擇或輸入新規格'}/></Field>
+        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="尺寸"><EditableCombo options={sizeOptions} required value={data.size} onChange={(value) => set('size', value.toUpperCase())} placeholder={data.category === '刀片' ? 'ex. 160404' : '輸入切削直徑值'}/></Field>}
+        {data.category === '刀片' && <Field label="斷屑槽"><EditableCombo options={chipbreakerOptions} value={data.chipbreaker} onChange={(value) => set('chipbreaker', value.toUpperCase())} placeholder="ex. MS (無則留空)"/></Field>}
+        {(data.category === '刀片' || data.category === '鑽銑刀') && <Field label="材質"><EditableCombo options={materialOptions} required value={data.material} onChange={(value) => set('material', value.toUpperCase())} placeholder={data.category === '刀片' ? 'ex. PR1535' : 'ex. 鎢鋼'}/></Field>}
       </div>
       <div className="form-grid common-fields">
-        <Field label="廠牌"><EditableCombo options={brandOptions} value={data.brand} onChange={(value) => set('brand', value)} placeholder="選擇或輸入新廠牌"/></Field>
-        <Field label="供應商"><EditableCombo options={supplierOptions} value={data.supplier} onChange={(value) => set('supplier', value)} placeholder="選擇或輸入新供應商"/></Field>
+        <Field label="廠牌"><EditableCombo options={brandOptions} required={!product} value={data.brand} onChange={(value) => set('brand', value)} placeholder="選擇或輸入新廠牌"/></Field>
+        <Field label="供應商"><EditableCombo options={supplierOptions} required={!product} value={data.supplier} onChange={(value) => set('supplier', value)} placeholder="選擇或輸入新供應商"/></Field>
         <Field label="單位"><EditableCombo options={unitOptions} required value={data.unit} onChange={(value) => set('unit', value)} placeholder="片"/></Field>
       </div>
-      {!product && <fieldset className="initial-stock"><legend>目前庫存（可只填數量，單價找不到時可留空）</legend><div className="form-grid three"><Field label="數量"><input min="0" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_quantity || ''} onChange={(e) => set('initial_quantity', Number(e.target.value))}/></Field><Field label="單價"><input min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_unit_price || ''} onChange={(e) => set('initial_unit_price', Number(e.target.value))} placeholder="可留空"/></Field><Field label="購入日期"><input type="date" value={data.purchased_at} onChange={(e) => set('purchased_at', e.target.value)}/></Field></div><TotalPreview quantity={data.initial_quantity} unitPrice={data.initial_unit_price} total={initialTotalPrice}/></fieldset>}
+      {!product && <fieldset className="initial-stock" aria-label="目前庫存">
+        <div className="form-grid three">
+          <Field label="數量"><input required min="0" step="1" type="number" inputMode="numeric" pattern="[0-9]*" value={initialQuantityInput} onChange={(e) => setInitialQuantityInput(e.target.value)}/></Field>
+          <Field label="單價" ><input min="0" step="0.01" type="number" inputMode="numeric" pattern="[0-9]*" value={data.initial_unit_price || ''} onChange={(e) => set('initial_unit_price', Number(e.target.value))} placeholder="可留空"/></Field>
+          <Field label="購入日期"><input required type="date" value={data.purchased_at} onChange={(e) => set('purchased_at', e.target.value)}/></Field>
+        </div>
+        <TotalPreview quantity={initialQuantity} unitPrice={data.initial_unit_price} total={initialTotalPrice} alignWithFields/>
+      </fieldset>}
       <Field label="備註" wide><textarea value={data.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
       {formError && <p className="form-error">{formError}</p>}
       <button disabled={busy} className="button modal-submit primary">{busy ? '儲存中…' : '儲存'}</button>
@@ -2708,7 +2740,13 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
   </Modal>
 }
 
-function Field({ label, wide, children }: { label: string; wide?: boolean; children: ReactNode }) { return <label className={`field ${wide ? 'wide' : ''}`}><span>{label}</span>{children}</label> }
+function Field({ label, wide, hint, className, children }: { label: string; wide?: boolean; hint?: string; className?: string; children: ReactNode }) {
+  return <label className={`field${wide ? ' wide' : ''}${className ? ` ${className}` : ''}`}>
+    <span>{label}</span>
+    {children}
+    {hint && <small className="product-create-field-hint">{hint}</small>}
+  </label>
+}
 
 function TableScrollControls() {
   const [isScrolling, setIsScrolling] = useState(false)
