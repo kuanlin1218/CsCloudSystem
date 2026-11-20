@@ -1823,9 +1823,34 @@ GitHub Summary：縮短編輯加工紀錄表單並修正手機日期欄寬度。
 
 2026-11-19
 修改內容：全站共用 iPhone 螢幕安全區，調整登入、功能選擇、操作紀錄、加工／庫存管理導覽、彈窗及浮動按鈕的位置，讓可讀內容和操作區避開動態島及底部手勢區。
+實機驗證：使用者於 2026-11-19 回報 iPhone 實機確認全站安全區調整 OK。
 修改檔案：src/styles.css、工作交接紀錄.md、專案修改紀錄.txt。
 SQL：不需要執行。
 GitHub Summary：統一全站 iPhone 安全區，讓頁面與操作元件避開動態島。
+
+2026-11-20
+修改內容：新增紅橘金屬烤漆浮雕圖示，提供高解析 PNG 與多尺寸 Windows ICO，現行圖示設定沿用原值。
+修改檔案：public/icons/metal-enamel-logo.png、public/icons/metal-enamel-windows.ico、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：新增 3D 金屬烤漆浮雕 Logo 與 Windows 圖示。
+
+2026-11-20
+修改內容：依使用者提供的圖樣更新備選金屬浮雕圖示，保留銀色拉絲背景、紅橘浮雕與公司英文名，移除英文名下方的波浪線。
+修改檔案：public/icons/metal-enamel-logo.png、public/icons/metal-enamel-windows.ico、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：更新金屬浮雕圖示並移除公司名下方波浪線。
+
+2026-11-20
+修改內容：稍微提亮備選圖示的紅橘浮雕高光，並重新輸出 Windows ICO。
+修改檔案：public/icons/metal-enamel-logo.png、public/icons/metal-enamel-windows.ico、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：微調金屬烤漆浮雕圖示的高光。
+
+2026-11-20
+修改內容：以使用者確認的水平尾端浮雕 Logo 輸出 iPhone 主畫面與 PWA 安裝 PNG，另製作透明圓角 Windows ICO，並更新安裝圖示網址版本。
+修改檔案：public/icons/metal-enamel-logo.png、public/icons/apple-touch-icon.png、public/icons/icon-192.png、public/icons/icon-512.png、public/icons/metal-enamel-windows.ico、index.html、public/manifest.webmanifest、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：更新手機與電腦安裝用的金屬浮雕圖示。
 
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
