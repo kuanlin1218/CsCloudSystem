@@ -142,7 +142,7 @@ const GUEST_SESSION_KEY = 'cnc-cloud-guest-mode'
 const INITIAL_STOCK_NOTE = '建立時初庫存'
 const isInitialStockNote = (value: string) => value === INITIAL_STOCK_NOTE || value === '建立商品時的期初庫存'
 
-type StockModalState = { type: MovementType; productId?: string }
+type StockModalState = { type: MovementType; productId?: string; scannerReturnBarcode?: string }
 type AdminDeleteRequest = {
   title: string
   description: string
@@ -616,11 +616,14 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
 
       {showTableScrollControls && <TableScrollControls key={activePage} />}
 
-      {!guestMode && stockModal && <StockModal type={stockModal.type} initialProductId={stockModal.productId} products={products} close={() => setStockModal(null)} switchType={(type) => setStockModal((current) => current ? { ...current, type } : null)} save={async (input) => {
+      {!guestMode && stockModal && <StockModal type={stockModal.type} initialProductId={stockModal.productId} products={products} close={() => {
+        if (stockModal.scannerReturnBarcode) setScannerBarcode(stockModal.scannerReturnBarcode)
+        setStockModal(null)
+      }} switchType={(type) => setStockModal((current) => current ? { ...current, type } : null)} save={async (input) => {
         await registerMovement(input); setStockModal(null); await afterSave(input.movement_type === 'in' ? '入庫完成' : '出庫完成')
       }} />}
       {!guestMode && productModal && <ProductModal product={productModal === 'new' ? null : productModal} products={products} initialBarcode={productModal === 'new' ? pendingBarcode : ''} close={() => {
-        if (productModal === 'new' && pendingBarcode) setScannerBarcode(pendingBarcode)
+        if (pendingBarcode) setScannerBarcode(pendingBarcode)
         setProductModal(null); setPendingBarcode('')
       }} save={async (input) => {
         if (productModal === 'new') await createProduct(input); else await updateProduct(productModal.id, input)
@@ -637,10 +640,10 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
         setScannerBarcode(null); setPendingBarcode(barcode); setProductModal('new')
       }} linkBarcode={async (productId, barcode, expectedBarcode) => {
         await updateProductBarcode(productId, barcode, expectedBarcode); await afterSave('條碼已綁定刀具')
-      }} openStock={(type, productId) => {
-        setScannerBarcode(null); setStockModal({ type, productId })
-      }} adjustStocktake={adjustStocktake} editProduct={(product) => {
-        setScannerBarcode(null); setProductModal(product)
+      }} openStock={(type, productId, barcode) => {
+        setScannerBarcode(null); setStockModal({ type, productId, scannerReturnBarcode: barcode })
+      }} adjustStocktake={adjustStocktake} editProduct={(product, barcode) => {
+        setScannerBarcode(null); setPendingBarcode(barcode); setProductModal(product)
       }} />}
       {priceHistoryProduct && <PriceHistoryModal product={priceHistoryProduct} movements={movements} close={() => setPriceHistoryProduct(null)} />}
       {!guestMode && productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={(productionOptionModal === 'product' ? productionEntryProductCodes : productionMachines)} close={() => setProductionOptionModal(null)} save={async (value) => {
@@ -2039,9 +2042,9 @@ function BarcodeScannerModal(props: {
 } | {
   createWithBarcode: (barcode: string) => void
   linkBarcode: (productId: string, barcode: string, expectedBarcode: string) => Promise<void>
-  openStock: (type: MovementType, productId: string) => void
+  openStock: (type: MovementType, productId: string, barcode: string) => void
   adjustStocktake: (product: Product, actualQuantity: number, notes: string) => Promise<void>
-  editProduct: (product: Product) => void
+  editProduct: (product: Product, barcode: string) => void
 })) {
   const { products, initialBarcode, close } = props
   const lookup = 'applyBarcode' in props ? null : props
@@ -2381,7 +2384,7 @@ function BarcodeScannerModal(props: {
       </div>
       <form onSubmit={submitScanStocktake}>
         <div className="form-grid barcode-stocktake-fields">
-          <Field label={`實際數量（${stocktakeProduct.unit}）`}><input type="text" inputMode="numeric" required disabled={stocktakeSaving} value={stocktake.quantity} onChange={(event) => { setStocktake({ ...stocktake, quantity: event.target.value }); setError('') }}/></Field>
+          <Field label={`實際數量`}><input type="text" inputMode="numeric" required disabled={stocktakeSaving} value={stocktake.quantity} onChange={(event) => { setStocktake({ ...stocktake, quantity: event.target.value }); setError('') }}/></Field>
           <Field label="盤點備註"><input  disabled={stocktakeSaving} value={stocktake.notes} onChange={(event) => setStocktake({ ...stocktake, notes: event.target.value })}/></Field>
         </div>
         {error && <div className="form-error modal-tool-error" role="alert">{error}</div>}
@@ -2456,10 +2459,10 @@ function BarcodeScannerModal(props: {
           <p>目前庫存 <b>{formatNumber(matchedProduct.stock_quantity)} {matchedProduct.unit}</b></p>
         </div>
         <div className="barcode-result-actions">
-          <button className="button inbound" type="button" onClick={() => props.openStock('in', matchedProduct.id)}><ArrowDownToLine/>入庫</button>
-          <button className="button outbound" type="button" onClick={() => props.openStock('out', matchedProduct.id)}><ArrowUpFromLine/>出庫</button>
+          <button className="button inbound" type="button" onClick={() => props.openStock('in', matchedProduct.id, barcode)}><ArrowDownToLine/>入庫</button>
+          <button className="button outbound" type="button" onClick={() => props.openStock('out', matchedProduct.id, barcode)}><ArrowUpFromLine/>出庫</button>
           <button className="button stocktake-barcode-action" type="button" onClick={() => { setError(''); setStocktake({ product: matchedProduct, quantity: '', notes: '' }) }}><ClipboardCheck/>盤點</button>
-          <button className="button edit-barcode-action" type="button" onClick={() => props.editProduct(matchedProduct)}><Pencil/>編輯刀具</button>
+          <button className="button edit-barcode-action" type="button" onClick={() => props.editProduct(matchedProduct, barcode)}><Pencil/>編輯刀具</button>
         </div>
       </> : <>
         <div className="barcode-unmatched-message"><ScanBarcode/><div><strong>尚未綁定任何刀具</strong><span>可以建立新刀具，或從現有刀具中選擇一筆綁定。</span></div></div>
