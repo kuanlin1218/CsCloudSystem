@@ -2056,6 +2056,12 @@ GitHub Summary：檢查新增品項的重複條碼並調整手機版按鈕位置
 SQL：不需要執行。
 GitHub Summary：讓手機出入庫備註換行並對齊刀具表單的條碼欄。
 
+2026-11-20
+修改內容：新增品項及編輯刀具的條碼輸入框左側圖示改為 ScanLine，沿用既有配色與尺寸。
+修改檔案：src/App.tsx、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：將刀具表單的條碼輸入框圖示換成 ScanLine。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

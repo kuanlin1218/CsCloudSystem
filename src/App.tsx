@@ -4,7 +4,7 @@ import {
   ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpFromLine, Boxes, CalendarDays, ChevronDown, ChevronUp,
   Calculator, Camera, Clock3, ClipboardCheck, ClipboardList, Database, Download, History, Home, LayoutGrid,
   FileSpreadsheet, FileUp, FlaskConical, ListPlus, LockKeyhole, LogOut, Menu, Pencil, Plus, QrCode, RefreshCw, Save, Search, ShieldCheck, Trash2, Triangle, UserRound, WandSparkles, Wrench, X,
-  Barcode,ScanBarcode,Factory,LayoutDashboard,Layers,DatabaseBackup,Combine,ChartColumnBig,CalendarClock,LaptopMinimal
+  Barcode,ScanBarcode,ScanLine,Factory,LayoutDashboard,Layers,DatabaseBackup,Combine,ChartColumnBig,CalendarClock,LaptopMinimal
 } from 'lucide-react'
 import { dataStorage, isDemoMode, isLocalDataMode, isTestMode, supabase, TEST_MODE_KEY } from './lib/supabase'
 import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, registerOwnerPasskey, signInWithPasskey, supportsPasskeys, verifyOwnerPassword } from './lib/auth'
@@ -2630,7 +2630,7 @@ function ProductModal({ product, products, inventoryLoaded, initialBarcode = '',
         <div className="barcode-generator">
           <div className="barcode-generator-entry">
             <div>
-              <div className="barcode-input"><ScanBarcode/><input value={data.barcode} onChange={(event) => set('barcode', event.target.value.trimStart())} placeholder="可掃描、手動輸入或自動產生" autoComplete="off" aria-invalid={duplicateBarcode ? true : undefined} aria-describedby={duplicateBarcode || checkingBarcode ? 'product-barcode-status' : undefined} /></div>
+              <div className="barcode-input"><ScanLine aria-hidden="true"/><input value={data.barcode} onChange={(event) => set('barcode', event.target.value.trimStart())} placeholder="掃描/手動輸入/自動產生" autoComplete="off" aria-invalid={duplicateBarcode ? true : undefined} aria-describedby={duplicateBarcode || checkingBarcode ? 'product-barcode-status' : undefined} /></div>
               {/* {!product && <small className="product-create-field-hint">可掃描、手動輸入或自動產生</small>} */}
             </div>
             <div className="barcode-generator-actions">
