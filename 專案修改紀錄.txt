@@ -2068,6 +2068,24 @@ GitHub Summary：將刀具表單的條碼輸入框圖示換成 ScanLine。
 SQL：不需要執行。
 GitHub Summary：修正手機版訂單完工預估的日期欄位溢出。
 
+2026-11-24
+修改內容：訂單完工預估可從單一產品的加工 Excel 報表讀取日期、機台和數量，在當前頁面作為產能樣本。剩餘數量照常使用系統加工紀錄，樣本不寫入雲端。
+修改檔案：src/App.tsx、src/lib/forecastProductionXlsx.ts、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：讓訂單完工預估可在本機使用加工 Excel 產能樣本。
+
+2026-11-24
+修改內容：移除訂單完工預估的 Excel 產能樣本入口、樣式與讀取程式。歷史產能依據使用系統全部加工紀錄或指定日期區間。
+修改檔案：src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。刪除 src/lib/forecastProductionXlsx.ts。
+SQL：不需要執行。
+GitHub Summary：移除訂單完工預估的加工 Excel 產能樣本功能。
+
+2026-11-24
+修改內容：將管理產品編號改為訂單管理，新增訂單數量、交期及完工日期顯示。加工數量登記可勾選訂單完成並儲存完工日期。完工預估帶入訂單設定，完整 Excel 備份及還原包含訂單欄位。
+修改檔案：src/App.tsx、src/styles.css、src/types.ts、src/lib/repository.ts、src/lib/format.ts、src/lib/adminData.ts、src/lib/adminDataWorkbook.ts、supabase/enable-production-orders.sql、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：需要執行 supabase/enable-production-orders.sql，建立訂單欄位、完工登記交易及備份／還原支援。
+GitHub Summary：新增訂單數量、交期與加工完工登記。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

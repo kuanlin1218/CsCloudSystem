@@ -42,6 +42,9 @@ export interface AdminProductionRow {
 export interface AdminOptionRow {
   option_type: 'product' | 'machine'
   value: string
+  order_quantity?: number | null
+  due_date?: string | null
+  completed_on?: string | null
 }
 
 export interface AdminDataPayload {

@@ -4,6 +4,10 @@ export const today = () => {
   return new Date(now.getTime() - offset * 60_000).toISOString().slice(0, 10)
 }
 
+export const todayInTaipei = () => new Intl.DateTimeFormat('sv-SE', {
+  timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+}).format(new Date())
+
 export const formatDate = (value: string) => value ? value.replaceAll('-', '.') : '—'
 export const formatMoney = (value: number) => new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(value)
 export const formatNumber = (value: number) => new Intl.NumberFormat('zh-TW').format(value)

@@ -1721,6 +1721,8 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   /* 手機版｜庫存日期篩選、出入庫與新增刀具，以及編輯加工紀錄和訂單完工預估的日期欄位：
      關閉 iPhone 原生欄位會撐開寬度的外觀限制，強制日期框跟隨父層縮放。 */
   .production-edit-modal input[type="date"], /* 手機版｜加工數量查詢 → 編輯加工紀錄 → 日期輸入框 */
+  .production-order-modal input[type="date"], /* 手機版｜基礎資料設定 → 訂單管理 → 交期 */
+  #production-entry-completed-on, /* 手機版｜加工數量登記 → 訂單完成 → 完工日期 */
   .order-forecast .forecast-setting > input[type="date"], /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史開始日期、歷史結束日期及訂單交期 */
   .inventory-shell input[type="date"] { /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 選取此元件 */
       display: block; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 顯示與排版方式 */
@@ -1737,6 +1739,8 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   /* 手機版｜庫存管理系統、編輯加工紀錄及訂單完工預估的日期輸入框內文字：
      讓 Safari／Chrome 使用的 iOS 日期文字區可以縮小，不再撐開輸入框。 */
   .production-edit-modal input[type="date"]::-webkit-date-and-time-value, /* 手機版｜加工數量查詢 → 編輯加工紀錄 → 日期輸入框內的文字 */
+  .production-order-modal input[type="date"]::-webkit-date-and-time-value, /* 手機版｜訂單管理 → 交期欄內文字 */
+  #production-entry-completed-on::-webkit-date-and-time-value, /* 手機版｜加工數量登記 → 完工日期欄內文字 */
   .order-forecast .forecast-setting > input[type="date"]::-webkit-date-and-time-value, /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史開始日期、歷史結束日期及訂單交期的欄內文字 */
   .inventory-shell input[type="date"]::-webkit-date-and-time-value { /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 選取此元件 */
       width: 100%; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 寬度 */
@@ -3075,6 +3079,27 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   box-shadow: 0 15px 45px rgba(0,0,0,.18); /* 手機與電腦共用｜加工管理系統 → 主要表單或查詢內容卡片 → 外框陰影 */
 } /* 手機與電腦共用｜加工管理系統 → 主要表單或查詢內容卡片 → 結束此區設定 */
 
+/* 加工管理系統 → 加工數量登記 →「訂單完成」核取方塊 */
+.production-completion-check {
+  display: flex; /* 核取方塊與文字並排 */
+  align-items: center; /* 核取方塊與文字垂直對齊 */
+  gap: 10px; /* 核取方塊與文字的間距 */
+  margin-bottom: 13px; /* 與完工日期欄或送出按鈕的距離 */
+  min-height: 44px; /* 提供手機可點按的標籤高度 */
+  color: #dce5e9; /*「訂單完成」文字顏色 */
+}
+
+.production-completion-check > input {
+  width: 18px; /* 核取方塊的寬度 */
+  height: 18px; /* 核取方塊的高度 */
+  accent-color: #3dccb3; /* 勾選時的顏色 */
+}
+
+.production-completion-check small {
+  display: block; /* 已登記完工日期顯示在下一行 */
+  color: #93a3ab; /* 已登記完工日期的文字顏色 */
+}
+
 /* 加工管理系統｜加工登記／查詢表單的「日期、產品編號、機台、數量、備註」各欄位 */
 .production-field-row { /* 手機與電腦共用｜加工管理系統 → 表單欄位及其輸入框 → 選取此元件 */
   min-height: 58px; /* 手機與電腦共用｜加工管理系統 → 表單欄位及其輸入框 → 最小高度 */
@@ -4102,6 +4127,26 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 } /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 結束此區設定 */
 
 /* 加工管理系統｜基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 */
+/* 加工管理系統 → 基礎資料設定 → 訂單管理 → 清單摘要及編輯欄位 */
+.production-order-summary {
+  display: block; /* 把數量、交期與完工狀態放在編號下方 */
+  color: #93a3ab; /* 訂單摘要文字顏色 */
+  font: 500 13px var(--font-family-site); /* 訂單摘要的字級、字重與字型 */
+  white-space: normal; /* 手機上允許摘要換行 */
+}
+
+.production-order-modal .option-list-item.is-editing {
+  display: grid; /* 將編輯欄位排在產品編號與操作鈕的下一列 */
+  grid-template-columns: minmax(0, 1fr) auto; /* 依序保留可縮小的編號欄與右側操作鈕 */
+  gap: 8px; /* 編輯欄與操作鈕的間距 */
+}
+
+.production-order-fields {
+  grid-column: 1 / -1; /* 訂單數量與交期占滿編輯列 */
+  min-width: 0; /* 手機欄位縮小時可留在訂單卡片內 */
+  margin-top: 8px; /* 與上方產品編號的距離 */
+}
+
 .option-empty { /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 選取此元件 */
   padding: 25px 12px; /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 內距 */
   border: 1px dashed #303a40; /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 邊框 */

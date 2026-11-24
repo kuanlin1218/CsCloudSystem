@@ -109,7 +109,13 @@ export interface ProductionInput {
 
 export type ProductionOptionType = 'product' | 'machine'
 
-export interface ProductionOption {
+export interface ProductionOrderSettings {
+  order_quantity?: number | null
+  due_date?: string | null
+  completed_on?: string | null
+}
+
+export interface ProductionOption extends ProductionOrderSettings {
   id: string
   option_type: ProductionOptionType
   value: string

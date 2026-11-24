@@ -1,5 +1,5 @@
 import { dataStorage, isLocalDataMode, supabase } from './supabase'
-import { composeProductName, today } from './format'
+import { composeProductName, today, todayInTaipei } from './format'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord, type StocktakeInput } from '../types'
 import { requireAuthenticatedUserId } from './auth'
 import type { OperationLogEntry } from '../types'
@@ -176,22 +176,22 @@ export async function loadProductionRecords(): Promise<ProductionRecord[]> {
 
 export async function loadProductionOptions(): Promise<ProductionOption[]> {
   if (isLocalDataMode) return readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
-  const { data, error } = await supabase!.from('production_options').select('id,option_type,value,created_at').order('option_type').order('value')
+  const { data, error } = await supabase!.from('production_options').select('*').order('option_type').order('value')
   if (error) throw error
   return data as ProductionOption[]
 }
 
-export async function createProductionOption(optionType: ProductionOptionType, rawValue: string): Promise<void> {
+export async function createProductionOption(optionType: ProductionOptionType, rawValue: string, settings?: Pick<ProductionOption, 'order_quantity' | 'due_date'>): Promise<void> {
   const value = rawValue.trim().toUpperCase()
   if (!value) throw new Error(optionType === 'product' ? '產品編號不能空白' : '機台名稱不能空白')
   if (isLocalDataMode) {
     const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
     if (options.some((option) => option.option_type === optionType && option.value.toLowerCase() === value.toLowerCase())) throw new Error('這筆資料已經存在')
-    writeLocal(PRODUCTION_OPTION_KEY, [...options, { id: id(), option_type: optionType, value, created_at: new Date().toISOString() }])
+    writeLocal(PRODUCTION_OPTION_KEY, [...options, { id: id(), option_type: optionType, value, created_at: new Date().toISOString(), ...settings }])
     return
   }
   const userId = await requireAuthenticatedUserId()
-  const { error } = await supabase!.from('production_options').insert({ user_id: userId, option_type: optionType, value })
+  const { error } = await supabase!.from('production_options').insert({ user_id: userId, option_type: optionType, value, ...settings })
   if (error) {
     if (error.code === '23505') throw new Error('這筆資料已經存在')
     throw error
@@ -207,19 +207,57 @@ export async function deleteProductionOption(optionType: ProductionOptionType, v
   await runAdminDelete('admin_delete_production_option', { p_option_type: optionType, p_value: value })
 }
 
-export async function renameProductionProductCode(currentValue: string, nextValue: string): Promise<void> {
+export async function updateProductionOrder(currentValue: string, nextValue: string, settings: Pick<ProductionOption, 'order_quantity' | 'due_date'>): Promise<void> {
   const current = currentValue.trim().toUpperCase()
   const next = nextValue.trim().toUpperCase()
   if (!current || !next) throw new Error('產品編號不能空白')
-  if (current === next) return
   if (isLocalDataMode) {
     const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
-    if (options.some((option) => option.option_type === 'product' && option.value.toUpperCase() === next)) throw new Error('新的產品編號已經存在')
-    writeLocal(PRODUCTION_OPTION_KEY, options.map((option) => option.option_type === 'product' && option.value.toUpperCase() === current ? { ...option, value: next } : option))
-    writeLocal(PRODUCTION_KEY, readLocal(PRODUCTION_KEY, seedProductionRecords).map((record) => record.product_code.toUpperCase() === current ? { ...record, product_code: next } : record))
+    const order = options.find((option) => option.option_type === 'product' && option.value.toUpperCase() === current)
+    if (!order) throw new Error('找不到原本的訂單')
+    const records = readLocal(PRODUCTION_KEY, seedProductionRecords)
+    if (current !== next && (options.some((option) => option.option_type === 'product' && option.value.toUpperCase() === next)
+      || records.some((record) => record.product_code.toUpperCase() === next))) throw new Error('新的產品編號已經存在')
+    writeLocal(PRODUCTION_OPTION_KEY, options.map((option) => option.id === order.id ? { ...option, value: next, ...settings } : option))
+    if (current !== next) {
+      try {
+        writeLocal(PRODUCTION_KEY, records.map((record) => record.product_code.toUpperCase() === current ? { ...record, product_code: next } : record))
+      } catch (error) {
+        writeLocal(PRODUCTION_OPTION_KEY, options)
+        throw error
+      }
+    }
     return
   }
-  const { error } = await supabase!.rpc('rename_production_product_code', { p_current_value: current, p_new_value: next })
+  const { error } = await supabase!.rpc('update_production_order', {
+    p_current_value: current, p_new_value: next, p_order_quantity: settings.order_quantity ?? null, p_due_date: settings.due_date ?? null,
+  })
+  if (error) throw error
+}
+
+export async function saveCompletedProductionRecord(input: ProductionInput, completedOn: string, overwrite?: ProductionRecord): Promise<void> {
+  const date = new Date(`${completedOn}T00:00:00Z`)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(completedOn) || Number.isNaN(date.valueOf()) || date.toISOString().slice(0, 10) !== completedOn || completedOn > todayInTaipei()) {
+    throw new Error('請選擇有效的完工日期，且不得晚於今天')
+  }
+  const productCode = input.product_code.trim().toUpperCase()
+  if (isLocalDataMode) {
+    const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
+    const order = options.find((option) => option.option_type === 'product' && option.value.toUpperCase() === productCode)
+    if (!order) throw new Error('找不到要登記完工的訂單')
+    writeLocal(PRODUCTION_OPTION_KEY, options.map((option) => option.id === order.id ? { ...option, completed_on: completedOn } : option))
+    try {
+      if (overwrite) await updateProductionRecord(overwrite.id, input, overwrite)
+      else await createProductionRecord(input)
+    } catch (error) {
+      writeLocal(PRODUCTION_OPTION_KEY, options)
+      throw error
+    }
+    return
+  }
+  const { error } = await supabase!.rpc('save_completed_production_record', {
+    p_input: input, p_completed_on: completedOn, p_expected: overwrite ?? null,
+  })
   if (error) throw error
 }
 

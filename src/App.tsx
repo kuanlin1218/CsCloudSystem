@@ -8,14 +8,14 @@ import {
 } from 'lucide-react'
 import { dataStorage, isDemoMode, isLocalDataMode, isTestMode, supabase, TEST_MODE_KEY } from './lib/supabase'
 import { isOwnerUser, OWNER_EMAIL, OWNER_USERNAME, registerOwnerPasskey, signInWithPasskey, supportsPasskeys, verifyOwnerPassword } from './lib/auth'
-import { composeProductName, formatDate, formatMoney, formatNumber, today } from './lib/format'
+import { composeProductName, formatDate, formatMoney, formatNumber, today, todayInTaipei } from './lib/format'
 import { hasTaiwanHolidayCalendar, isTaiwanPublicHoliday, TAIWAN_HOLIDAY_CALENDAR_YEARS } from './lib/taiwanHolidays'
 import { exportProductionXlsx } from './lib/exportProductionXlsx'
 import { exportAllAdminData, importAllAdminData } from './lib/adminData'
 import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
 import { LoginFeedback, PhoneLoginPanel, PhoneLoginScanner } from './PhoneLogin'
 import type { WorkbookPreview } from './lib/adminDataWorkbook'
-import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, findMatchingProductionRecord, loadInventory, loadOperationLog, loadProductChanges, loadProductMovements, loadProductionOptions, loadProductionRecords, registerMovement, renameProductionProductCode, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionRecord } from './lib/repository'
+import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, findMatchingProductionRecord, loadInventory, loadOperationLog, loadProductChanges, loadProductMovements, loadProductionOptions, loadProductionRecords, registerMovement, saveCompletedProductionRecord, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionOrder, updateProductionRecord } from './lib/repository'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type OperationLogEntry, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
 
 const blankProduct = (): ProductInput => ({
@@ -520,7 +520,8 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
   const isProduction = activePage === 'production-dashboard' || activePage === 'production-entry' || activePage === 'production-query' || activePage === 'production-forecast' || activePage === 'production-settings' || activePage === 'production-delete'
   const isSystem = isInventory || isProduction
   const showTableScrollControls = activePage === 'production-query' || activePage === 'production-delete' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
-  const productionEntryProductCodes = useMemo(() => productionOptions.filter((option) => option.option_type === 'product').map((option) => option.value).sort(), [productionOptions])
+  const productionOrders = useMemo(() => productionOptions.filter((option) => option.option_type === 'product'), [productionOptions])
+  const productionEntryProductCodes = useMemo(() => productionOrders.map((option) => option.value).sort(), [productionOrders])
   const productionQueryProductCodes = useMemo(() => [...new Set([
     ...productionEntryProductCodes,
     ...productionRecords.map((record) => record.product_code),
@@ -585,7 +586,12 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
           showOperationLog={canReadOperationLog} exitButton={portalExitButton} />}
         {activePage === 'operation-log' && <OperationLogPage goHome={() => nav('home')} />}
         {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
-        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} machines={productionMachines} loading={loading} onSave={async (input, overwrite) => {
+        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} orders={productionOrders} machines={productionMachines} loading={loading} onSave={async (input, overwrite, completedOn) => {
+          if (completedOn) {
+            await saveCompletedProductionRecord(input, completedOn, overwrite)
+            await afterSave(`加工數量及完工日期 ${formatDate(completedOn)} 已登記`)
+            return
+          }
           if (overwrite) {
             await updateProductionRecord(overwrite.id, input, overwrite)
             await afterSave('已覆蓋原加工登記')
@@ -604,7 +610,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
           if (deleted) await afterSave('所選加工紀錄已刪除')
           return deleted
         }} />}
-        {activePage === 'production-forecast' && <ProductionForecastPage records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
+        {activePage === 'production-forecast' && <ProductionForecastPage records={productionRecords} productCodes={productionQueryProductCodes} orders={productionOrders} loading={loading} />}
         {activePage === 'production-settings' && !guestMode && <ProductionSettingsPage openOption={setProductionOptionModal} />}
         {activePage === 'production-delete' && !guestMode && <ProductionDataManagementPage records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} onDeleteProductRecords={async (productCode, count) => {
           const deleted = await requestAdminDelete('永久刪除產品加工資料', `將刪除產品編號「${productCode}」、管理清單選項與全部 ${count} 筆加工紀錄。`, () => deleteProductionProductData(productCode))
@@ -653,15 +659,15 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
         setProductModal(null); setPendingBarcode(''); await afterSave(message)
       }} />}
       {priceHistoryProduct && <PriceHistoryModal product={priceHistoryProduct} movements={movements} close={() => setPriceHistoryProduct(null)} />}
-      {!guestMode && productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={(productionOptionModal === 'product' ? productionEntryProductCodes : productionMachines)} close={() => setProductionOptionModal(null)} save={async (value) => {
-        await createProductionOption(productionOptionModal, value); await afterSave(productionOptionModal === 'product' ? '產品編號已新增' : '機台已新增')
+      {!guestMode && productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={productionOptionModal === 'product' ? productionEntryProductCodes : productionMachines} orders={productionOrders} close={() => setProductionOptionModal(null)} save={async (value, settings) => {
+        await createProductionOption(productionOptionModal, value, settings); await afterSave(productionOptionModal === 'product' ? '訂單已新增' : '機台已新增')
       }} remove={async (value) => {
-        const label = productionOptionModal === 'product' ? '產品編號' : '機台'
+        const label = productionOptionModal === 'product' ? '訂單' : '機台'
         const deleted = await requestAdminDelete(`刪除${label}`, `確定刪除${label}「${value}」？過去已登記的加工紀錄會保留。`, () => deleteProductionOption(productionOptionModal, value))
         if (deleted) await afterSave(`${label}已刪除`)
-      }} rename={productionOptionModal === 'product' ? async (currentValue, nextValue) => {
-        await renameProductionProductCode(currentValue, nextValue)
-        await afterSave(`產品編號已由 ${currentValue} 更新為 ${nextValue.trim().toUpperCase()}`)
+      }} updateOrder={productionOptionModal === 'product' ? async (currentValue, nextValue, settings) => {
+        await updateProductionOrder(currentValue, nextValue, settings)
+        await afterSave('訂單已更新')
       } : undefined} />}
       {!guestMode && !isTestMode && adminDataModal && <AdminDataModal close={() => setAdminDataModal(false)} afterImport={async () => {
         await refresh(); setToast('Excel 資料已完整匯入')
@@ -715,6 +721,7 @@ const operationFields: Record<string, string> = {
   purchased_at: '購入日期', notes: '備註', movement_type: '出入庫類型', quantity: '數量', movement_date: '出入庫日期',
   stock_after: '庫存餘額', work_date: '加工日期', product_code: '產品編號', machine: '機台', hours: '小時', minutes: '分鐘',
   option_type: '選項類型', value: '選項', products: '刀具', movements: '出入庫紀錄', production_records: '加工紀錄', production_options: '加工選項',
+  order_quantity: '訂單數量', due_date: '交期', completed_on: '完工日期',
   auth_event_id: '驗證事件編號',
 }
 
@@ -750,8 +757,13 @@ function describeOperation(entry: OperationLogEntry, fields: string[]) {
     }
   }
   if (entry.entity === 'production_options') {
-    const kind = row.option_type === 'machine' ? '機台' : '產品編號'
-    return { title: `${action}加工${kind}選項 ${entry.target}`, lines: entry.operation === 'UPDATE' ? changes : [] }
+    const orderDetails = [
+      row.order_quantity == null ? '' : `訂單數量：${value('order_quantity')}`,
+      row.due_date ? `交期：${value('due_date')}` : '',
+      row.completed_on ? `完工日期：${value('completed_on')}` : '',
+    ].filter(Boolean)
+    const kind = row.option_type === 'machine' ? '加工機台' : '訂單'
+    return { title: `${action}${kind} ${entry.target}`, lines: entry.operation === 'UPDATE' ? changes : orderDetails }
   }
   const entity = operationEntities[entry.entity] || entry.entity
   const name = entry.entity === 'products' && row.name ? `｜${value('name')}` : ''
@@ -917,13 +929,17 @@ function ProductionQuantityChart({ productCode, days, total }: { productCode: st
   </article>
 }
 
-function ProductionEntryPage({ records, productCodes, machines, loading, onSave, onDeleteLast }: { records: ProductionRecord[]; productCodes: string[]; machines: string[]; loading: boolean; onSave: (input: ProductionInput, overwrite?: ProductionRecord) => Promise<void>; onDeleteLast: (record: ProductionRecord) => Promise<void> }) {
+function ProductionEntryPage({ records, productCodes, orders, machines, loading, onSave, onDeleteLast }: { records: ProductionRecord[]; productCodes: string[]; orders: ProductionOption[]; machines: string[]; loading: boolean; onSave: (input: ProductionInput, overwrite?: ProductionRecord, completedOn?: string) => Promise<void>; onDeleteLast: (record: ProductionRecord) => Promise<void> }) {
   const [form, setForm] = useState<Omit<ProductionInput, 'hours' | 'minutes'> & { hours: number | null; minutes: number | null }>({ work_date: previousLocalDate(), product_code: '', machine: '', hours: null, minutes: null, quantity: 0, notes: '' })
   const [showTimeCalculator, setShowTimeCalculator] = useState(false)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
   const saveInProgress = useRef(false)
-  const [pendingDuplicate, setPendingDuplicate] = useState<{ input: ProductionInput; record: ProductionRecord } | null>(null)
+  const [markCompleted, setMarkCompleted] = useState(false)
+  const [completedOn, setCompletedOn] = useState('')
+  const [pendingDuplicate, setPendingDuplicate] = useState<{ input: ProductionInput; record: ProductionRecord; completedOn?: string } | null>(null)
+  const selectedOrder = orders.find((order) => order.value === form.product_code)
+  const latestCompletionDate = todayInTaipei()
   const latest = useMemo(() => [...records].sort((a, b) => `${b.created_at}-${b.id}`.localeCompare(`${a.created_at}-${a.id}`))[0], [records])
   useEffect(() => {
     setForm((current) => ({
@@ -945,10 +961,12 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
     if (!Number.isInteger(hours) || hours < 0 || !Number.isInteger(minutes) || minutes < 0 || minutes > 59) { setFormError('工時格式不正確，分鐘需介於 0 到 59'); return }
     if (hours * 60 + minutes <= 0) { setFormError('加工時間必須大於 0 分鐘'); return }
     if (!Number.isInteger(form.quantity) || form.quantity <= 0) { setFormError('加工數量必須是大於 0 的整數'); return }
-    void saveEntry({ ...form, hours, minutes, product_code: form.product_code.trim().toUpperCase(), machine: form.machine.trim().toUpperCase() })
+    const completionDate = markCompleted ? completedOn || form.work_date : undefined
+    if (completionDate && completionDate > latestCompletionDate) { setFormError('完工日期不能晚於今天'); return }
+    void saveEntry({ ...form, hours, minutes, product_code: form.product_code.trim().toUpperCase(), machine: form.machine.trim().toUpperCase() }, completionDate)
   }
 
-  const saveEntry = async (input: ProductionInput, decision?: ProductionRecord | 'new') => {
+  const saveEntry = async (input: ProductionInput, completionDate?: string, decision?: ProductionRecord | 'new') => {
     if (saveInProgress.current) return
     saveInProgress.current = true
     setSaving(true)
@@ -956,11 +974,13 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
     try {
       if (!decision) {
         const record = await findMatchingProductionRecord(input)
-        if (record) { setPendingDuplicate({ input, record }); return }
+        if (record) { setPendingDuplicate({ input, record, completedOn: completionDate }); return }
       }
-      await onSave(input, decision === 'new' ? undefined : decision)
+      await onSave(input, decision === 'new' ? undefined : decision, completionDate)
       setPendingDuplicate(null)
       setForm((current) => ({ ...current, hours: null, minutes: null, quantity: 0, notes: '' }))
+      setMarkCompleted(false)
+      setCompletedOn('')
     } catch (error) { setFormError(messageFor(error)) }
     finally { saveInProgress.current = false; setSaving(false) }
   }
@@ -1000,7 +1020,7 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
     <PageTitle eyebrow="PRODUCTION ENTRY" title="加工數量登記" />
     <form className="production-card entry-card production-record-form" onSubmit={submit} onKeyDown={handleEntryKeyDown}>
       <div className="production-field-row"><label htmlFor="production-entry-date">日期</label><input id="production-entry-date" type="date" value={form.work_date} onChange={(e) => setForm({ ...form, work_date: e.target.value })} required /></div>
-      <div className="production-field-row"><label htmlFor="production-entry-product">產品編號</label><select id="production-entry-product" value={form.product_code} onChange={(e) => setForm({ ...form, product_code: e.target.value })} required><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+      <div className="production-field-row"><label htmlFor="production-entry-product">產品編號</label><select id="production-entry-product" value={form.product_code} onChange={(e) => { setForm({ ...form, product_code: e.target.value }); setMarkCompleted(false); setCompletedOn('') }} required><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
       <div className="production-field-row"><label htmlFor="production-entry-machine">機台</label><select id="production-entry-machine" value={form.machine} onChange={(e) => setForm({ ...form, machine: e.target.value })} required><option value="">請選擇機台</option>{machines.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
 
       <ProductionDurationFields
@@ -1014,6 +1034,8 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
 
       <div className="production-field-row"><label htmlFor="production-entry-quantity">數量</label><input id="production-entry-quantity" type="number" inputMode="numeric" enterKeyHint="done" pattern="[0-9]*" min="1" step="1" value={form.quantity || ''} onChange={(e) => setForm({ ...form, quantity: Math.max(0, Number(e.target.value)) })}  required /></div>
       <div className="production-field-row note-row"><label htmlFor="production-entry-notes">備註</label><textarea id="production-entry-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}  /></div>
+      <label className="production-completion-check"><input type="checkbox" checked={markCompleted} disabled={!selectedOrder || saving} onChange={(event) => setMarkCompleted(event.target.checked)} /><span>訂單完成{selectedOrder?.completed_on && <small>已登記完工 {formatDate(selectedOrder.completed_on)}</small>}</span></label>
+      {markCompleted && selectedOrder && <div className="production-field-row"><label htmlFor="production-entry-completed-on">完工日期</label><input id="production-entry-completed-on" type="date" max={latestCompletionDate} value={completedOn || form.work_date} onChange={(event) => setCompletedOn(event.target.value)} required /></div>}
       {formError && !pendingDuplicate && <div className="form-error production-error" role="alert">{formError}</div>}
       <button className="production-action save-action" disabled={saving} type="submit"><Save />{saving ? '儲存中…' : '送出登記'}</button>
       <button className="production-action delete-action" disabled={loading || saving || !latest} type="button" onClick={() => latest && void onDeleteLast(latest)}><Trash2 />刪除最後一筆</button>
@@ -1024,13 +1046,13 @@ function ProductionEntryPage({ records, productCodes, machines, loading, onSave,
       <div className="modal-replacement-details">
         <strong>{formatDate(pendingDuplicate.input.work_date)} · {pendingDuplicate.input.machine} · {pendingDuplicate.input.product_code}</strong>
         <div className="modal-replacement-original"><strong>原登記（{formatTaipeiRecordTime(pendingDuplicate.record.created_at, true, true)}）</strong><br />{formatNumber(pendingDuplicate.record.quantity)} 顆 · {formatNumber(pendingDuplicate.record.total_minutes)} 分{pendingDuplicate.record.notes && <> · {pendingDuplicate.record.notes}</>}</div>
-        <div className="modal-replacement-incoming"><strong>本次登記</strong><br />{formatNumber(pendingDuplicate.input.quantity)} 顆 · {formatNumber(pendingDuplicate.input.hours * 60 + pendingDuplicate.input.minutes)} 分{pendingDuplicate.input.notes && <> · {pendingDuplicate.input.notes}</>}</div>
+        <div className="modal-replacement-incoming"><strong>本次登記</strong><br />{formatNumber(pendingDuplicate.input.quantity)} 顆 · {formatNumber(pendingDuplicate.input.hours * 60 + pendingDuplicate.input.minutes)} 分{pendingDuplicate.input.notes && <> · {pendingDuplicate.input.notes}</>}{pendingDuplicate.completedOn && <><br />訂單完工日期 {formatDate(pendingDuplicate.completedOn)}</>}</div>
       </div>
       {formError && <div className="form-error modal-tool-error" role="alert">{formError}</div>}
       <div className="modal-tool-actions">
         <button className="button modal-replacement-cancel" type="button" disabled={saving} autoFocus onClick={closeDuplicate}>取消</button>
-        <button className="button modal-replacement-confirm" type="button" disabled={saving} onClick={() => void saveEntry(pendingDuplicate.input, pendingDuplicate.record)}>覆蓋原登記</button>
-        <button className="button production-duplicate-create" type="button" disabled={saving} onClick={() => void saveEntry(pendingDuplicate.input, 'new')}>新增一筆</button>
+        <button className="button modal-replacement-confirm" type="button" disabled={saving} onClick={() => void saveEntry(pendingDuplicate.input, pendingDuplicate.completedOn, pendingDuplicate.record)}>覆蓋原登記</button>
+        <button className="button production-duplicate-create" type="button" disabled={saving} onClick={() => void saveEntry(pendingDuplicate.input, pendingDuplicate.completedOn, 'new')}>新增一筆</button>
       </div>
     </Modal>}
     {showTimeCalculator && <ProductionTimeCalculatorModal initialHours={form.hours ?? 0} initialMinutes={form.minutes ?? 0} close={() => setShowTimeCalculator(false)} apply={(hours, minutes) => { setForm((current) => ({ ...current, hours, minutes })); setShowTimeCalculator(false) }} />}
@@ -1204,7 +1226,7 @@ function ProductionSettingsPage({ openOption }: { openOption: (type: ProductionO
     <PageTitle eyebrow="PRODUCTION SETTINGS" title="基礎資料設定" />
     <div className="production-settings-grid">
       <button className="production-setting-card product-setting" type="button" onClick={() => openOption('product')}>
-        <Wrench /><span><strong>管理產品編號</strong><small>新增、編輯或刪除加工產品編號</small></span><Pencil />
+        <Wrench /><span><strong>訂單管理</strong><small>管理產品編號、訂單數量與交期</small></span><Pencil />
       </button>
       <button className="production-setting-card machine-setting" type="button" onClick={() => openOption('machine')}>
         <Wrench /><span><strong>管理機台</strong><small>新增或刪除加工機台名稱</small></span><Pencil />
@@ -1213,19 +1235,22 @@ function ProductionSettingsPage({ openOption }: { openOption: (type: ProductionO
   </section>
 }
 
-function ProductionForecastPage({ records, productCodes, loading }: { records: ProductionRecord[]; productCodes: string[]; loading: boolean }) {
+function ProductionForecastPage({ records, productCodes, orders, loading }: { records: ProductionRecord[]; productCodes: string[]; orders: ProductionOption[]; loading: boolean }) {
   const [productCode, setProductCode] = useState(readForecastProductSelection)
   const selectedRecords = useMemo(() => records.filter((record) => record.product_code.toLowerCase() === productCode.toLowerCase()), [records, productCode])
   /* 「訂單完工預估」的「產品編號」：切換功能、瀏覽器分頁或重新整理後保留上次選擇。 */
-  useEffect(() => { saveForecastProductSelection(productCode) }, [productCode])
   useEffect(() => {
-    if (!loading && productCode && !productCodes.some((value) => value.toLowerCase() === productCode.toLowerCase())) setProductCode('')
+    if (!productCode || productCodes.includes(productCode)) saveForecastProductSelection(productCode)
+  }, [productCode, productCodes])
+  useEffect(() => {
+    if (loading || !productCode || productCodes.includes(productCode)) return
+    setProductCode(productCodes.find((code) => code.toLowerCase() === productCode.toLowerCase()) ?? '')
   }, [loading, productCode, productCodes])
   return <section className="page-content production-system-page production-forecast-page">
     <PageTitle eyebrow="ORDER FORECAST" title="訂單完工預估" />
     <div className="production-card production-tool-page-card">
-      <div className="production-field-row"><label>產品編號</label><select value={productCode} onChange={(event) => setProductCode(event.target.value)} disabled={loading}><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
-      {loading ? <PageSkeleton /> : productCode ? <OrderForecastPanel key={productCode} productCode={productCode} records={selectedRecords} /> : <div className="production-tool-placeholder"><Calculator />請先選擇要估算的產品編號</div>}
+      <div className="production-field-row"><label htmlFor="forecast-product-code">產品編號</label><select id="forecast-product-code" value={productCode} onChange={(event) => setProductCode(event.target.value)} disabled={loading}><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+      {loading ? <PageSkeleton /> : productCode ? <OrderForecastPanel key={productCode} productCode={productCode} records={selectedRecords} order={orders.find((entry) => entry.value.toLowerCase() === productCode.toLowerCase())} /> : <div className="production-tool-placeholder"><Calculator />請先選擇要估算的產品編號</div>}
     </div>
   </section>
 }
@@ -1346,22 +1371,23 @@ function ProductionTimeCalculatorModal({ initialHours, initialMinutes, close, ap
   </Modal>
 }
 
-function OrderForecastPanel({ productCode, records }: { productCode: string; records: ProductionRecord[] }) {
+function OrderForecastPanel({ productCode, records, order }: { productCode: string; records: ProductionRecord[]; order?: ProductionOption }) {
   const historyDateBounds = useMemo(() => {
     const dates = records.map((record) => record.work_date).filter(Boolean).sort()
     return { first: dates[0] || '', last: dates[dates.length - 1] || '' }
   }, [records])
   const totalCompletedQuantity = useMemo(() => records.reduce((sum, record) => sum + record.quantity, 0), [records])
   const storedDraft = useMemo(() => readForecastDraft(productCode), [productCode])
-  const [orderQuantity, setOrderQuantity] = useState(storedDraft?.orderQuantity ?? 0)
-  const [dueDate, setDueDate] = useState(storedDraft?.dueDate ?? '')
+  const [orderQuantity, setOrderQuantity] = useState(order?.order_quantity ?? storedDraft?.orderQuantity ?? 0)
+  const [dueDate, setDueDate] = useState(order?.due_date ?? storedDraft?.dueDate ?? '')
   const [capacityScope, setCapacityScope] = useState<ForecastCapacityScope>(storedDraft?.capacityScope ?? 'all')
   const [historyFrom, setHistoryFrom] = useState(storedDraft?.historyFrom || historyDateBounds.first)
   const [historyTo, setHistoryTo] = useState(storedDraft?.historyTo || historyDateBounds.last)
-  const historyRangeInvalid = capacityScope === 'range' && Boolean(historyFrom && historyTo && historyFrom > historyTo)
-  const scopedRecords = useMemo(() => capacityScope === 'range'
+  const useHistoryRange = capacityScope === 'range'
+  const historyRangeInvalid = useHistoryRange && Boolean(historyFrom && historyTo && historyFrom > historyTo)
+  const scopedRecords = useMemo(() => useHistoryRange
     ? records.filter((record) => (!historyFrom || record.work_date >= historyFrom) && (!historyTo || record.work_date <= historyTo) && !historyRangeInvalid)
-    : records, [records, capacityScope, historyFrom, historyTo, historyRangeInvalid])
+    : records, [records, useHistoryRange, historyFrom, historyTo, historyRangeInvalid])
   /* 產能只採用未來排程也會使用的日期：星期一至星期六，並排除國定假日與補假。 */
   const capacityRecords = useMemo(() => scopedRecords.filter((record) => {
     const weekday = parseLocalDate(record.work_date).getDay()
@@ -1394,13 +1420,13 @@ function OrderForecastPanel({ productCode, records }: { productCode: string; rec
     }
   }, [capacityRecords])
   const [machineCount, setMachineCount] = useState(storedDraft?.machineCount || capacityHistory.defaultMachineCount)
-  const previousCapacityBasis = useRef(`${capacityScope}|${historyFrom}|${historyTo}`)
+  const historyBasis = `${capacityScope}|${historyFrom}|${historyTo}`
+  const previousCapacityBasis = useRef(historyBasis)
   useEffect(() => {
-    const basis = `${capacityScope}|${historyFrom}|${historyTo}`
-    if (basis === previousCapacityBasis.current) return
-    previousCapacityBasis.current = basis
+    if (historyBasis === previousCapacityBasis.current) return
+    previousCapacityBasis.current = historyBasis
     setMachineCount(capacityHistory.defaultMachineCount)
-  }, [capacityScope, historyFrom, historyTo, capacityHistory.defaultMachineCount])
+  }, [historyBasis, capacityHistory.defaultMachineCount])
   useEffect(() => {
     saveForecastDraft(productCode, { orderQuantity, dueDate, capacityScope, historyFrom, historyTo, machineCount })
   }, [productCode, orderQuantity, dueDate, capacityScope, historyFrom, historyTo, machineCount])
@@ -1442,7 +1468,7 @@ function OrderForecastPanel({ productCode, records }: { productCode: string; rec
     const quantityDifference = dueDate ? Math.round(availableQuantity - remainingQuantity) : null
     return { requiredWorkDays, estimatedDate, availableWorkDays, availableQuantity, canMeetDeadline, quantityDifference }
   }, [remainingQuantity, estimatedDailyQuantity, capacityHistory.includesSaturday, dueDate])
-  const historyRangeText = capacityScope === 'range' ? `採用區間 ${formatDate(historyFrom)} ～ ${formatDate(historyTo)}` : '採用全部歷史紀錄'
+  const historyRangeText = useHistoryRange ? `採用區間 ${formatDate(historyFrom)} ～ ${formatDate(historyTo)}` : '採用全部歷史紀錄'
   const holidayCalendarIncomplete = [dueDate, forecastResult.estimatedDate].some((value) => value && !hasTaiwanHolidayCalendar(value))
   const holidayCalendarYears = `${TAIWAN_HOLIDAY_CALENDAR_YEARS[0]}～${TAIWAN_HOLIDAY_CALENDAR_YEARS[TAIWAN_HOLIDAY_CALENDAR_YEARS.length - 1]}`
   return <div className="order-forecast production-forecast-panel">
@@ -1451,14 +1477,14 @@ function OrderForecastPanel({ productCode, records }: { productCode: string; rec
     <div className="forecast-capacity-controls forecast-single-control">
       <label className="forecast-setting"><span>歷史產能依據</span><select value={capacityScope} onChange={(event) => setCapacityScope(event.target.value as ForecastCapacityScope)}><option value="all">全部歷史資料</option><option value="range">指定歷史日期區間</option></select></label>
     </div>
-    {capacityScope === 'range' && <div className="forecast-history-range"><label className="forecast-setting"><span>歷史開始日期</span><input type="date" min={historyDateBounds.first || undefined} max={historyTo || historyDateBounds.last || undefined} value={historyFrom} onChange={(event) => setHistoryFrom(event.target.value)} /></label><label className="forecast-setting"><span>歷史結束日期</span><input type="date" min={historyFrom || historyDateBounds.first || undefined} max={historyDateBounds.last || undefined} value={historyTo} onChange={(event) => setHistoryTo(event.target.value)} /></label></div>}
+    {useHistoryRange && <div className="forecast-history-range"><label className="forecast-setting"><span>歷史開始日期</span><input type="date" min={historyDateBounds.first || undefined} max={historyTo || historyDateBounds.last || undefined} value={historyFrom} onChange={(event) => setHistoryFrom(event.target.value)} /></label><label className="forecast-setting"><span>歷史結束日期</span><input type="date" min={historyFrom || historyDateBounds.first || undefined} max={historyDateBounds.last || undefined} value={historyTo} onChange={(event) => setHistoryTo(event.target.value)} /></label></div>}
     <div className="forecast-history-basis"><span>產能依據</span><strong>{capacityHistory.historyDays} 個加工日</strong><strong>總產量 {formatNumber(capacityHistory.capacitySampleQuantity)} 只</strong><strong>平均產量 {formatNumber(Math.round(estimatedDailyQuantity))} 只／日</strong><small>{historyRangeText}；{matchingMachineSamples.length ? `採用歷史中實際使用 ${machineCount} 台的 ${matchingMachineSamples.length} 個加工日` : `歷史沒有使用 ${machineCount} 台的加工日，暫依每台平均產量換算`}；{capacityHistory.includesSaturday ? `資料包含星期六（共 ${capacityHistory.saturdayDays} 天），未來排程會計入星期六` : '資料沒有星期六，未來排程只計算星期一至星期五'}</small></div>
     <div className="forecast-future-config">
       <label className="forecast-setting"><span>訂單交期</span><input type="date" min={today()} value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label>
       <label className="forecast-setting"><span>預計使用機台數</span><input type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={machineCount || ''} onChange={(event) => setMachineCount(Math.max(0, Math.trunc(Number(event.target.value))))} /></label>
     </div>
     {historyRangeInvalid ? <p className="forecast-placeholder warning">歷史開始日期不能晚於歷史結束日期</p> : orderQuantity <= 0 ? <p className="forecast-placeholder">輸入訂單總數量後顯示預估結果</p> : !capacityHistory.historyDays || !capacityHistory.averageQuantityPerMachineDay ? <p className="forecast-placeholder warning">所選歷史產能依據沒有有效的加工數量與機台資料，暫時無法評估</p> : !machineCount ? <p className="forecast-placeholder warning">預計使用機台數必須大於 0</p> : <>
-      <div className="forecast-grid forecast-result-grid"><div className="accent"><span>剩餘數量</span><strong>{formatNumber(remainingQuantity)}</strong><small>訂單總數量扣除全部歷史完成量</small></div><div><span>預估日產量</span><strong>{formatNumber(Math.round(estimatedDailyQuantity))}</strong><small>{formatNumber(machineCount)} 台機台</small></div><div><span>所需加工日</span><strong>{formatNumber(forecastResult.requiredWorkDays)}</strong><small>不含星期日與國定假日</small></div><div><span>預計完工日期</span><strong>{formatDate(forecastResult.estimatedDate)}</strong><small>{capacityHistory.includesSaturday ? '排程包含星期六' : '排程不包含星期六'}</small></div></div>
+      <div className="forecast-grid forecast-result-grid"><div className="accent"><span>剩餘數量</span><strong>{formatNumber(remainingQuantity)}</strong><small>訂單總數量扣除系統累計完成量</small></div><div><span>預估日產量</span><strong>{formatNumber(Math.round(estimatedDailyQuantity))}</strong><small>{formatNumber(machineCount)} 台機台</small></div><div><span>所需加工日</span><strong>{formatNumber(forecastResult.requiredWorkDays)}</strong><small>不含星期日與國定假日</small></div><div><span>預計完工日期</span><strong>{formatDate(forecastResult.estimatedDate)}</strong><small>{capacityHistory.includesSaturday ? '排程包含星期六' : '排程不包含星期六'}</small></div></div>
       {dueDate ? <div className={`forecast-deadline-assessment ${forecastResult.canMeetDeadline ? 'can-meet' : 'will-be-late'}`}>{forecastResult.canMeetDeadline ? <ShieldCheck /> : <Triangle />}<div><strong>{forecastResult.canMeetDeadline ? '可以在交期內完成' : '無法在交期內完成'}</strong><span>交期前可加工 {formatNumber(forecastResult.availableWorkDays)} 日；{forecastResult.canMeetDeadline ? `預計可多完成 ${formatNumber(Math.max(forecastResult.quantityDifference || 0, 0))} 只` : `預估尚缺 ${formatNumber(Math.abs(Math.min(forecastResult.quantityDifference || 0, 0)))} 只`}</span></div></div> : <p className="forecast-placeholder">輸入訂單交期後，系統會評估是否能在交期內完成</p>}
       {holidayCalendarIncomplete && <p className="forecast-placeholder warning">訂單交期或預估完工日超出目前載入的 {holidayCalendarYears} 官方行事曆，尚未公布年度的國定假日可能無法完整排除。</p>}
     </>}
@@ -1466,20 +1492,45 @@ function OrderForecastPanel({ productCode, records }: { productCode: string; rec
   </div>
 }
 
-function ProductionOptionModal({ type, values, close, save, remove, rename }: { type: ProductionOptionType; values: string[]; close: () => void; save: (value: string) => Promise<void>; remove: (value: string) => Promise<void>; rename?: (currentValue: string, nextValue: string) => Promise<void> }) {
+type OrderSettings = Pick<ProductionOption, 'order_quantity' | 'due_date'>
+type OrderSettingsDraft = { quantity: string; dueDate: string }
+const emptyOrderSettings = { quantity: '', dueDate: '' }
+
+function readOrderSettings(draft: OrderSettingsDraft): OrderSettings {
+  const quantity = draft.quantity ? Number(draft.quantity) : null
+  if (quantity !== null && (!Number.isInteger(quantity) || quantity < 1 || quantity > 2147483647)) {
+    throw new Error('訂單數量須為 1 至 2,147,483,647 的整數')
+  }
+  return { order_quantity: quantity, due_date: draft.dueDate || null }
+}
+
+function ProductionOrderFields({ draft, setDraft }: { draft: OrderSettingsDraft; setDraft: (value: OrderSettingsDraft) => void }) {
+  return <div className="form-grid production-order-fields">
+    <Field label="訂單數量"><input type="number" inputMode="numeric" min="1" max="2147483647" step="1" value={draft.quantity} onChange={(event) => setDraft({ ...draft, quantity: event.target.value })} /></Field>
+    <Field label="交期"><input type="date" value={draft.dueDate} onChange={(event) => setDraft({ ...draft, dueDate: event.target.value })} /></Field>
+  </div>
+}
+
+function ProductionOptionModal({ type, values, orders, close, save, remove, updateOrder }: { type: ProductionOptionType; values: string[]; orders: ProductionOption[]; close: () => void; save: (value: string, settings?: OrderSettings) => Promise<void>; remove: (value: string) => Promise<void>; updateOrder?: (currentValue: string, nextValue: string, settings: OrderSettings) => Promise<void> }) {
   const [value, setValue] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [removing, setRemoving] = useState('')
   const [editing, setEditing] = useState('')
   const [editValue, setEditValue] = useState('')
+  const [newSettings, setNewSettings] = useState<OrderSettingsDraft>(emptyOrderSettings)
+  const [editSettings, setEditSettings] = useState<OrderSettingsDraft>(emptyOrderSettings)
   const [updating, setUpdating] = useState(false)
-  const label = type === 'product' ? '產品編號' : '機台'
+  const label = type === 'product' ? '訂單' : '機台'
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError('')
-    if (!value.trim()) { setError(`請輸入${label}`); return }
+    if (!value.trim()) { setError(type === 'product' ? '請輸入產品編號' : '請輸入機台'); return }
     setSaving(true)
-    try { await save(value); setValue('') } catch (submitError) { setError(messageFor(submitError)) }
+    try {
+      await save(value, type === 'product' ? readOrderSettings(newSettings) : undefined)
+      setValue('')
+      setNewSettings(emptyOrderSettings)
+    } catch (submitError) { setError(messageFor(submitError)) }
     finally { setSaving(false) }
   }
   const removeValue = async (target: string) => {
@@ -1488,34 +1539,38 @@ function ProductionOptionModal({ type, values, close, save, remove, rename }: { 
     finally { setRemoving('') }
   }
   const updateValue = async () => {
-    if (!rename || !editing) return
+    if (!updateOrder || !editing || updating) return
     const normalized = editValue.trim().toUpperCase()
     setError('')
     if (!normalized) { setError('產品編號不能空白'); return }
-    if (normalized === editing.trim().toUpperCase()) { setEditing(''); setEditValue(''); return }
     setUpdating(true)
-    try { await rename(editing, normalized); setEditing(''); setEditValue('') }
+    try { await updateOrder(editing, normalized, readOrderSettings(editSettings)); setEditing(''); setEditValue('') }
     catch (updateError) { setError(messageFor(updateError)) }
     finally { setUpdating(false) }
   }
-  return <Modal title={`管理${label}`} close={close}>
+  return <Modal title={type === 'product' ? '訂單管理' : '管理機台'} size={type === 'product' ? 'production-order-modal' : undefined} close={close}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
-      <Field label={label} wide><input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder={type === 'product' ? '產品編號<訂單編號>' : '例如 MT04'} /></Field>
-      <p className="option-help">{type === 'product' ? '新增後會出現在加工登記選單；編輯會同步取代資料庫內全部既有加工紀錄的產品編號。' : '新增後會出現在加工登記選單；刪除不會影響過去的加工紀錄。'}</p>
+      <Field label={type === 'product' ? '產品編號' : label} wide><input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder={type === 'product' ? '產品編號<訂單編號>' : '例如 MT04'} /></Field>
+      {type === 'product' && <ProductionOrderFields draft={newSettings} setDraft={setNewSettings} />}
+      <p className="option-help">{type === 'product' ? '訂單數量與交期可稍後補填。更改產品編號會同步更新既有加工紀錄。' : '新增後會出現在加工登記選單；刪除不會影響過去的加工紀錄。'}</p>
       {error && <div className="form-error">{error}</div>}
       <button className="button primary option-add-button" disabled={saving || !!removing || updating} type="submit"><Plus />{saving ? '新增中…' : `新增${label}`}</button>
     </form>
     <div className="option-list-head"><span>目前的{label}</span><small>{values.length} 筆</small></div>
     <div className="option-list">
-      {values.length === 0 ? <div className="option-empty">尚未新增任何{label}</div> : values.map((item) => <div className={`option-list-item ${editing === item ? 'is-editing' : ''}`} key={item}>
+      {values.length === 0 ? <div className="option-empty">尚未新增任何{label}</div> : values.map((item) => {
+        const order = type === 'product' ? orders.find((entry) => entry.value === item) : undefined
+        return <div className={`option-list-item ${editing === item ? 'is-editing' : ''}`} key={item}>
         {editing === item
           ? <input className="option-edit-input" autoFocus value={editValue} onChange={(event) => setEditValue(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void updateValue() } }} aria-label={`編輯產品編號 ${item}`} />
-          : <span>{item}</span>}
+          : <span>{item}{order && <small className="production-order-summary">數量 {order.order_quantity == null ? '未設定' : formatNumber(order.order_quantity)} · 交期 {order.due_date ? formatDate(order.due_date) : '未設定'} · {order.completed_on ? `完工 ${formatDate(order.completed_on)}` : '未完工'}</small>}</span>}
         <div className="option-list-actions">
-          {type === 'product' && (editing === item ? <><button className="option-save-edit" disabled={updating} onClick={() => void updateValue()} aria-label={`儲存產品編號 ${item}`} title="儲存修改">{updating ? '…' : <Save />}</button><button disabled={updating} onClick={() => { setEditing(''); setEditValue(''); setError('') }} aria-label="取消編輯" title="取消編輯"><X /></button></> : <button className="option-start-edit" disabled={!!removing || updating || !!editing} onClick={() => { setEditing(item); setEditValue(item); setError('') }} aria-label={`編輯產品編號 ${item}`} title="編輯產品編號"><Pencil /></button>)}
+          {order && (editing === item ? <><button className="option-save-edit" disabled={updating || saving} onClick={() => void updateValue()} aria-label={`儲存訂單 ${item}`} title="儲存修改">{updating ? '…' : <Save />}</button><button disabled={updating} onClick={() => { setEditing(''); setEditValue(''); setError('') }} aria-label="取消編輯" title="取消編輯"><X /></button></> : <button className="option-start-edit" disabled={saving || !!removing || updating || !!editing} onClick={() => { setEditing(item); setEditValue(item); setEditSettings({ quantity: String(order.order_quantity ?? ''), dueDate: order.due_date ?? '' }); setError('') }} aria-label={`編輯訂單 ${item}`} title="編輯訂單"><Pencil /></button>)}
           <button className="danger-icon" disabled={!!removing || updating || !!editing} onClick={() => void removeValue(item)} aria-label={`刪除${label} ${item}`} title={`刪除${label}`}>{removing === item ? '…' : <Trash2 />}</button>
         </div>
-      </div>)}
+        {editing === item && <ProductionOrderFields draft={editSettings} setDraft={setEditSettings} />}
+      </div>
+      })}
     </div>
   </Modal>
 }

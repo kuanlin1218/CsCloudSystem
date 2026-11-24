@@ -213,8 +213,11 @@ export async function downloadAdminWorkbook(payload: AdminDataPayload, exportedA
 
   addDataSheet(workbook, SHEETS.options, payload.production_options.map((o) => ({
     type: o.option_type === 'product' ? '產品編號' : '機台', value: o.value,
+    orderQuantity: o.order_quantity ?? '', dueDate: o.due_date ?? '', completedOn: o.completed_on ?? '',
   })), [
     { header: '類型', key: 'type', width: 16 }, { header: '值', key: 'value', width: 32 },
+    { header: '訂單數量', key: 'orderQuantity', width: 16 }, { header: '交期', key: 'dueDate', width: 16 },
+    { header: '完工日期', key: 'completedOn', width: 16 },
   ])
 
   await addQrLabelSheet(workbook, payload.products)
@@ -284,7 +287,15 @@ export async function parseAdminWorkbook(file: File): Promise<WorkbookPreview> {
     options = rows(workbook, SHEETS.options).filter((r) => Object.values(r).some((v) => text(v))).map((r, i) => {
       const type = text(r['類型']); const value = upper(r['值'])
       if (!['產品編號', '機台', 'product', 'machine'].includes(type) || !value) throw new Error(`管理選項第 ${i + 2} 列格式不正確`)
-      return { option_type: (type === '產品編號' || type === 'product') ? 'product' as const : 'machine' as const, value }
+      if (type === '機台' || type === 'machine') return { option_type: 'machine' as const, value }
+      const row = i + 2
+      const orderQuantity = text(r['訂單數量']) ? number(r['訂單數量'], '管理選項「訂單數量」', row, true) : null
+      if (orderQuantity !== null && (orderQuantity < 1 || orderQuantity > 2147483647)) throw new Error(`管理選項第 ${row} 列訂單數量超出有效範圍`)
+      return {
+        option_type: 'product' as const, value, order_quantity: orderQuantity,
+        due_date: localDate(r['交期'], '管理選項「交期」', row, true),
+        completed_on: localDate(r['完工日期'], '管理選項「完工日期」', row, true),
+      }
     })
     options = options.filter((item, index) => options.findIndex((other) => other.option_type === item.option_type && other.value === item.value) === index)
   } catch (error) { errors.push(error instanceof Error ? error.message : '管理選項格式錯誤') }
