@@ -62,6 +62,7 @@ type ForecastDraft = {
   historyFrom: string
   historyTo: string
   machineCount: number
+  referenceOrderKeys: string[]
 }
 
 /* 「訂單完工預估」的「未完成輸入資料」：保存在目前瀏覽器，切換功能或重新整理後仍可還原。 */
@@ -92,6 +93,7 @@ const readForecastDraft = (productCode: string): ForecastDraft | null => {
       historyFrom: typeof value.historyFrom === 'string' ? value.historyFrom : '',
       historyTo: typeof value.historyTo === 'string' ? value.historyTo : '',
       machineCount: Math.max(0, Number(value.machineCount)),
+      referenceOrderKeys: Array.isArray(value.referenceOrderKeys) ? value.referenceOrderKeys.filter((key) => typeof key === 'string') : [],
     }
   } catch { return null }
 }
@@ -1235,9 +1237,35 @@ function ProductionSettingsPage({ openOption }: { openOption: (type: ProductionO
   </section>
 }
 
+type ForecastReferenceOrder = { key: string; code: string; records: ProductionRecord[] }
+
+// 預估以完整編號區分訂單，舊資料只有產品編號時也可當作獨立的歷史來源。
+const forecastOrderKey = (code: string) => code.trim().toUpperCase()
+const forecastProductKey = (code: string) => forecastOrderKey(code.match(/^([^<＜〈]+)[<＜〈][^>＞〉]+[>＞〉]/)?.[1] ?? code)
+
+function groupForecastHistory(productCode: string, records: ProductionRecord[]) {
+  const selectedRecords: ProductionRecord[] = []
+  const references = new Map<string, ForecastReferenceOrder>()
+  const orderKey = forecastOrderKey(productCode)
+  if (!orderKey) return { selectedRecords, referenceOrders: [] }
+  const productKey = forecastProductKey(productCode)
+  for (const record of records) {
+    const key = forecastOrderKey(record.product_code)
+    if (!key) continue
+    if (key === orderKey) {
+      selectedRecords.push(record)
+    } else if (forecastProductKey(record.product_code) === productKey) {
+      const reference = references.get(key)
+      if (reference) reference.records.push(record)
+      else references.set(key, { key, code: record.product_code.trim(), records: [record] })
+    }
+  }
+  return { selectedRecords, referenceOrders: [...references.values()].sort((a, b) => a.code.localeCompare(b.code, 'zh-TW')) }
+}
+
 function ProductionForecastPage({ records, productCodes, orders, loading }: { records: ProductionRecord[]; productCodes: string[]; orders: ProductionOption[]; loading: boolean }) {
   const [productCode, setProductCode] = useState(readForecastProductSelection)
-  const selectedRecords = useMemo(() => records.filter((record) => record.product_code.toLowerCase() === productCode.toLowerCase()), [records, productCode])
+  const { selectedRecords, referenceOrders } = useMemo(() => groupForecastHistory(productCode, records), [records, productCode])
   /* 「訂單完工預估」的「產品編號」：切換功能、瀏覽器分頁或重新整理後保留上次選擇。 */
   useEffect(() => {
     if (!productCode || productCodes.includes(productCode)) saveForecastProductSelection(productCode)
@@ -1249,8 +1277,8 @@ function ProductionForecastPage({ records, productCodes, orders, loading }: { re
   return <section className="page-content production-system-page production-forecast-page">
     <PageTitle eyebrow="ORDER FORECAST" title="訂單完工預估" />
     <div className="production-card production-tool-page-card">
-      <div className="production-field-row"><label htmlFor="forecast-product-code">產品編號</label><select id="forecast-product-code" value={productCode} onChange={(event) => setProductCode(event.target.value)} disabled={loading}><option value="">請選擇產品編號</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
-      {loading ? <PageSkeleton /> : productCode ? <OrderForecastPanel key={productCode} productCode={productCode} records={selectedRecords} order={orders.find((entry) => entry.value.toLowerCase() === productCode.toLowerCase())} /> : <div className="production-tool-placeholder"><Calculator />請先選擇要估算的產品編號</div>}
+      <div className="production-field-row"><label htmlFor="forecast-product-code">產品訂單</label><select id="forecast-product-code" value={productCode} onChange={(event) => setProductCode(event.target.value)} disabled={loading}><option value="">請選擇產品訂單</option>{productCodes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+      {loading ? <PageSkeleton /> : productCode ? <OrderForecastPanel key={productCode} productCode={productCode} records={selectedRecords} referenceOrders={referenceOrders} order={orders.find((entry) => forecastOrderKey(entry.value) === forecastOrderKey(productCode))} /> : <div className="production-tool-placeholder"><Calculator />請先選擇要估算的產品訂單</div>}
     </div>
   </section>
 }
@@ -1371,23 +1399,35 @@ function ProductionTimeCalculatorModal({ initialHours, initialMinutes, close, ap
   </Modal>
 }
 
-function OrderForecastPanel({ productCode, records, order }: { productCode: string; records: ProductionRecord[]; order?: ProductionOption }) {
-  const historyDateBounds = useMemo(() => {
-    const dates = records.map((record) => record.work_date).filter(Boolean).sort()
-    return { first: dates[0] || '', last: dates[dates.length - 1] || '' }
-  }, [records])
+function OrderForecastPanel({ productCode, records, referenceOrders, order }: { productCode: string; records: ProductionRecord[]; referenceOrders: ForecastReferenceOrder[]; order?: ProductionOption }) {
   const totalCompletedQuantity = useMemo(() => records.reduce((sum, record) => sum + record.quantity, 0), [records])
   const storedDraft = useMemo(() => readForecastDraft(productCode), [productCode])
+  const [referenceOrderKeys, setReferenceOrderKeys] = useState(storedDraft?.referenceOrderKeys ?? [])
+  const selectedReferences = useMemo(() => referenceOrders.filter((reference) => referenceOrderKeys.includes(reference.key)), [referenceOrders, referenceOrderKeys])
+  const historyRecords = useMemo(() => [...records, ...selectedReferences.flatMap((reference) => reference.records)], [records, selectedReferences])
   const [orderQuantity, setOrderQuantity] = useState(order?.order_quantity ?? storedDraft?.orderQuantity ?? 0)
   const [dueDate, setDueDate] = useState(order?.due_date ?? storedDraft?.dueDate ?? '')
   const [capacityScope, setCapacityScope] = useState<ForecastCapacityScope>(storedDraft?.capacityScope ?? 'all')
-  const [historyFrom, setHistoryFrom] = useState(storedDraft?.historyFrom || historyDateBounds.first)
-  const [historyTo, setHistoryTo] = useState(storedDraft?.historyTo || historyDateBounds.last)
+  const [historyFrom, setHistoryFrom] = useState(storedDraft?.historyFrom ?? '')
+  const [historyTo, setHistoryTo] = useState(storedDraft?.historyTo ?? '')
+  const changeCapacityScope = (scope: ForecastCapacityScope) => {
+    if (scope === 'range') {
+      const end = todayInTaipei()
+      const start = parseLocalDate(end)
+      start.setDate(start.getDate() - 5)
+      setHistoryFrom(localDateValue(start))
+      setHistoryTo(end)
+    }
+    setCapacityScope(scope)
+  }
+  const toggleReferenceOrder = (key: string, checked: boolean) => {
+    setReferenceOrderKeys((current) => checked ? [...current, key] : current.filter((value) => value !== key))
+  }
   const useHistoryRange = capacityScope === 'range'
   const historyRangeInvalid = useHistoryRange && Boolean(historyFrom && historyTo && historyFrom > historyTo)
   const scopedRecords = useMemo(() => useHistoryRange
-    ? records.filter((record) => (!historyFrom || record.work_date >= historyFrom) && (!historyTo || record.work_date <= historyTo) && !historyRangeInvalid)
-    : records, [records, useHistoryRange, historyFrom, historyTo, historyRangeInvalid])
+    ? historyRecords.filter((record) => (!historyFrom || record.work_date >= historyFrom) && (!historyTo || record.work_date <= historyTo) && !historyRangeInvalid)
+    : historyRecords, [historyRecords, useHistoryRange, historyFrom, historyTo, historyRangeInvalid])
   /* 產能只採用未來排程也會使用的日期：星期一至星期六，並排除國定假日與補假。 */
   const capacityRecords = useMemo(() => scopedRecords.filter((record) => {
     const weekday = parseLocalDate(record.work_date).getDay()
@@ -1420,7 +1460,7 @@ function OrderForecastPanel({ productCode, records, order }: { productCode: stri
     }
   }, [capacityRecords])
   const [machineCount, setMachineCount] = useState(storedDraft?.machineCount || capacityHistory.defaultMachineCount)
-  const historyBasis = `${capacityScope}|${historyFrom}|${historyTo}`
+  const historyBasis = JSON.stringify([capacityScope, historyFrom, historyTo, ...selectedReferences.map((reference) => reference.key)])
   const previousCapacityBasis = useRef(historyBasis)
   useEffect(() => {
     if (historyBasis === previousCapacityBasis.current) return
@@ -1428,8 +1468,8 @@ function OrderForecastPanel({ productCode, records, order }: { productCode: stri
     setMachineCount(capacityHistory.defaultMachineCount)
   }, [historyBasis, capacityHistory.defaultMachineCount])
   useEffect(() => {
-    saveForecastDraft(productCode, { orderQuantity, dueDate, capacityScope, historyFrom, historyTo, machineCount })
-  }, [productCode, orderQuantity, dueDate, capacityScope, historyFrom, historyTo, machineCount])
+    saveForecastDraft(productCode, { orderQuantity, dueDate, capacityScope, historyFrom, historyTo, machineCount, referenceOrderKeys })
+  }, [productCode, orderQuantity, dueDate, capacityScope, historyFrom, historyTo, machineCount, referenceOrderKeys])
 
   const remainingQuantity = Math.max(orderQuantity - totalCompletedQuantity, 0)
   const matchingMachineSamples = capacityHistory.dailySamples.filter((sample) => sample.machineCount === machineCount)
@@ -1472,12 +1512,17 @@ function OrderForecastPanel({ productCode, records, order }: { productCode: stri
   const holidayCalendarIncomplete = [dueDate, forecastResult.estimatedDate].some((value) => value && !hasTaiwanHolidayCalendar(value))
   const holidayCalendarYears = `${TAIWAN_HOLIDAY_CALENDAR_YEARS[0]}～${TAIWAN_HOLIDAY_CALENDAR_YEARS[TAIWAN_HOLIDAY_CALENDAR_YEARS.length - 1]}`
   return <div className="order-forecast production-forecast-panel">
-    <div className="forecast-modal-product"><span>產品編號</span><strong>{productCode}</strong></div>
+    <div className="forecast-modal-product"><span>產品訂單</span><strong>{productCode}</strong></div>
     <div className="forecast-head modal-forecast-head"><div><Calculator /><span><strong>依歷史產能預估完工日期</strong><small>依選定歷史資料的實際產量與機台數進行預估</small></span></div><label><span>訂單總數量</span><input className="order-quantity-input" type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={orderQuantity || ''} onChange={(event) => setOrderQuantity(Math.max(0, Number(event.target.value)))} placeholder="輸入訂單數量" /></label></div>
     <div className="forecast-capacity-controls forecast-single-control">
-      <label className="forecast-setting"><span>歷史產能依據</span><select value={capacityScope} onChange={(event) => setCapacityScope(event.target.value as ForecastCapacityScope)}><option value="all">全部歷史資料</option><option value="range">指定歷史日期區間</option></select></label>
+      <label className="forecast-setting"><span>歷史產能依據</span><select value={capacityScope} onChange={(event) => changeCapacityScope(event.target.value as ForecastCapacityScope)}><option value="all">全部歷史資料</option><option value="range">指定歷史日期區間</option></select></label>
     </div>
-    {useHistoryRange && <div className="forecast-history-range"><label className="forecast-setting"><span>歷史開始日期</span><input type="date" min={historyDateBounds.first || undefined} max={historyTo || historyDateBounds.last || undefined} value={historyFrom} onChange={(event) => setHistoryFrom(event.target.value)} /></label><label className="forecast-setting"><span>歷史結束日期</span><input type="date" min={historyFrom || historyDateBounds.first || undefined} max={historyDateBounds.last || undefined} value={historyTo} onChange={(event) => setHistoryTo(event.target.value)} /></label></div>}
+    {referenceOrders.length > 0 && <fieldset className="forecast-reference-orders" aria-describedby="forecast-reference-orders-help">
+      <legend>同產品歷史訂單</legend>
+      <small id="forecast-reference-orders-help">勾選要納入產能估算的訂單。所選日期區間也會套用到這些紀錄。</small>
+      {referenceOrders.map((reference) => <label key={reference.key}><input type="checkbox" checked={referenceOrderKeys.includes(reference.key)} onChange={(event) => toggleReferenceOrder(reference.key, event.target.checked)} /><span>{reference.code}</span></label>)}
+    </fieldset>}
+    {useHistoryRange && <div className="forecast-history-range"><label className="forecast-setting"><span>歷史開始日期</span><input type="date" max={historyTo || undefined} value={historyFrom} onChange={(event) => setHistoryFrom(event.target.value)} /></label><label className="forecast-setting"><span>歷史結束日期</span><input type="date" min={historyFrom || undefined} value={historyTo} onChange={(event) => setHistoryTo(event.target.value)} /></label></div>}
     <div className="forecast-history-basis"><span>產能依據</span><strong>{capacityHistory.historyDays} 個加工日</strong><strong>總產量 {formatNumber(capacityHistory.capacitySampleQuantity)} 只</strong><strong>平均產量 {formatNumber(Math.round(estimatedDailyQuantity))} 只／日</strong><small>{historyRangeText}；{matchingMachineSamples.length ? `採用歷史中實際使用 ${machineCount} 台的 ${matchingMachineSamples.length} 個加工日` : `歷史沒有使用 ${machineCount} 台的加工日，暫依每台平均產量換算`}；{capacityHistory.includesSaturday ? `資料包含星期六（共 ${capacityHistory.saturdayDays} 天），未來排程會計入星期六` : '資料沒有星期六，未來排程只計算星期一至星期五'}</small></div>
     <div className="forecast-future-config">
       <label className="forecast-setting"><span>訂單交期</span><input type="date" min={today()} value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label>

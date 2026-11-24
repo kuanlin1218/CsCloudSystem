@@ -3684,6 +3684,40 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 } /* 手機與電腦共用｜加工管理系統 → 訂單完工預估 → 訂單完工預估的機台數設定區 → 結束此區設定 */
 
 /* 加工管理系統｜訂單完工預估的「指定歷史日期區間」開始與結束日期排列區 */
+.forecast-reference-orders { /* 手機與電腦共用｜加工管理系統 → 訂單完工預估 →「同產品歷史訂單」勾選區 */
+  min-inline-size: 0; /* 手機上長訂單編號可在區塊內換行 */
+  margin: 10px 0 0; /* 與歷史產能下拉選單的距離 */
+  padding: 6px 12px 8px; /* 「同產品歷史訂單」區塊內距 */
+  border: 1px solid #39464d; /* 歷史訂單勾選區邊框 */
+  border-radius: 6px; /* 歷史訂單勾選區圓角 */
+}
+
+.forecast-reference-orders > legend { /* 訂單完工預估 →「同產品歷史訂單」標題 */
+  padding-inline: 4px; /* 標題兩側與邊框的距離 */
+  color: #dce6ea; /* 標題文字顏色 */
+  font-weight: 700; /* 標題字重 */
+}
+
+.forecast-reference-orders > small { /* 訂單完工預估 → 歷史訂單勾選說明 */
+  display: block; /* 說明獨占一行 */
+  color: #93a3ab; /* 說明文字顏色 */
+}
+
+.forecast-reference-orders > label { /* 訂單完工預估 → 歷史訂單核取方塊與編號 */
+  display: flex; /* 核取方塊與訂單編號並排 */
+  align-items: center; /* 核取方塊與訂單編號垂直對齊 */
+  gap: 8px; /* 核取方塊與訂單編號間距 */
+  min-height: 44px; /* 手機可點按整列 */
+  overflow-wrap: anywhere; /* 長編號可換行 */
+}
+
+.forecast-reference-orders > label > input { /* 訂單完工預估 → 歷史訂單核取方塊 */
+  flex: 0 0 auto; /* 長訂單編號不會壓縮核取方塊 */
+  width: 18px; /* 核取方塊寬度 */
+  height: 18px; /* 核取方塊高度 */
+  accent-color: #3dccb3; /* 勾選時顏色 */
+}
+
 .forecast-history-range { /* 手機與電腦共用｜加工管理系統 → 訂單完工預估 → 訂單完工預估的「指定歷史日期區間」開始與結束日期排列區 → 選取此元件 */
   display: grid; /* 手機與電腦共用｜加工管理系統 → 訂單完工預估 → 訂單完工預估的「指定歷史日期區間」開始與結束日期排列區 → 顯示與排版方式 */
   grid-template-columns: repeat(2, minmax(0, 1fr)); /* 手機與電腦共用｜加工管理系統 → 訂單完工預估 → 訂單完工預估的「指定歷史日期區間」開始與結束日期排列區 → 網格欄的數量及寬度 */

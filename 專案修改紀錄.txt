@@ -2086,6 +2086,30 @@ GitHub Summary：移除訂單完工預估的加工 Excel 產能樣本功能。
 SQL：需要執行 supabase/enable-production-orders.sql，建立訂單欄位、完工登記交易及備份／還原支援。
 GitHub Summary：新增訂單數量、交期與加工完工登記。
 
+2026-11-24
+修改內容：訂單完工預估可逐筆勾選同產品的其他歷史訂單作為產能參考。所選日期區間套用到整批參考紀錄，剩餘數量仍以本訂單累計量計算。
+修改檔案：src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：讓訂單完工預估可勾選同產品的歷史訂單。
+
+2026-11-24
+修改內容：訂單完工預估的歷史參考清單可跨產品勾選，列出所有有加工紀錄的其他訂單。
+修改檔案：src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：開放訂單完工預估跨產品參考歷史訂單。
+
+2026-11-24
+修改內容：訂單完工預估的歷史參考訂單恢復為同產品限定，舊草稿中的跨產品選擇不列入產能估算。
+修改檔案：src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：將完工預估的歷史參考訂單限定為同產品。
+
+2026-11-24
+修改內容：切換至指定歷史日期區間時，以台灣日期帶入今天往前五天至今天。勾選參考訂單時保留目前起訖日期。
+修改檔案：src/App.tsx、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：設定完工預估的預設歷史日期區間。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
