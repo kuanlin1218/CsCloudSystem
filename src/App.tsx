@@ -1246,7 +1246,7 @@ function ProductionSettingsPage({ openOption }: { openOption: (type: ProductionO
         <Wrench /><span><strong>訂單管理</strong><small>管理產品編號、訂單數量與交期</small></span><Pencil />
       </button>
       <button className="production-setting-card machine-setting" type="button" onClick={() => openOption('machine')}>
-        <Wrench /><span><strong>管理機台</strong><small>新增或刪除加工機台名稱</small></span><Pencil />
+        <Wrench /><span><strong>機台管理</strong><small>新增或刪除加工機台名稱</small></span><Pencil />
       </button>
     </div>
   </section>
@@ -1625,12 +1625,12 @@ function ProductionOptionModal({ type, values, orders, close, save, remove, upda
     catch (updateError) { setError(messageFor(updateError)) }
     finally { setUpdating(false) }
   }
-  return <Modal title={type === 'product' ? '訂單管理' : '管理機台'} size={type === 'product' ? 'production-order-modal' : undefined} close={close}>
+  return <Modal title={type === 'product' ? '訂單管理' : '機台管理'} size={type === 'product' ? 'production-order-modal' : undefined} close={close}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       {type === 'product' ? <ProductionOrderFields
-        productInput={<input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder="產品編號<訂單編號>" />}
+        productInput={<input value={value} onChange={(event) => setValue(event.target.value)} placeholder="產品編號<訂單編號>" />}
         draft={newSettings} setDraft={setNewSettings}
-      /> : <Field label={label} wide><input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder="例如 MT04" /></Field>}
+      /> : <Field label={label} wide><input value={value} onChange={(event) => setValue(event.target.value)} placeholder="例如 MT04" /></Field>}
       <p className="option-help">{type === 'product' ? '訂單數量與交期可稍後補填。更改產品編號會同步更新既有加工紀錄。' : '新增後會出現在加工登記選單；刪除不會影響過去的加工紀錄。'}</p>
       {error && <div className="form-error">{error}</div>}
       <button className="button primary option-add-button" disabled={saving || !!removing || updating} type="submit"><Plus />{saving ? '新增中…' : `新增${label}`}</button>
