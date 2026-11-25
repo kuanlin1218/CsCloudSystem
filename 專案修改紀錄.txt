@@ -2170,6 +2170,12 @@ GitHub Summary：關閉訂單管理與管理機台的初始輸入焦點。
 SQL：需要執行 supabase/enable-machine-management.sql，建立機台狀態、資料及保養維修紀錄，並接上備份／還原。
 GitHub Summary：新增機台基本資料、停用及保養維修紀錄。
 
+2026-11-25
+修改內容：手機版訂單管理與機台管理清單可隨內容展開，超出可視範圍時可捲動整個視窗。
+修改檔案：src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：增加手機版訂單管理與機台管理視窗的清單可見高度。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

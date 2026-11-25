@@ -1649,7 +1649,7 @@ function ProductionOptionModal({ type, values, orders, machines, close, save, re
       ? <MachineProfileModal key={selectedMachine.id} machine={selectedMachine} back={back} onSaved={onMachineSaved} />
       : <MachineServiceModal key={selectedMachine.id} machine={selectedMachine} back={back} />
   }
-  return <Modal title={type === 'product' ? '訂單管理' : '機台管理'} size={type === 'product' ? 'production-order-modal' : undefined} close={close}>
+  return <Modal title={type === 'product' ? '訂單管理' : '機台管理'} size={type === 'product' ? 'production-option-modal production-order-modal' : 'production-option-modal'} close={close}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       {type === 'product' ? <ProductionOrderFields
         productInput={<input value={value} onChange={(event) => setValue(event.target.value)} placeholder="產品編號<訂單編號>" />}
