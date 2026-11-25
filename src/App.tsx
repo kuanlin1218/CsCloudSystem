@@ -523,11 +523,14 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
   const isSystem = isInventory || isProduction
   const showTableScrollControls = activePage === 'production-query' || activePage === 'production-delete' || activePage === 'movements' || activePage === 'stocktake' || activePage === 'products'
   const productionOrders = useMemo(() => productionOptions.filter((option) => option.option_type === 'product'), [productionOptions])
-  const productionEntryProductCodes = useMemo(() => productionOrders.map((option) => option.value).sort(), [productionOrders])
-  const productionQueryProductCodes = useMemo(() => [...new Set([
-    ...productionEntryProductCodes,
-    ...productionRecords.map((record) => record.product_code),
-  ].filter(Boolean))].sort(), [productionEntryProductCodes, productionRecords])
+  const productionOrderListCodes = useMemo(() => [...productionOrders]
+    .sort((a, b) => (Date.parse(a.created_at) || 0) - (Date.parse(b.created_at) || 0) || a.value.localeCompare(b.value, 'zh-TW'))
+    .map((order) => order.value), [productionOrders])
+  const productionQueryProductCodes = useMemo(() => {
+    const historyCodes = [...new Set(productionRecords.map((record) => record.product_code).filter(Boolean))].sort()
+    return [...new Set([...productionOrderListCodes, ...historyCodes])]
+  }, [productionOrderListCodes, productionRecords])
+  const productionDashboardProductCodes = useMemo(() => [...productionQueryProductCodes].sort(), [productionQueryProductCodes])
   const productionMachines = useMemo(() => productionOptions.filter((option) => option.option_type === 'machine').map((option) => option.value).sort(), [productionOptions])
   const portalExitButton = !isLocalDataMode && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>
 
@@ -587,8 +590,8 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
         {isHome && <HomePage navigate={nav} openAdmin={() => setAdminDataModal(true)} guestMode={guestMode}
           showOperationLog={canReadOperationLog} exitButton={portalExitButton} />}
         {activePage === 'operation-log' && <OperationLogPage goHome={() => nav('home')} />}
-        {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionQueryProductCodes} loading={loading} />}
-        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionEntryProductCodes} orders={productionOrders} machines={productionMachines} loading={loading} onSave={async (input, overwrite, completedOn) => {
+        {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionDashboardProductCodes} loading={loading} />}
+        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionOrderListCodes} orders={productionOrders} machines={productionMachines} loading={loading} onSave={async (input, overwrite, completedOn) => {
           if (completedOn) {
             await saveCompletedProductionRecord(input, completedOn, overwrite)
             await afterSave(`加工數量及完工日期 ${formatDate(completedOn)} 已登記`)
@@ -661,7 +664,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
         setProductModal(null); setPendingBarcode(''); await afterSave(message)
       }} />}
       {priceHistoryProduct && <PriceHistoryModal product={priceHistoryProduct} movements={movements} close={() => setPriceHistoryProduct(null)} />}
-      {!guestMode && productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={productionOptionModal === 'product' ? productionEntryProductCodes : productionMachines} orders={productionOrders} close={() => setProductionOptionModal(null)} save={async (value, settings) => {
+      {!guestMode && productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={productionOptionModal === 'product' ? productionOrderListCodes : productionMachines} orders={productionOrders} close={() => setProductionOptionModal(null)} save={async (value, settings) => {
         await createProductionOption(productionOptionModal, value, settings); await afterSave(productionOptionModal === 'product' ? '訂單已新增' : '機台已新增')
       }} remove={async (value) => {
         const label = productionOptionModal === 'product' ? '訂單' : '機台'
@@ -1340,7 +1343,7 @@ function ProductionRecordEditModal({ record, productCodes, machines, close, save
   })
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState('')
-  const availableProductCodes = productCodes.includes(form.product_code) ? productCodes : [form.product_code, ...productCodes]
+  const availableProductCodes = productCodes.includes(form.product_code) ? productCodes : [...productCodes, form.product_code]
   const availableMachines = machines.includes(form.machine) ? machines : [form.machine, ...machines]
 
   const submit = async (event: FormEvent) => {
@@ -1566,8 +1569,9 @@ function readOrderSettings(draft: OrderSettingsDraft): OrderSettings {
   return { order_quantity: quantity, due_date: draft.dueDate || null }
 }
 
-function ProductionOrderFields({ draft, setDraft }: { draft: OrderSettingsDraft; setDraft: (value: OrderSettingsDraft) => void }) {
-  return <div className="form-grid production-order-fields">
+function ProductionOrderFields({ productInput, draft, setDraft }: { productInput: ReactNode; draft: OrderSettingsDraft; setDraft: (value: OrderSettingsDraft) => void }) {
+  return <div className="production-order-fields">
+    <Field label="產品編號">{productInput}</Field>
     <Field label="訂單數量"><input type="number" inputMode="numeric" min="1" max="2147483647" step="1" value={draft.quantity} onChange={(event) => setDraft({ ...draft, quantity: event.target.value })} /></Field>
     <Field label="交期"><input type="date" value={draft.dueDate} onChange={(event) => setDraft({ ...draft, dueDate: event.target.value })} /></Field>
   </div>
@@ -1612,8 +1616,10 @@ function ProductionOptionModal({ type, values, orders, close, save, remove, upda
   }
   return <Modal title={type === 'product' ? '訂單管理' : '管理機台'} size={type === 'product' ? 'production-order-modal' : undefined} close={close}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
-      <Field label={type === 'product' ? '產品編號' : label} wide><input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder={type === 'product' ? '產品編號<訂單編號>' : '例如 MT04'} /></Field>
-      {type === 'product' && <ProductionOrderFields draft={newSettings} setDraft={setNewSettings} />}
+      {type === 'product' ? <ProductionOrderFields
+        productInput={<input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder="產品編號<訂單編號>" />}
+        draft={newSettings} setDraft={setNewSettings}
+      /> : <Field label={label} wide><input autoFocus value={value} onChange={(event) => setValue(event.target.value)} placeholder="例如 MT04" /></Field>}
       <p className="option-help">{type === 'product' ? '訂單數量與交期可稍後補填。更改產品編號會同步更新既有加工紀錄。' : '新增後會出現在加工登記選單；刪除不會影響過去的加工紀錄。'}</p>
       {error && <div className="form-error">{error}</div>}
       <button className="button primary option-add-button" disabled={saving || !!removing || updating} type="submit"><Plus />{saving ? '新增中…' : `新增${label}`}</button>
@@ -1624,13 +1630,15 @@ function ProductionOptionModal({ type, values, orders, close, save, remove, upda
         const order = type === 'product' ? orders.find((entry) => entry.value === item) : undefined
         return <div className={`option-list-item ${editing === item ? 'is-editing' : ''}`} key={item}>
         {editing === item
-          ? <input className="option-edit-input" autoFocus value={editValue} onChange={(event) => setEditValue(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void updateValue() } }} aria-label={`編輯產品編號 ${item}`} />
+          ? <ProductionOrderFields
+            productInput={<input className="option-edit-input" autoFocus value={editValue} onChange={(event) => setEditValue(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void updateValue() } }} aria-label={`編輯產品編號 ${item}`} />}
+            draft={editSettings} setDraft={setEditSettings}
+          />
           : <span>{item}{order && <small className="production-order-summary">數量 {order.order_quantity == null ? '未設定' : formatNumber(order.order_quantity)} · 交期 {order.due_date ? formatDate(order.due_date) : '未設定'} · {order.completed_on ? `完工 ${formatDate(order.completed_on)}` : '未完工'}</small>}</span>}
         <div className="option-list-actions">
           {order && (editing === item ? <><button className="option-save-edit" disabled={updating || saving} onClick={() => void updateValue()} aria-label={`儲存訂單 ${item}`} title="儲存修改">{updating ? '…' : <Save />}</button><button disabled={updating} onClick={() => { setEditing(''); setEditValue(''); setError('') }} aria-label="取消編輯" title="取消編輯"><X /></button></> : <button className="option-start-edit" disabled={saving || !!removing || updating || !!editing} onClick={() => { setEditing(item); setEditValue(item); setEditSettings({ quantity: String(order.order_quantity ?? ''), dueDate: order.due_date ?? '' }); setError('') }} aria-label={`編輯訂單 ${item}`} title="編輯訂單"><Pencil /></button>)}
           <button className="danger-icon" disabled={!!removing || updating || !!editing} onClick={() => void removeValue(item)} aria-label={`刪除${label} ${item}`} title={`刪除${label}`}>{removing === item ? '…' : <Trash2 />}</button>
         </div>
-        {editing === item && <ProductionOrderFields draft={editSettings} setDraft={setEditSettings} />}
       </div>
       })}
     </div>

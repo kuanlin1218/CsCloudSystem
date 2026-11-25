@@ -4034,9 +4034,9 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 
 /* 加工管理系統｜基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 */
 .option-help { /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 選取此元件 */
-  margin: -7px 0 5px; /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 外距 */
+  margin: 10px 0 -5px; /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 外距 */
   color: #82919a; /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 文字或圖示前景色 */
-  font-size: 13px; /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 字級 */
+  font-size: 10px; /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 字級 */
 } /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 結束此區設定 */
 
 /* 加工管理系統｜基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 */
@@ -4177,15 +4177,30 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 }
 
 .production-order-modal .option-list-item.is-editing {
-  display: grid; /* 將編輯欄位排在產品編號與操作鈕的下一列 */
-  grid-template-columns: minmax(0, 1fr) auto; /* 依序保留可縮小的編號欄與右側操作鈕 */
+  display: grid; /* 編輯表單在上，儲存與取消操作列在下 */
+  grid-template-columns: minmax(0, 1fr); /* 編輯表單使用整列寬度 */
   gap: 8px; /* 編輯欄與操作鈕的間距 */
 }
 
-.production-order-fields {
-  grid-column: 1 / -1; /* 訂單數量與交期占滿編輯列 */
-  min-width: 0; /* 手機欄位縮小時可留在訂單卡片內 */
-  margin-top: 8px; /* 與上方產品編號的距離 */
+.production-order-modal .option-list-item.is-editing > .option-list-actions {
+  justify-self: end; /* 儲存與取消靠齊右側輸入框 */
+}
+
+.production-order-fields { /* 訂單管理 → 新增與編輯表單的產品編號、訂單數量與交期 */
+  display: grid; /* 三個訂單欄位各占一列 */
+  grid-template-columns: minmax(0, 1fr); /* 表單列隨手機與電腦的視窗寬度縮放 */
+  gap: 10px; /* 三個欄位的列間距 */
+}
+
+.production-order-fields > .field { /* 訂單管理 → 左側欄位標題與右側輸入框 */
+  grid-template-columns: 5.25rem minmax(0, 1fr); /* 左側四字標題對齊，右欄用剩餘空間 */
+  align-items: center; /* 欄位標題和輸入框垂直置中 */
+  margin: 0; /* 表單列間距由訂單表單統一管理 */
+}
+
+.production-order-fields > .field > input { /* 訂單管理 → 產品編號、訂單數量與交期輸入框 */
+  min-width: 0; /* 原生日期框與長編號可隨右欄縮小 */
+  max-width: 100%; /* 輸入框保持在右欄範圍內 */
 }
 
 .option-empty { /* 手機與電腦共用｜加工管理系統 → 基礎資料設定 → 基礎資料設定的「產品編號」與「機台」新增、編輯或刪除列 → 選取此元件 */
