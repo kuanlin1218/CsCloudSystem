@@ -170,6 +170,7 @@ export default function App() {
   const [authReady, setAuthReady] = useState(isLocalDataMode)
   const [authMessage, setAuthMessage] = useState('')
   const [forcePasswordSetup, setForcePasswordSetup] = useState(false)
+  const autoPasskeyAvailable = useRef(!guestMode)
   const mobileQuery = '(max-width: 620px), (hover: none) and (pointer: coarse)'
   const [phoneLayout, setPhoneLayout] = useState(() => window.matchMedia(mobileQuery).matches)
 
@@ -185,6 +186,7 @@ export default function App() {
     const client = supabase
     if (!client) return
     const acceptSession = async (nextSession: Session | null) => {
+      if (nextSession) autoPasskeyAvailable.current = false
       if (nextSession && !isOwnerUser(nextSession.user.id)) {
         await client.auth.signOut()
         setSession(null)
@@ -212,6 +214,7 @@ export default function App() {
   }, [])
 
   const enterGuestMode = () => {
+    autoPasskeyAvailable.current = false
     window.sessionStorage.setItem(GUEST_SESSION_KEY, '1')
     setAuthMessage('')
     setGuestMode(true)
@@ -222,12 +225,19 @@ export default function App() {
     setGuestMode(false)
   }
 
+  // 主畫面 PWA 只在本次開啟時自動驗證。手動登出或訪客返回登入時保留手動選擇。
+  const claimAutoPasskey = useCallback(() => {
+    if (!autoPasskeyAvailable.current) return false
+    autoPasskeyAvailable.current = false
+    return true
+  }, [])
+
   if (isLocalDataMode) return <AuthenticatedApp session={null} />
   if (guestMode) return <AuthenticatedApp session={null} guestMode exitGuest={exitGuestMode} />
   if (!authReady) return <LoadingScreen label="正在確認安全登入狀態…" />
   const canScanPhoneLogin = phoneLayout && supportsPasskeys()
   if (!session) return <LoginScreen initialMessage={authMessage} onGuest={enterGuestMode}
-    phoneLayout={phoneLayout} canScanPhoneLogin={canScanPhoneLogin} />
+    phoneLayout={phoneLayout} canScanPhoneLogin={canScanPhoneLogin} claimAutoPasskey={claimAutoPasskey} />
   if (forcePasswordSetup || session.user.user_metadata?.password_configured !== true) {
     return <PasswordSetupScreen session={session} complete={(user) => { setForcePasswordSetup(false); setSession({ ...session, user }) }} />
   }
@@ -240,8 +250,9 @@ function LoadingScreen({ label }: { label: string }) {
 
 type LoginMethod = 'password' | 'qr' | 'reset'
 
-function LoginScreen({ initialMessage, onGuest, phoneLayout, canScanPhoneLogin }: {
+function LoginScreen({ initialMessage, onGuest, phoneLayout, canScanPhoneLogin, claimAutoPasskey }: {
   initialMessage?: string; onGuest: () => void; phoneLayout: boolean; canScanPhoneLogin: boolean
+  claimAutoPasskey: () => boolean
 }) {
   const [method, setMethod] = useState<LoginMethod | null>(null)
   const [username, setUsername] = useState('')
@@ -264,13 +275,21 @@ function LoginScreen({ initialMessage, onGuest, phoneLayout, canScanPhoneLogin }
     setResetSuccess(false)
   }
 
-  const submitPasskey = async () => {
-    showMethod(null)
+  const submitPasskey = useCallback(async (automatic = false) => {
+    const controller = automatic ? new AbortController() : undefined
+    const timeout = controller && window.setTimeout(() => controller.abort(), 20_000)
     setBusy(true)
-    try { await signInWithPasskey() }
-    catch (error) { setMessage(messageFor(error)) }
-    finally { setBusy(false) }
-  }
+    try { await signInWithPasskey(controller?.signal) }
+    catch (error) { if (!automatic) setMessage(messageFor(error)) }
+    finally { window.clearTimeout(timeout); setBusy(false) }
+  }, [])
+
+  useEffect(() => {
+    if (!phoneLayout || initialMessage || !supportsPasskeys()) return
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as Navigator & { standalone?: boolean }).standalone === true
+    if (standalone && claimAutoPasskey()) void submitPasskey(true)
+  }, [phoneLayout, claimAutoPasskey, initialMessage, submitPasskey])
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setMessage('')
@@ -336,7 +355,7 @@ function LoginScreen({ initialMessage, onGuest, phoneLayout, canScanPhoneLogin }
           onClick={() => showMethod('password')} disabled={busy} aria-expanded={false} aria-controls="login-method-panel">
           <UserRound aria-hidden="true" />帳號密碼登入
         </button>}
-        {supportsPasskeys() && <button className="button auth-passkey-button" type="button" onClick={() => void submitPasskey()} disabled={busy}>
+        {supportsPasskeys() && <button className="button auth-passkey-button" type="button" onClick={() => { showMethod(null); void submitPasskey() }} disabled={busy}>
           <LockKeyhole aria-hidden="true" />使用通行密鑰登入 Face ID
         </button>}
         {(!phoneLayout || canScanPhoneLogin) && <button className="button auth-qr-button" type="button"

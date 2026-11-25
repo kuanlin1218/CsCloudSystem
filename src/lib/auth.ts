@@ -30,9 +30,9 @@ function passkeyErrorMessage(error: { code?: string; name: string; message: stri
   return '通行密鑰操作失敗，請確認裝置設定或使用帳密登入。'
 }
 
-export async function signInWithPasskey() {
+export async function signInWithPasskey(signal?: AbortSignal) {
   if (!supabase || !supportsPasskeys()) throw new Error('此瀏覽器或網址不支援通行密鑰。')
-  const { error } = await supabase.auth.signInWithPasskey()
+  const { error } = await supabase.auth.signInWithPasskey({ options: { signal } })
   if (error) throw new Error(passkeyErrorMessage(error))
 }
 

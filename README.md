@@ -248,7 +248,9 @@ Supabase 專案本身也有密碼最短長度設定。請在 Auth 的 Password S
 1. 到 Supabase Dashboard → Authentication → Passkeys，開啟 **Enable Passkey authentication**。
 2. 以使用者實際開啟的 HTTPS 網址設定 WebAuthn。假設網址是 `https://your-account.github.io/cnc/`，Relying Party Display Name 可填「詮栩雲端系統」，Relying Party ID 填 `your-account.github.io`，Relying Party Origins 填 `https://your-account.github.io`。兩欄都不包含 `/cnc/`。
 3. 部署新版後，用 iPhone 開啟正式網址，先用管理員帳密登入，進入加工管理或庫存管理系統並打開左側選單。在帳號下方、「登出系統」上方點「設定通行密鑰（Face ID）」，依裝置提示完成設定。
-4. 登出後，點「使用通行密鑰登入（Face ID）」測試。iPhone 會依裝置設定提供 Face ID 或其他驗證方式，原有帳密也可繼續登入。
+4. 登出後，點「使用通行密鑰登入 Face ID」測試。iPhone 會依裝置設定提供 Face ID 或其他驗證方式，原有帳密也可繼續登入。
+
+從手機主畫面開啟 PWA，若需要登入，網站會自動嘗試一次通行密鑰驗證。iPhone 可能會先顯示系統確認畫面。若取消、未出現驗證提示或嘗試逾時，可按「使用通行密鑰登入 Face ID」重試，或改用帳密。手機瀏覽器內開啟網站、手動登出及訪客返回登入時，使用原本的手動登入流程。
 
 通行密鑰綁定 Relying Party ID，日後變更此設定須重新註冊。
 

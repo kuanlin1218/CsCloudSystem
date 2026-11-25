@@ -2182,6 +2182,12 @@ GitHub Summary：增加手機版訂單管理與機台管理視窗的清單可見
 SQL：不需要執行。
 GitHub Summary：讓管理清單高度樣式相容主畫面 PWA 的既有版面。
 
+2026-11-25
+修改內容：手機主畫面 PWA 啟動至登入頁時，自動嘗試一次通行密鑰驗證，保留手動重試與其他登入方式。
+修改檔案：src/App.tsx、src/lib/auth.ts、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：主畫面 PWA 開啟時自動嘗試 Face ID 登入。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：
