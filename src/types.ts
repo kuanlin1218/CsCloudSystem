@@ -120,4 +120,30 @@ export interface ProductionOption extends ProductionOrderSettings {
   option_type: ProductionOptionType
   value: string
   created_at: string
+  machine_active?: boolean
+}
+
+export interface MachineProfile {
+  name: string
+  brand: string
+  model: string
+  serial_number: string
+  purchased_on: string | null
+  started_on: string | null
+  notes: string
+}
+
+export interface MachineServiceInput {
+  service_date: string
+  service_type: 'maintenance' | 'repair'
+  description: string
+  technician: string
+  cost: number | null
+  downtime_minutes: number | null
+}
+
+export interface MachineServiceRecord extends MachineServiceInput {
+  id: string
+  machine_id: string
+  created_at: string
 }

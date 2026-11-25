@@ -1,10 +1,11 @@
 import ExcelJS from 'exceljs'
 import { read, utils } from 'xlsx'
-import type { AdminDataPayload, AdminMovementRow, AdminOptionRow, AdminProductRow, AdminProductionRow } from './adminData'
+import type { AdminDataPayload, AdminMachineProfileRow, AdminMachineServiceRow, AdminMovementRow, AdminOptionRow, AdminProductRow, AdminProductionRow } from './adminData'
 import { createQrCodeDataUrl } from './barcode'
 
 const SHEETS = {
-  guide: '使用說明', products: '刀具資料', movements: '出入庫歷史', production: '加工數量', options: '管理選項', qrLabels: 'QR Code 標籤',
+  guide: '使用說明', products: '刀具資料', movements: '出入庫歷史', production: '加工數量', options: '管理選項',
+  machineProfiles: '機台基本資料', machineService: '保養維修紀錄', qrLabels: 'QR Code 標籤',
 } as const
 
 type CellRow = Record<string, unknown>
@@ -220,6 +221,28 @@ export async function downloadAdminWorkbook(payload: AdminDataPayload, exportedA
     { header: '完工日期', key: 'completedOn', width: 16 },
   ])
 
+  addDataSheet(workbook, SHEETS.machineProfiles, (payload.machine_profiles ?? []).map((machine) => ({
+    code: machine.machine_code, active: machine.machine_active ? '使用中' : '停用', name: machine.name ?? '',
+    brand: machine.brand ?? '', model: machine.model ?? '', serial: machine.serial_number ?? '',
+    purchased: machine.purchased_on ?? '', started: machine.started_on ?? '', notes: machine.notes ?? '',
+  })), [
+    { header: '機台編號', key: 'code', width: 16 }, { header: '狀態', key: 'active', width: 12 },
+    { header: '機台名稱', key: 'name', width: 22 }, { header: '廠牌', key: 'brand', width: 16 },
+    { header: '型號', key: 'model', width: 18 }, { header: '出廠序號', key: 'serial', width: 18 },
+    { header: '購入日期', key: 'purchased', width: 14 }, { header: '啟用日期', key: 'started', width: 14 },
+    { header: '備註', key: 'notes', width: 34 },
+  ])
+
+  addDataSheet(workbook, SHEETS.machineService, (payload.machine_service_records ?? []).map((record) => ({
+    code: record.machine_code, date: record.service_date, type: record.service_type === 'maintenance' ? '保養' : '維修',
+    description: record.description, technician: record.technician, cost: record.cost ?? '', downtime: record.downtime_minutes ?? '',
+  })), [
+    { header: '機台編號', key: 'code', width: 16 }, { header: '日期', key: 'date', width: 14 },
+    { header: '類型', key: 'type', width: 12 }, { header: '處理內容', key: 'description', width: 40 },
+    { header: '處理人員／廠商', key: 'technician', width: 24 }, { header: '費用', key: 'cost', width: 14 },
+    { header: '停機分鐘', key: 'downtime', width: 14 },
+  ])
+
   await addQrLabelSheet(workbook, payload.products)
   const finalWorkbook = await workbook.xlsx.writeBuffer()
   const downloadUrl = URL.createObjectURL(new Blob([finalWorkbook], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
@@ -235,7 +258,7 @@ export async function downloadAdminWorkbook(payload: AdminDataPayload, exportedA
 
 export interface WorkbookPreview {
   payload: AdminDataPayload
-  summary: { products: number; movements: number; productionRecords: number; options: number }
+  summary: { products: number; movements: number; productionRecords: number; options: number; machineProfiles: number; machineServiceRecords: number }
 }
 
 export async function parseAdminWorkbook(file: File): Promise<WorkbookPreview> {
@@ -245,6 +268,8 @@ export async function parseAdminWorkbook(file: File): Promise<WorkbookPreview> {
   let movements: AdminMovementRow[] = []
   let productionRecords: AdminProductionRow[] = []
   let options: AdminOptionRow[] = []
+  let machineProfiles: AdminMachineProfileRow[] = []
+  let machineService: AdminMachineServiceRow[] = []
 
   try {
     products = rows(workbook, SHEETS.products).filter((r) => Object.values(r).some((v) => text(v))).map((r, i) => {
@@ -300,6 +325,50 @@ export async function parseAdminWorkbook(file: File): Promise<WorkbookPreview> {
     options = options.filter((item, index) => options.findIndex((other) => other.option_type === item.option_type && other.value === item.value) === index)
   } catch (error) { errors.push(error instanceof Error ? error.message : '管理選項格式錯誤') }
 
+  const knownMachineCodes = new Set([...options.filter((option) => option.option_type === 'machine').map((option) => option.value), ...productionRecords.map((record) => record.machine)])
+  if (workbook.Sheets[SHEETS.machineProfiles]) {
+    try {
+      const seen = new Set<string>()
+      machineProfiles = rows(workbook, SHEETS.machineProfiles).filter((r) => Object.values(r).some((v) => text(v))).map((r, i) => {
+        const row = i + 2
+        const machineCode = upper(r['機台編號'])
+        const status = text(r['狀態'])
+        if (!knownMachineCodes.has(machineCode) || seen.has(machineCode)) throw new Error(`機台基本資料第 ${row} 列的機台編號不存在或重複`)
+        if (status && status !== '使用中' && status !== '停用') throw new Error(`機台基本資料第 ${row} 列狀態不正確`)
+        seen.add(machineCode)
+        return {
+          machine_code: machineCode, machine_active: status !== '停用',
+          name: text(r['機台名稱']), brand: text(r['廠牌']), model: text(r['型號']), serial_number: text(r['出廠序號']),
+          purchased_on: localDate(r['購入日期'], '機台基本資料「購入日期」', row, true),
+          started_on: localDate(r['啟用日期'], '機台基本資料「啟用日期」', row, true), notes: text(r['備註']),
+        }
+      })
+    } catch (error) { errors.push(error instanceof Error ? error.message : '機台基本資料格式錯誤') }
+  }
+  if (workbook.Sheets[SHEETS.machineService]) {
+    try {
+      machineService = rows(workbook, SHEETS.machineService).filter((r) => Object.values(r).some((v) => text(v))).map((r, i) => {
+        const row = i + 2
+        const machineCode = upper(r['機台編號'])
+        const type = text(r['類型'])
+        const description = text(r['處理內容'])
+        if (!knownMachineCodes.has(machineCode) || (type !== '保養' && type !== '維修') || !description) {
+          throw new Error(`保養維修紀錄第 ${row} 列的機台、類型或處理內容不正確`)
+        }
+        const cost = optionalNumber(r['費用'], '保養維修紀錄「費用」', row)
+        const downtime = text(r['停機分鐘']) ? number(r['停機分鐘'], '保養維修紀錄「停機分鐘」', row, true) : null
+        if ((cost !== null && (cost < 0 || cost > 999999999999.99)) || (downtime !== null && (downtime < 0 || downtime > 2147483647))) {
+          throw new Error(`保養維修紀錄第 ${row} 列的費用或停機分鐘超出範圍`)
+        }
+        return {
+          machine_code: machineCode, service_date: localDate(r['日期'], '保養維修紀錄「日期」', row)!,
+          service_type: type === '保養' ? 'maintenance' : 'repair',
+          description, technician: text(r['處理人員／廠商']), cost, downtime_minutes: downtime,
+        }
+      })
+    } catch (error) { errors.push(error instanceof Error ? error.message : '保養維修紀錄格式錯誤') }
+  }
+
   if (!errors.length) {
     const productCodes = new Set(products.map((p) => p.code))
     const missing = movements.find((m) => !productCodes.has(m.product_code))
@@ -307,6 +376,9 @@ export async function parseAdminWorkbook(file: File): Promise<WorkbookPreview> {
   }
   if (errors.length) throw new Error(errors.slice(0, 5).join('；'))
 
-  const payload = { products, movements, production_records: productionRecords, production_options: options }
-  return { payload, summary: { products: products.length, movements: movements.length, productionRecords: productionRecords.length, options: options.length } }
+  const payload = { products, movements, production_records: productionRecords, production_options: options, machine_profiles: machineProfiles, machine_service_records: machineService }
+  return { payload, summary: {
+    products: products.length, movements: movements.length, productionRecords: productionRecords.length, options: options.length,
+    machineProfiles: machineProfiles.length, machineServiceRecords: machineService.length,
+  } }
 }

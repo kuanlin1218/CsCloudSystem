@@ -2164,6 +2164,12 @@ GitHub Summary：補上匯出與刪除、完工預估及加工總覽的已完工
 SQL：不需要執行。
 GitHub Summary：關閉訂單管理與管理機台的初始輸入焦點。
 
+2026-11-25
+修改內容：機台管理加入基本資料、使用中／停用與保養維修紀錄。改機台編號會同步更新加工紀錄。機台資料及保養維修紀錄納入 Excel 完整備份／還原與操作紀錄。
+修改檔案：src/App.tsx、src/styles.css、src/types.ts、src/lib/repository.ts、src/lib/adminData.ts、src/lib/adminDataWorkbook.ts、supabase/enable-machine-management.sql、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：需要執行 supabase/enable-machine-management.sql，建立機台狀態、資料及保養維修紀錄，並接上備份／還原。
+GitHub Summary：新增機台基本資料、停用及保養維修紀錄。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

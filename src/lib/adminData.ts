@@ -1,4 +1,5 @@
 import { isDemoMode, supabase } from './supabase'
+import type { MachineProfile, MachineServiceInput } from '../types'
 
 export interface AdminProductRow {
   code: string
@@ -47,11 +48,16 @@ export interface AdminOptionRow {
   completed_on?: string | null
 }
 
+export type AdminMachineProfileRow = MachineProfile & { machine_code: string; machine_active: boolean }
+export type AdminMachineServiceRow = MachineServiceInput & { machine_code: string }
+
 export interface AdminDataPayload {
   products: AdminProductRow[]
   movements: AdminMovementRow[]
   production_records: AdminProductionRow[]
   production_options: AdminOptionRow[]
+  machine_profiles?: AdminMachineProfileRow[]
+  machine_service_records?: AdminMachineServiceRow[]
 }
 
 export interface AdminExportResult {
@@ -69,6 +75,8 @@ export interface AdminImportResult {
     movements: number
     production_records: number
     production_options: number
+    machine_profiles?: number
+    machine_service_records?: number
   }
 }
 
@@ -89,8 +97,14 @@ export async function exportAllAdminData(): Promise<Required<Pick<AdminExportRes
 export async function importAllAdminData(payload: AdminDataPayload): Promise<AdminImportResult['counts']> {
   const client = requireCloud()
   const args = { p_payload: payload }
-  let { data, error } = await client.rpc('admin_import_all_with_operation_log', args)
-  if (error?.code === 'PGRST202') ({ data, error } = await client.rpc('admin_import_all', args))
+  const hasMachineData = Boolean(payload.machine_profiles?.length || payload.machine_service_records?.length)
+  let { data, error } = await client.rpc(hasMachineData ? 'admin_import_all_with_machine_data' : 'admin_import_all_with_operation_log', args)
+  if (error?.code === 'PGRST202') {
+    if (hasMachineData) throw new Error('請先執行 enable-machine-management.sql，再還原含機台資料的備份。')
+    const legacyResult = await client.rpc('admin_import_all', args)
+    data = legacyResult.data
+    error = legacyResult.error
+  }
   if (error) throw error
   const result = data as AdminImportResult
   if (!result?.ok || !result.counts) throw new Error(result?.error || '無法匯入雲端資料')

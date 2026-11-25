@@ -15,7 +15,8 @@ import { exportAllAdminData, importAllAdminData } from './lib/adminData'
 import { createQrCodeDataUrl, generateUniqueToolBarcode } from './lib/barcode'
 import { LoginFeedback, PhoneLoginPanel, PhoneLoginScanner } from './PhoneLogin'
 import type { WorkbookPreview } from './lib/adminDataWorkbook'
-import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, findMatchingProductionRecord, loadInventory, loadOperationLog, loadProductChanges, loadProductMovements, loadProductionOptions, loadProductionRecords, registerMovement, saveCompletedProductionRecord, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionOrder, updateProductionRecord } from './lib/repository'
+import { createProduct, createProductionOption, createProductionRecord, deleteMovement, deleteProduct, deleteProductionOption, deleteProductionProductData, deleteProductionRecord, findMatchingProductionRecord, loadInventory, loadMachineProfile, loadMachineServiceRecords, loadOperationLog, loadProductChanges, loadProductMovements, loadProductionOptions, loadProductionRecords, registerMovement, saveCompletedProductionRecord, saveMachineProfile, saveMachineServiceRecord, setStocktakeQuantity, updateProduct, updateProductBarcode, updateProductionOrder, updateProductionRecord } from './lib/repository'
+import type { MachineProfile, MachineServiceInput, MachineServiceRecord } from './types'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type MovementType, type OperationLogEntry, type Page, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord } from './types'
 
 const blankProduct = (): ProductInput => ({
@@ -531,7 +532,9 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
     return [...new Set([...productionOrderListCodes, ...historyCodes])]
   }, [productionOrderListCodes, productionRecords])
   const productionDashboardProductCodes = useMemo(() => [...productionQueryProductCodes].sort(), [productionQueryProductCodes])
-  const productionMachines = useMemo(() => productionOptions.filter((option) => option.option_type === 'machine').map((option) => option.value).sort(), [productionOptions])
+  const machineOptions = useMemo(() => productionOptions.filter((option) => option.option_type === 'machine'), [productionOptions])
+  const productionMachines = useMemo(() => machineOptions.map((option) => option.value).sort(), [machineOptions])
+  const activeProductionMachines = useMemo(() => machineOptions.filter((option) => option.machine_active !== false).map((option) => option.value).sort(), [machineOptions])
   const portalExitButton = !isLocalDataMode && <button className="portal-logout" type="button" onClick={() => guestMode ? exitGuest?.() : void supabase?.auth.signOut()}>{guestMode ? <UserRound /> : <LogOut />}{guestMode ? '返回登入' : '登出'}</button>
 
   return <>
@@ -591,7 +594,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
           showOperationLog={canReadOperationLog} exitButton={portalExitButton} />}
         {activePage === 'operation-log' && <OperationLogPage goHome={() => nav('home')} />}
         {activePage === 'production-dashboard' && <ProductionDashboard records={productionRecords} productCodes={productionDashboardProductCodes} orders={productionOrders} loading={loading} />}
-        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionOrderListCodes} orders={productionOrders} machines={productionMachines} loading={loading} onSave={async (input, overwrite, completedOn) => {
+        {activePage === 'production-entry' && !guestMode && <ProductionEntryPage records={productionRecords} productCodes={productionOrderListCodes} orders={productionOrders} machines={activeProductionMachines} loading={loading} onSave={async (input, overwrite, completedOn) => {
           if (completedOn) {
             await saveCompletedProductionRecord(input, completedOn, overwrite)
             await afterSave(`加工數量及完工日期 ${formatDate(completedOn)} 已登記`)
@@ -664,7 +667,7 @@ function AuthenticatedApp({ session, guestMode = false, exitGuest, canScanPhoneL
         setProductModal(null); setPendingBarcode(''); await afterSave(message)
       }} />}
       {priceHistoryProduct && <PriceHistoryModal product={priceHistoryProduct} movements={movements} close={() => setPriceHistoryProduct(null)} />}
-      {!guestMode && productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={productionOptionModal === 'product' ? productionOrderListCodes : productionMachines} orders={productionOrders} close={() => setProductionOptionModal(null)} save={async (value, settings) => {
+      {!guestMode && productionOptionModal && <ProductionOptionModal type={productionOptionModal} values={productionOptionModal === 'product' ? productionOrderListCodes : productionMachines} orders={productionOrders} machines={machineOptions} close={() => setProductionOptionModal(null)} onMachineSaved={() => afterSave('機台資料已更新')} save={async (value, settings) => {
         await createProductionOption(productionOptionModal, value, settings); await afterSave(productionOptionModal === 'product' ? '訂單已新增' : '機台已新增')
       }} remove={async (value) => {
         const label = productionOptionModal === 'product' ? '訂單' : '機台'
@@ -718,6 +721,7 @@ function HomePage({ navigate, openAdmin, guestMode, showOperationLog, exitButton
 
 const operationEntities: Record<string, string> = {
   products: '刀具', stock_movements: '出入庫紀錄', production_records: '加工紀錄', production_options: '加工選項',
+  machine_profiles: '機台基本資料', machine_service_records: '機台保養維修紀錄',
 }
 
 const operationFields: Record<string, string> = {
@@ -727,6 +731,9 @@ const operationFields: Record<string, string> = {
   stock_after: '庫存餘額', work_date: '加工日期', product_code: '產品編號', machine: '機台', hours: '小時', minutes: '分鐘',
   option_type: '選項類型', value: '選項', products: '刀具', movements: '出入庫紀錄', production_records: '加工紀錄', production_options: '加工選項',
   order_quantity: '訂單數量', due_date: '交期', completed_on: '完工日期',
+  machine_active: '機台使用中', model: '型號', serial_number: '出廠序號', purchased_on: '購入日期', started_on: '啟用日期',
+  service_date: '保養維修日期', service_type: '類型', description: '處理內容', technician: '處理人員或廠商', cost: '費用', downtime_minutes: '停機分鐘',
+  machine_profiles: '機台基本資料', machine_service_records: '保養維修紀錄',
   auth_event_id: '驗證事件編號',
 }
 
@@ -769,6 +776,15 @@ function describeOperation(entry: OperationLogEntry, fields: string[]) {
     ].filter(Boolean)
     const kind = row.option_type === 'machine' ? '加工機台' : '訂單'
     return { title: `${action}${kind} ${entry.target}`, lines: entry.operation === 'UPDATE' ? changes : orderDetails }
+  }
+  if (entry.entity === 'machine_service_records') {
+    return {
+      title: `${action} ${entry.target} 的${row.service_type === 'maintenance' ? '保養' : '維修'}紀錄`,
+      lines: [`日期 ${value('service_date')}`, ...(entry.operation === 'UPDATE' ? changes : [value('description')])],
+    }
+  }
+  if (entry.entity === 'machine_profiles') {
+    return { title: `${action} ${entry.target} 的基本資料`, lines: entry.operation === 'UPDATE' ? changes : [row.name, row.brand, row.model].filter(Boolean).map(String) }
   }
   const entity = operationEntities[entry.entity] || entry.entity
   const name = entry.entity === 'products' && row.name ? `｜${value('name')}` : ''
@@ -1246,7 +1262,7 @@ function ProductionSettingsPage({ openOption }: { openOption: (type: ProductionO
         <Wrench /><span><strong>訂單管理</strong><small>管理產品編號、訂單數量與交期</small></span><Pencil />
       </button>
       <button className="production-setting-card machine-setting" type="button" onClick={() => openOption('machine')}>
-        <Wrench /><span><strong>機台管理</strong><small>新增或刪除加工機台名稱</small></span><Pencil />
+        <Wrench /><span><strong>機台管理</strong><small>機台基本資料與保養維修紀錄</small></span><Pencil />
       </button>
     </div>
   </section>
@@ -1588,7 +1604,7 @@ function ProductionOrderFields({ productInput, draft, setDraft }: { productInput
   </div>
 }
 
-function ProductionOptionModal({ type, values, orders, close, save, remove, updateOrder }: { type: ProductionOptionType; values: string[]; orders: ProductionOption[]; close: () => void; save: (value: string, settings?: OrderSettings) => Promise<void>; remove: (value: string) => Promise<void>; updateOrder?: (currentValue: string, nextValue: string, settings: OrderSettings) => Promise<void> }) {
+function ProductionOptionModal({ type, values, orders, machines, close, save, remove, updateOrder, onMachineSaved }: { type: ProductionOptionType; values: string[]; orders: ProductionOption[]; machines: ProductionOption[]; close: () => void; save: (value: string, settings?: OrderSettings) => Promise<void>; remove: (value: string) => Promise<void>; updateOrder?: (currentValue: string, nextValue: string, settings: OrderSettings) => Promise<void>; onMachineSaved: () => Promise<void> }) {
   const [value, setValue] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -1598,6 +1614,8 @@ function ProductionOptionModal({ type, values, orders, close, save, remove, upda
   const [newSettings, setNewSettings] = useState<OrderSettingsDraft>(emptyOrderSettings)
   const [editSettings, setEditSettings] = useState<OrderSettingsDraft>(emptyOrderSettings)
   const [updating, setUpdating] = useState(false)
+  const [machineView, setMachineView] = useState<{ id: string; mode: 'profile' | 'service' } | null>(null)
+  const selectedMachine = machines.find((machine) => machine.id === machineView?.id)
   const label = type === 'product' ? '訂單' : '機台'
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError('')
@@ -1625,13 +1643,19 @@ function ProductionOptionModal({ type, values, orders, close, save, remove, upda
     catch (updateError) { setError(messageFor(updateError)) }
     finally { setUpdating(false) }
   }
+  if (type === 'machine' && machineView && selectedMachine) {
+    const back = () => setMachineView(null)
+    return machineView.mode === 'profile'
+      ? <MachineProfileModal key={selectedMachine.id} machine={selectedMachine} back={back} onSaved={onMachineSaved} />
+      : <MachineServiceModal key={selectedMachine.id} machine={selectedMachine} back={back} />
+  }
   return <Modal title={type === 'product' ? '訂單管理' : '機台管理'} size={type === 'product' ? 'production-order-modal' : undefined} close={close}>
     <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
       {type === 'product' ? <ProductionOrderFields
         productInput={<input value={value} onChange={(event) => setValue(event.target.value)} placeholder="產品編號<訂單編號>" />}
         draft={newSettings} setDraft={setNewSettings}
       /> : <Field label={label} wide><input value={value} onChange={(event) => setValue(event.target.value)} placeholder="例如 MT04" /></Field>}
-      <p className="option-help">{type === 'product' ? '訂單數量與交期可稍後補填。更改產品編號會同步更新既有加工紀錄。' : '新增後會出現在加工登記選單；刪除不會影響過去的加工紀錄。'}</p>
+      <p className="option-help">{type === 'product' ? '訂單數量與交期可稍後補填。更改產品編號會同步更新既有加工紀錄。' : '在基本資料可停用機台。停用後不出現在加工登記，可繼續查閱歷史紀錄。'}</p>
       {error && <div className="form-error">{error}</div>}
       <button className="button primary option-add-button" disabled={saving || !!removing || updating} type="submit"><Plus />{saving ? '新增中…' : `新增${label}`}</button>
     </form>
@@ -1639,20 +1663,156 @@ function ProductionOptionModal({ type, values, orders, close, save, remove, upda
     <div className="option-list">
       {values.length === 0 ? <div className="option-empty">尚未新增任何{label}</div> : values.map((item) => {
         const order = type === 'product' ? orders.find((entry) => entry.value === item) : undefined
-        return <div className={`option-list-item ${editing === item ? 'is-editing' : ''}`} key={item}>
+        const machine = type === 'machine' ? machines.find((entry) => entry.value === item) : undefined
+        return <div className={`option-list-item${editing === item ? ' is-editing' : ''}${machine ? ' machine-management-item' : ''}`} key={item}>
         {editing === item
           ? <ProductionOrderFields
             productInput={<input className="option-edit-input" autoFocus value={editValue} onChange={(event) => setEditValue(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void updateValue() } }} aria-label={`編輯產品編號 ${item}`} />}
             draft={editSettings} setDraft={setEditSettings}
           />
-          : <span>{item}{order && <small className="production-order-summary">數量 {order.order_quantity == null ? '未設定' : formatNumber(order.order_quantity)} · 交期 {order.due_date ? formatDate(order.due_date) : '未設定'} · {order.completed_on ? `完工 ${formatDate(order.completed_on)}` : '未完工'}</small>}</span>}
+          : <span>{item}{machine?.machine_active === false && <small className="production-order-summary">停用</small>}{order && <small className="production-order-summary">數量 {order.order_quantity == null ? '未設定' : formatNumber(order.order_quantity)} · 交期 {order.due_date ? formatDate(order.due_date) : '未設定'} · {order.completed_on ? `完工 ${formatDate(order.completed_on)}` : '未完工'}</small>}</span>}
         <div className="option-list-actions">
           {order && (editing === item ? <><button className="option-save-edit" disabled={updating || saving} onClick={() => void updateValue()} aria-label={`儲存訂單 ${item}`} title="儲存修改">{updating ? '…' : <Save />}</button><button disabled={updating} onClick={() => { setEditing(''); setEditValue(''); setError('') }} aria-label="取消編輯" title="取消編輯"><X /></button></> : <button className="option-start-edit" disabled={saving || !!removing || updating || !!editing} onClick={() => { setEditing(item); setEditValue(item); setEditSettings({ quantity: String(order.order_quantity ?? ''), dueDate: order.due_date ?? '' }); setError('') }} aria-label={`編輯訂單 ${item}`} title="編輯訂單"><Pencil /></button>)}
           <button className="danger-icon" disabled={!!removing || updating || !!editing} onClick={() => void removeValue(item)} aria-label={`刪除${label} ${item}`} title={`刪除${label}`}>{removing === item ? '…' : <Trash2 />}</button>
         </div>
+        {machine && <div className="machine-management-actions">
+          <button type="button" className="machine-management-button" onClick={() => setMachineView({ id: machine.id, mode: 'profile' })}><Pencil />基本資料</button>
+          <button type="button" className="machine-management-button" onClick={() => setMachineView({ id: machine.id, mode: 'service' })}><History />保養維修紀錄</button>
+        </div>}
       </div>
       })}
     </div>
+  </Modal>
+}
+
+function MachineProfileModal({ machine, back, onSaved }: { machine: ProductionOption; back: () => void; onSaved: () => Promise<void> }) {
+  const [code, setCode] = useState(machine.value)
+  const [active, setActive] = useState(machine.machine_active !== false)
+  const [profile, setProfile] = useState<MachineProfile | null>(null)
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    let current = true
+    void loadMachineProfile(machine.id).then(
+      (data) => { if (current) setProfile(data) },
+      (failure) => { if (current) setError(messageFor(failure)) },
+    )
+    return () => { current = false }
+  }, [machine.id])
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!profile || saving) return
+    setSaving(true); setError('')
+    try {
+      await saveMachineProfile(machine, code, active, profile)
+      await onSaved()
+      back()
+    } catch (failure) { setError(messageFor(failure)) }
+    finally { setSaving(false) }
+  }
+  return <Modal title={`${machine.value} 基本資料`} close={back} size="machine-management-detail">
+    {error && <p className="form-error" role="alert">{error}</p>}
+    {!profile && !error && <PageSkeleton />}
+    {profile && <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
+      <div className="production-order-fields">
+        <Field label="機台編號"><input required value={code} onChange={(event) => setCode(event.target.value)} /></Field>
+        <Field label="機台名稱"><input value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} /></Field>
+        <Field label="廠牌"><input value={profile.brand} onChange={(event) => setProfile({ ...profile, brand: event.target.value })} /></Field>
+        <Field label="型號"><input value={profile.model} onChange={(event) => setProfile({ ...profile, model: event.target.value })} /></Field>
+        <Field label="出廠序號"><input value={profile.serial_number} onChange={(event) => setProfile({ ...profile, serial_number: event.target.value })} /></Field>
+        <Field label="購入日期"><input type="date" value={profile.purchased_on ?? ''} onChange={(event) => setProfile({ ...profile, purchased_on: event.target.value || null })} /></Field>
+        <Field label="啟用日期"><input type="date" value={profile.started_on ?? ''} onChange={(event) => setProfile({ ...profile, started_on: event.target.value || null })} /></Field>
+        <Field label="狀態"><select value={active ? 'active' : 'inactive'} onChange={(event) => setActive(event.target.value === 'active')}><option value="active">使用中</option><option value="inactive">停用</option></select></Field>
+        <Field label="備註"><textarea rows={2} value={profile.notes} onChange={(event) => setProfile({ ...profile, notes: event.target.value })} /></Field>
+      </div>
+      <div className="modal-tool-actions">
+        <button className="button" type="button" disabled={saving} onClick={back}>返回機台管理</button>
+        <button className="button primary" type="submit" disabled={saving}><Save />{saving ? '儲存中…' : '儲存基本資料'}</button>
+      </div>
+    </form>}
+  </Modal>
+}
+
+type MachineServiceDraft = Omit<MachineServiceInput, 'cost' | 'downtime_minutes'> & { cost: string; downtime_minutes: string; recordId: string | null }
+
+function MachineServiceModal({ machine, back }: { machine: ProductionOption; back: () => void }) {
+  const [records, setRecords] = useState<MachineServiceRecord[] | null>(null)
+  const [draft, setDraft] = useState<MachineServiceDraft | null>(null)
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    let current = true
+    void loadMachineServiceRecords(machine.id).then(
+      (data) => { if (current) setRecords(data) },
+      (failure) => { if (current) setError(messageFor(failure)) },
+    )
+    return () => { current = false }
+  }, [machine.id])
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!draft || saving) return
+    setError('')
+    const { recordId, ...fields } = draft
+    const description = fields.description.trim()
+    if (!description) { setError('請輸入處理內容'); return }
+    if (!fields.service_date || fields.service_date > todayInTaipei()) { setError('請輸入不晚於今天的日期'); return }
+    setSaving(true)
+    try {
+      const saved = await saveMachineServiceRecord(machine.id, {
+        ...fields, description, technician: fields.technician.trim(), cost: fields.cost === '' ? null : Number(fields.cost),
+        downtime_minutes: fields.downtime_minutes === '' ? null : Number(fields.downtime_minutes),
+      }, recordId)
+      setRecords((current) => [...(current ?? []).filter((record) => record.id !== saved.id), saved]
+        .sort((a, b) => b.service_date.localeCompare(a.service_date) || b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id)))
+      setDraft(null)
+    } catch (failure) { setError(messageFor(failure)) }
+    finally { setSaving(false) }
+  }
+  return <Modal title={`${machine.value} 保養維修紀錄`} close={back} size="machine-management-detail">
+    {error && <p className="form-error" role="alert">{error}</p>}
+    {!records && !error && <PageSkeleton />}
+    {draft ? <form onSubmit={submit} onKeyDown={preventInputEnterSubmit}>
+      <div className="production-order-fields">
+        <Field label="日期"><input required type="date" max={todayInTaipei()} value={draft.service_date} onChange={(event) => setDraft({ ...draft, service_date: event.target.value })} /></Field>
+        <Field label="類型"><select value={draft.service_type} onChange={(event) => setDraft({ ...draft, service_type: event.target.value as MachineServiceInput['service_type'] })}><option value="maintenance">保養</option><option value="repair">維修</option></select></Field>
+        <Field label="處理內容"><textarea required rows={3} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></Field>
+        <Field label="人員／廠商"><input value={draft.technician} onChange={(event) => setDraft({ ...draft, technician: event.target.value })} /></Field>
+        <Field label="費用"><input type="number" inputMode="decimal" min="0" max="999999999999.99" step="0.01" value={draft.cost} onChange={(event) => setDraft({ ...draft, cost: event.target.value })} /></Field>
+        <Field label="停機分鐘"><input type="number" inputMode="numeric" min="0" max="2147483647" step="1" value={draft.downtime_minutes} onChange={(event) => setDraft({ ...draft, downtime_minutes: event.target.value })} /></Field>
+      </div>
+      <div className="modal-tool-actions">
+        <button className="button" type="button" disabled={saving} onClick={() => { setDraft(null); setError('') }}>取消</button>
+        <button className="button primary" type="submit" disabled={saving}><Save />{saving ? '儲存中…' : '儲存紀錄'}</button>
+      </div>
+    </form> : records && <>
+      <div className="option-list">
+        {!records.length && <div className="option-empty">尚無保養維修紀錄</div>}
+        {records.map((record) => <div key={record.id} className="option-list-item machine-service-record">
+          <div>
+            <strong>{formatDate(record.service_date)} · {record.service_type === 'maintenance' ? '保養' : '維修'}</strong>
+            <p>{record.description}</p>
+            {(record.technician || record.cost !== null || record.downtime_minutes !== null) && <small className="production-order-summary">{[
+              record.technician, record.cost === null ? '' : `費用 ${formatNumber(record.cost)}`,
+              record.downtime_minutes === null ? '' : `停機 ${formatNumber(record.downtime_minutes)} 分鐘`,
+            ].filter(Boolean).join(' · ')}</small>}
+          </div>
+          <button type="button" aria-label={`編輯 ${record.service_date} 的紀錄`} title="編輯紀錄" onClick={() => {
+            setError('')
+            const { id: recordId, service_date, service_type, description, technician, cost, downtime_minutes } = record
+            setDraft({ recordId, service_date, service_type, description, technician, cost: String(cost ?? ''), downtime_minutes: String(downtime_minutes ?? '') })
+          }}><Pencil /></button>
+        </div>)}
+      </div>
+      <div className="modal-tool-actions">
+        <button className="button" type="button" onClick={back}>返回機台管理</button>
+        <button className="button primary" type="button" onClick={() => {
+          setError('')
+          setDraft({ recordId: null, service_date: todayInTaipei(), service_type: 'maintenance', description: '', technician: '', cost: '', downtime_minutes: '' })
+        }}><Plus />新增紀錄</button>
+      </div>
+    </>}
   </Modal>
 }
 
@@ -2922,7 +3082,7 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
       await verifyOwnerPassword(password)
       const counts = await importAllAdminData(preview.payload)
       setSuccess(true)
-      setMessage(`匯入完成：刀具 ${counts?.products || 0}、出入庫 ${counts?.movements || 0}、加工紀錄 ${counts?.production_records || 0} 筆`)
+      setMessage(`匯入完成：刀具 ${counts?.products ?? 0}、出入庫 ${counts?.movements ?? 0}、加工紀錄 ${counts?.production_records ?? 0}、機台資料 ${counts?.machine_profiles ?? 0}、保養維修紀錄 ${counts?.machine_service_records ?? 0} 筆`)
       await afterImport()
       setPreview(null); setFileName(''); setConfirmation('')
     } catch (error) { setMessage(messageFor(error)) }
@@ -2943,6 +3103,7 @@ function AdminDataModal({ close, afterImport }: { close: () => void; afterImport
       <label className="admin-file-picker"><input type="file" accept=".xlsx,.xls" disabled={Boolean(busy)} onChange={(event) => void selectFile(event.target.files?.[0])}/><FileSpreadsheet/><span>{busy === 'parse' ? '正在檢查 Excel…' : fileName || '選擇系統匯出的 Excel'}</span></label>
       {preview && <div className="admin-preview">
         <span><b>{preview.summary.products}</b> 刀具</span><span><b>{preview.summary.movements}</b> 出入庫</span><span><b>{preview.summary.productionRecords}</b> 加工紀錄</span><span><b>{preview.summary.options}</b> 管理選項</span>
+        <span><b>{preview.summary.machineProfiles}</b> 機台資料</span><span><b>{preview.summary.machineServiceRecords}</b> 保養維修紀錄</span>
       </div>}
       {preview && <Field label="輸入「覆蓋資料」確認"><input value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="覆蓋資料" disabled={Boolean(busy)}/></Field>}
       <button className="button outbound admin-action" type="button" onClick={() => void importExcel()} disabled={Boolean(busy) || !preview || isDemoMode}>{busy === 'import' ? '正在安全匯入…' : '覆蓋並匯入雲端資料'}</button>

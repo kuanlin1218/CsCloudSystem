@@ -2,7 +2,7 @@ import { dataStorage, isLocalDataMode, supabase } from './supabase'
 import { composeProductName, today, todayInTaipei } from './format'
 import { PRODUCT_CATEGORIES, type Movement, type MovementInput, type Product, type ProductCategory, type ProductInput, type ProductionInput, type ProductionOption, type ProductionOptionType, type ProductionRecord, type StocktakeInput } from '../types'
 import { requireAuthenticatedUserId } from './auth'
-import type { OperationLogEntry } from '../types'
+import type { MachineProfile, MachineServiceInput, MachineServiceRecord, OperationLogEntry } from '../types'
 
 type StoredOperationLogEntry = Omit<OperationLogEntry, 'id'> & { id: number }
 
@@ -35,6 +35,8 @@ const PRODUCT_KEY = 'blade_inventory_products_v3'
 const MOVEMENT_KEY = 'blade_inventory_movements_v3'
 const PRODUCTION_KEY = 'cnc_production_records_v1'
 const PRODUCTION_OPTION_KEY = 'cnc_production_options_v1'
+const MACHINE_PROFILE_KEY = 'cnc_machine_profiles_v1'
+const MACHINE_SERVICE_KEY = 'cnc_machine_service_records_v1'
 const previousDay = (() => { const date = new Date(`${today()}T12:00:00`); date.setDate(date.getDate() - 1); return date.toISOString().slice(0, 10) })()
 const codePrefix = (category: ProductCategory) => ({ '刀片': 'T', '鑽銑刀': 'M', '刀柄': 'H', '其他': 'O' }[category])
 
@@ -201,10 +203,110 @@ export async function createProductionOption(optionType: ProductionOptionType, r
 export async function deleteProductionOption(optionType: ProductionOptionType, value: string): Promise<void> {
   if (isLocalDataMode) {
     const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
+    const option = options.find((item) => item.option_type === optionType && item.value === value)
+    if (optionType === 'machine' && option && readLocal<MachineServiceRecord[]>(MACHINE_SERVICE_KEY, []).some((record) => record.machine_id === option.id)) {
+      throw new Error('機台已有保養維修紀錄，請到基本資料設為停用。')
+    }
     writeLocal(PRODUCTION_OPTION_KEY, options.filter((option) => !(option.option_type === optionType && option.value === value)))
+    if (optionType === 'machine' && option) {
+      const profiles = readLocal<Record<string, MachineProfile>>(MACHINE_PROFILE_KEY, {})
+      if (profiles[option.id]) {
+        delete profiles[option.id]
+        try { writeLocal(MACHINE_PROFILE_KEY, profiles) }
+        catch (error) { writeLocal(PRODUCTION_OPTION_KEY, options); throw error }
+      }
+    }
     return
   }
-  await runAdminDelete('admin_delete_production_option', { p_option_type: optionType, p_value: value })
+  try {
+    await runAdminDelete('admin_delete_production_option', { p_option_type: optionType, p_value: value })
+  } catch (error) {
+    if (optionType === 'machine' && (error as { code?: string })?.code === '23503') {
+      throw new Error('機台已有保養維修紀錄，請到基本資料設為停用。')
+    }
+    throw error
+  }
+}
+
+const machineProfileFields = 'name,brand,model,serial_number,purchased_on,started_on,notes'
+const blankMachineProfile: MachineProfile = { name: '', brand: '', model: '', serial_number: '', purchased_on: null, started_on: null, notes: '' }
+
+export async function loadMachineProfile(machineId: string): Promise<MachineProfile> {
+  if (isLocalDataMode) return readLocal<Record<string, MachineProfile>>(MACHINE_PROFILE_KEY, {})[machineId] ?? blankMachineProfile
+  const { data, error } = await supabase!.from('machine_profiles').select(machineProfileFields).eq('machine_id', machineId).maybeSingle()
+  if (error) throw error
+  return data ?? blankMachineProfile
+}
+
+export async function saveMachineProfile(machine: ProductionOption, rawCode: string, active: boolean, profile: MachineProfile): Promise<void> {
+  const code = rawCode.trim().toUpperCase()
+  if (!code) throw new Error('請輸入機台編號')
+  if (isLocalDataMode) {
+    const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
+    const current = options.find((item) => item.id === machine.id && item.option_type === 'machine')
+    if (!current || current.value !== machine.value) throw new Error('機台編號已變更或不存在，請重新開啟。')
+    const records = readLocal(PRODUCTION_KEY, seedProductionRecords)
+    const renamed = current.value !== code
+    if (current.value.toUpperCase() !== code && (options.some((item) => item.option_type === 'machine' && item.value.toUpperCase() === code)
+      || records.some((record) => record.machine.toUpperCase() === code))) throw new Error('這個機台編號已在使用或已有加工紀錄')
+    const profiles = readLocal<Record<string, MachineProfile>>(MACHINE_PROFILE_KEY, {})
+    writeLocal(PRODUCTION_OPTION_KEY, options.map((item) => item.id === machine.id ? { ...item, value: code, machine_active: active } : item))
+    try {
+      if (renamed) writeLocal(PRODUCTION_KEY, records.map((record) => record.machine.toUpperCase() === current.value.toUpperCase() ? { ...record, machine: code } : record))
+      writeLocal(MACHINE_PROFILE_KEY, { ...profiles, [machine.id]: profile })
+    } catch (error) {
+      if (renamed) writeLocal(PRODUCTION_KEY, records)
+      writeLocal(PRODUCTION_OPTION_KEY, options)
+      throw error
+    }
+    return
+  }
+  const { error } = await supabase!.rpc('save_machine_profile', {
+    p_machine_id: machine.id, p_current_code: machine.value, p_code: code, p_active: active, p_profile: profile,
+  })
+  if (error) throw error
+}
+
+export async function loadMachineServiceRecords(machineId: string): Promise<MachineServiceRecord[]> {
+  if (isLocalDataMode) {
+    return readLocal<MachineServiceRecord[]>(MACHINE_SERVICE_KEY, [])
+      .filter((record) => record.machine_id === machineId)
+      .sort((a, b) => b.service_date.localeCompare(a.service_date) || b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id))
+  }
+  const records: MachineServiceRecord[] = []
+  const pageSize = 500
+  for (let start = 0; ; start += pageSize) {
+    const { data, error } = await supabase!.from('machine_service_records')
+      .select('id,machine_id,service_date,service_type,description,technician,cost,downtime_minutes,created_at')
+      .eq('machine_id', machineId).order('service_date', { ascending: false }).order('created_at', { ascending: false })
+      .order('id', { ascending: false }).range(start, start + pageSize - 1)
+    if (error) throw error
+    const page = data as MachineServiceRecord[]
+    records.push(...page)
+    if (page.length < pageSize) return records
+  }
+}
+
+export async function saveMachineServiceRecord(machineId: string, input: MachineServiceInput, recordId: string | null): Promise<MachineServiceRecord> {
+  if (!input.service_date || input.service_date > todayInTaipei() || !input.description.trim() ||
+    (input.cost !== null && (!Number.isFinite(input.cost) || input.cost < 0 || input.cost > 999999999999.99)) ||
+    (input.downtime_minutes !== null && (!Number.isInteger(input.downtime_minutes) || input.downtime_minutes < 0 || input.downtime_minutes > 2147483647))) {
+    throw new Error('請檢查保養維修日期、處理內容、費用及停機分鐘。')
+  }
+  if (isLocalDataMode) {
+    if (!readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions).some((item) => item.id === machineId && item.option_type === 'machine')) {
+      throw new Error('找不到這台機台')
+    }
+    const records = readLocal<MachineServiceRecord[]>(MACHINE_SERVICE_KEY, [])
+    const existing = recordId ? records.find((record) => record.id === recordId && record.machine_id === machineId) : null
+    if (recordId && !existing) throw new Error('找不到這筆保養維修紀錄')
+    const record = { id: existing?.id ?? id(), machine_id: machineId, created_at: existing?.created_at ?? new Date().toISOString(), ...input }
+    writeLocal(MACHINE_SERVICE_KEY, existing ? records.map((item) => item.id === record.id ? record : item) : [...records, record])
+    return record
+  }
+  const { data, error } = await supabase!.rpc('save_machine_service_record', { p_machine_id: machineId, p_record_id: recordId, p_record: input })
+  if (error) throw error
+  return data as MachineServiceRecord
 }
 
 export async function updateProductionOrder(currentValue: string, nextValue: string, settings: Pick<ProductionOption, 'order_quantity' | 'due_date'>): Promise<void> {
