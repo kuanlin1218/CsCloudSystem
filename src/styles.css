@@ -1718,12 +1718,11 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 } /* 手機與電腦共用｜載入中的旋轉圖示動畫 → 結束此區設定 */
 
 @media (max-width: 620px) { /* 手機版｜網站共用按鈕、表單與彈出視窗 → 開始此條件的設定 */
-  /* 手機版｜庫存日期篩選、出入庫與新增刀具，以及編輯加工紀錄和訂單完工預估的日期欄位：
+  /* 手機版｜庫存日期篩選、出入庫與新增刀具，以及編輯加工紀錄、訂單管理交期和加工完工日期欄位：
      關閉 iPhone 原生欄位會撐開寬度的外觀限制，強制日期框跟隨父層縮放。 */
   .production-edit-modal input[type="date"], /* 手機版｜加工數量查詢 → 編輯加工紀錄 → 日期輸入框 */
   .production-order-modal input[type="date"], /* 手機版｜基礎資料設定 → 訂單管理 → 交期 */
   #production-entry-completed-on, /* 手機版｜加工數量登記 → 訂單完成 → 完工日期 */
-  .order-forecast .forecast-setting > input[type="date"], /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史開始日期、歷史結束日期及訂單交期 */
   .inventory-shell input[type="date"] { /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 選取此元件 */
       display: block; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 顯示與排版方式 */
       width: 100%; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 寬度 */
@@ -1737,12 +1736,11 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
       text-align: center;
     } /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 結束此區設定 */
 
-  /* 手機版｜庫存管理系統、編輯加工紀錄及訂單完工預估的日期輸入框內文字：
+  /* 手機版｜庫存管理系統、編輯加工紀錄、訂單管理交期與加工完工日期的欄內文字：
      讓 Safari／Chrome 使用的 iOS 日期文字區可以縮小，不再撐開輸入框。 */
   .production-edit-modal input[type="date"]::-webkit-date-and-time-value, /* 手機版｜加工數量查詢 → 編輯加工紀錄 → 日期輸入框內的文字 */
   .production-order-modal input[type="date"]::-webkit-date-and-time-value, /* 手機版｜訂單管理 → 交期欄內文字 */
   #production-entry-completed-on::-webkit-date-and-time-value, /* 手機版｜加工數量登記 → 完工日期欄內文字 */
-  .order-forecast .forecast-setting > input[type="date"]::-webkit-date-and-time-value, /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史開始日期、歷史結束日期及訂單交期的欄內文字 */
   .inventory-shell input[type="date"]::-webkit-date-and-time-value { /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 選取此元件 */
       width: 100%; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 寬度 */
       min-width: 0; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 最小寬度 */
@@ -5241,10 +5239,20 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
       font-size: 16px; /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史日期、產能依據與預計使用機台數的欄位標題字體 → 字級 */
     } /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史日期、產能依據與預計使用機台數的欄位標題字體 → 結束此區設定 */
 
-  /* 手機版｜加工管理系統｜歷史日期與預計使用機台數輸入框字體 */
-  .forecast-setting input { /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史日期與預計使用機台數輸入框字體 → 選取此元件 */
-      font-size: 16px; /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史日期與預計使用機台數輸入框字體 → 字級 */
-    } /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史日期與預計使用機台數輸入框字體 → 結束此區設定 */
+  .forecast-setting input[type="number"] { /* 手機版｜加工管理系統 → 訂單完工預估 → 預計使用機台數輸入框 */
+    font-size: 16px; /* 預計使用機台數的輸入字級 */
+  }
+
+  /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史開始日期、歷史結束日期及訂單交期 */
+  .order-forecast .forecast-setting > input[type="date"] {
+    max-width: 100%; /* 保留窄螢幕的欄寬限制 */
+    height: auto; /* 比照加工數量登記，由日期控制項與內距決定高度 */
+    min-height: 46px; /* 保留預估日期框的基本高度 */
+    padding: 6px 10px; /* 同加工日期，上下留白相等，文字靠左對齊 */
+    color-scheme: dark; /* 與加工數量登記的原生日期欄同樣採深色 */
+    text-align: left; /* 日期文字靠左 */
+    font-size: 18px; /* 三個日期欄的輸入字級 */
+  }
 
   /* 加工管理系統｜「計算方式」下拉選單字體 */
   .forecast-setting select { /* 手機版｜加工管理系統 → 訂單完工預估 → 「計算方式」下拉選單字體 → 選取此元件 */
