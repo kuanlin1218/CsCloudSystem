@@ -1718,11 +1718,10 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 } /* 手機與電腦共用｜載入中的旋轉圖示動畫 → 結束此區設定 */
 
 @media (max-width: 620px) { /* 手機版｜網站共用按鈕、表單與彈出視窗 → 開始此條件的設定 */
-  /* 手機版｜庫存日期篩選、出入庫與新增刀具，以及編輯加工紀錄、訂單管理交期和加工完工日期欄位：
+  /* 手機版｜庫存日期篩選、出入庫與新增刀具，以及編輯加工紀錄和訂單管理交期欄位：
      關閉 iPhone 原生欄位會撐開寬度的外觀限制，強制日期框跟隨父層縮放。 */
   .production-edit-modal input[type="date"], /* 手機版｜加工數量查詢 → 編輯加工紀錄 → 日期輸入框 */
   .production-order-modal input[type="date"], /* 手機版｜基礎資料設定 → 訂單管理 → 交期 */
-  #production-entry-completed-on, /* 手機版｜加工數量登記 → 訂單完成 → 完工日期 */
   .inventory-shell input[type="date"] { /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 選取此元件 */
       display: block; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 顯示與排版方式 */
       width: 100%; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 寬度 */
@@ -1736,11 +1735,10 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
       text-align: center;
     } /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 結束此區設定 */
 
-  /* 手機版｜庫存管理系統、編輯加工紀錄、訂單管理交期與加工完工日期的欄內文字：
+  /* 手機版｜庫存管理系統、編輯加工紀錄與訂單管理交期的欄內日期文字：
      讓 Safari／Chrome 使用的 iOS 日期文字區可以縮小，不再撐開輸入框。 */
   .production-edit-modal input[type="date"]::-webkit-date-and-time-value, /* 手機版｜加工數量查詢 → 編輯加工紀錄 → 日期輸入框內的文字 */
   .production-order-modal input[type="date"]::-webkit-date-and-time-value, /* 手機版｜訂單管理 → 交期欄內文字 */
-  #production-entry-completed-on::-webkit-date-and-time-value, /* 手機版｜加工數量登記 → 完工日期欄內文字 */
   .inventory-shell input[type="date"]::-webkit-date-and-time-value { /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 選取此元件 */
       width: 100%; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 寬度 */
       min-width: 0; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 最小寬度 */
@@ -3083,7 +3081,7 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   display: flex; /* 核取方塊與文字並排 */
   align-items: center; /* 核取方塊與文字垂直對齊 */
   gap: 10px; /* 核取方塊與文字的間距 */
-  margin-bottom: 13px; /* 與完工日期欄或送出按鈕的距離 */
+  margin-bottom: 13px; /* 與送出按鈕或表單錯誤提示的距離 */
   min-height: 44px; /* 提供手機可點按的標籤高度 */
   color: #dce5e9; /*「訂單完成」文字顏色 */
 }
