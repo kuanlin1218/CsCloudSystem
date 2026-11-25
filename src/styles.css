@@ -3757,6 +3757,14 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
 } /* 手機與電腦共用｜加工管理系統 → 訂單完工預估 → 歷史日期與預計使用機台數輸入框 → 結束此區設定 */
 
 /* 加工管理系統｜「計算方式」下拉選單 */
+.forecast-date-control { /* 電腦版｜訂單完工預估 → 歷史開始日期、歷史結束日期及訂單交期 */
+  display: contents; /* 日期輸入框直接沿用表單網格 */
+}
+
+.forecast-date-value { /* 電腦版｜訂單完工預估 → 由原生欄位顯示日期 */
+  display: none; /* 手機專用的日期文字不占電腦版空間 */
+}
+
 .forecast-setting select { /* 手機與電腦共用｜加工管理系統 → 訂單完工預估 → 「計算方式」下拉選單 → 選取此元件 */
   width: 100%; /* 手機與電腦共用｜加工管理系統 → 訂單完工預估 → 「計算方式」下拉選單 → 寬度 */
   min-width: 0; /* 手機與電腦共用｜加工管理系統 → 訂單完工預估 → 「計算方式」下拉選單 → 最小寬度 */
@@ -5244,14 +5252,52 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   }
 
   /* 手機版｜加工管理系統 → 訂單完工預估 → 歷史開始日期、歷史結束日期及訂單交期 */
-  .order-forecast .forecast-setting > input[type="date"] {
-    max-width: 100%; /* 保留窄螢幕的欄寬限制 */
-    height: auto; /* 比照加工數量登記，由日期控制項與內距決定高度 */
-    min-height: 46px; /* 保留預估日期框的基本高度 */
-    padding: 6px 10px; /* 同加工日期，上下留白相等，文字靠左對齊 */
-    color-scheme: dark; /* 與加工數量登記的原生日期欄同樣採深色 */
-    text-align: left; /* 日期文字靠左 */
-    font-size: 18px; /* 三個日期欄的輸入字級 */
+  .forecast-date-control {
+    position: relative; /* 讓可點按的日期輸入框以自己的外框為定位範圍 */
+    display: grid; /* 用網格讓日期文字置中 */
+    grid-template-columns: minmax(0, 1fr); /* 可隨歷史日期與交期欄寬縮小 */
+    place-items: center; /* 日期文字水平與垂直置中 */
+    min-width: 0; /* 窄螢幕可縮到欄位內 */
+    min-height: 46px; /* 保留容易點按的日期框高度 */
+    padding-inline: 10px; /* 日期框左右留白 */
+    overflow: hidden; /* 原生日期控制項的內部寬度不會溢出外框 */
+    border: 1px solid #39464d; /* 日期框原有邊框色 */
+    border-radius: 6px; /* 日期框原有圓角 */
+    background-color: #090e11; /* 日期框原有背景色 */
+  }
+
+  .forecast-date-control:focus-within { /* 手機版｜訂單完工預估 → 日期欄取得焦點 */
+    border-color: #ffc23a; /* 沿用日期欄原有焦點色 */
+  }
+
+  .forecast-date-value { /* 手機版｜訂單完工預估 → 日期框內的顯示文字 */
+    display: block; /* 由網站字型顯示已選日期 */
+    color: #e9eef1; /* 日期文字沿用原有字色 */
+    font-size: 18px; /* 瀏覽器與主畫面網頁 App 使用相同字級 */
+    font-weight: 400; /* 日期文字使用一般字重 */
+    line-height: 1.25; /* 讓日期文字置中時保有正常行高 */
+    text-align: center; /* 文字換行時也保持置中 */
+  }
+
+  .forecast-date-control > input[type="date"] { /* 手機版｜訂單完工預估 → 點按時開啟原生日期選擇器 */
+    position: absolute; /* 原生輸入框蓋住整個日期欄，並離開網格尺寸計算 */
+    inset: 0; /* 讓日期框任一位置都可點按 */
+    width: 100%; /* 原生輸入框寬度跟隨外框 */
+    max-width: 100%; /* 限制原生日期控制項的寬度 */
+    height: 100%; /* 原生輸入框高度跟隨外框 */
+    margin: 0; /* 對齊日期欄外框 */
+    padding: 0; /* 不由原生控制項的內距決定顯示文字的位置 */
+    border: 0; /* 邊框由日期欄外框繪製 */
+    opacity: 0; /* 保留原生點按與日期輸入，畫面顯示網站的日期文字 */
+  }
+
+  .forecast-date-control > input[type="date"]::-webkit-calendar-picker-indicator { /* 手機版｜訂單完工預估 → WebKit 系列瀏覽器的選取日期點按區 */
+    position: absolute; /* 讓原生日期按鈕的點按區跟隨外框 */
+    inset: 0; /* 日期框可從任一位置開啟選擇器 */
+    width: auto; /* 點按區依左右邊界展開 */
+    height: auto; /* 點按區依上下邊界展開 */
+    margin: 0; /* 點按區貼齊日期框 */
+    padding: 0; /* 點按區沿用日期框的完整尺寸 */
   }
 
   /* 加工管理系統｜「計算方式」下拉選單字體 */

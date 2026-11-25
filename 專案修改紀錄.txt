@@ -2116,6 +2116,12 @@ GitHub Summary：設定完工預估的預設歷史日期區間。
 SQL：不需要執行。
 GitHub Summary：調整手機版完工預估日期欄的對齊與字級。
 
+2026-11-25
+修改內容：統一手機瀏覽器與 PWA 的完工預估日期欄，使用可縮放外框與 18px 置中文字，整框保留原生選日期操作。
+修改檔案：src/App.tsx、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：統一手機瀏覽器與 PWA 的完工預估日期欄。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

@@ -1399,6 +1399,20 @@ function ProductionTimeCalculatorModal({ initialHours, initialMinutes, close, ap
   </Modal>
 }
 
+const forecastDateDisplay = new Intl.DateTimeFormat('zh-TW', { dateStyle: 'long', timeZone: 'UTC' })
+
+function ForecastDateField({ label, value, min, max, onChange }: { label: string; value: string; min?: string; max?: string; onChange: (value: string) => void }) {
+  const date = new Date(`${value}T00:00:00Z`)
+  const dateText = Number.isNaN(date.getTime()) ? '選擇日期' : forecastDateDisplay.format(date)
+  return <label className="forecast-setting">
+    <span>{label}</span>
+    <span className="forecast-date-control">
+      <span className="forecast-date-value" aria-hidden="true">{dateText}</span>
+      <input type="date" min={min} max={max} value={value} onChange={(event) => onChange(event.target.value)} />
+    </span>
+  </label>
+}
+
 function OrderForecastPanel({ productCode, records, referenceOrders, order }: { productCode: string; records: ProductionRecord[]; referenceOrders: ForecastReferenceOrder[]; order?: ProductionOption }) {
   const totalCompletedQuantity = useMemo(() => records.reduce((sum, record) => sum + record.quantity, 0), [records])
   const storedDraft = useMemo(() => readForecastDraft(productCode), [productCode])
@@ -1522,10 +1536,13 @@ function OrderForecastPanel({ productCode, records, referenceOrders, order }: { 
       <small id="forecast-reference-orders-help">勾選要納入產能估算的訂單。所選日期區間也會套用到這些紀錄。</small>
       {referenceOrders.map((reference) => <label key={reference.key}><input type="checkbox" checked={referenceOrderKeys.includes(reference.key)} onChange={(event) => toggleReferenceOrder(reference.key, event.target.checked)} /><span>{reference.code}</span></label>)}
     </fieldset>}
-    {useHistoryRange && <div className="forecast-history-range"><label className="forecast-setting"><span>歷史開始日期</span><input type="date" max={historyTo || undefined} value={historyFrom} onChange={(event) => setHistoryFrom(event.target.value)} /></label><label className="forecast-setting"><span>歷史結束日期</span><input type="date" min={historyFrom || undefined} value={historyTo} onChange={(event) => setHistoryTo(event.target.value)} /></label></div>}
+    {useHistoryRange && <div className="forecast-history-range">
+      <ForecastDateField label="歷史開始日期" max={historyTo || undefined} value={historyFrom} onChange={setHistoryFrom} />
+      <ForecastDateField label="歷史結束日期" min={historyFrom || undefined} value={historyTo} onChange={setHistoryTo} />
+    </div>}
     <div className="forecast-history-basis"><span>產能依據</span><strong>{capacityHistory.historyDays} 個加工日</strong><strong>總產量 {formatNumber(capacityHistory.capacitySampleQuantity)} 只</strong><strong>平均產量 {formatNumber(Math.round(estimatedDailyQuantity))} 只／日</strong><small>{historyRangeText}；{matchingMachineSamples.length ? `採用歷史中實際使用 ${machineCount} 台的 ${matchingMachineSamples.length} 個加工日` : `歷史沒有使用 ${machineCount} 台的加工日，暫依每台平均產量換算`}；{capacityHistory.includesSaturday ? `資料包含星期六（共 ${capacityHistory.saturdayDays} 天），未來排程會計入星期六` : '資料沒有星期六，未來排程只計算星期一至星期五'}</small></div>
     <div className="forecast-future-config">
-      <label className="forecast-setting"><span>訂單交期</span><input type="date" min={today()} value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label>
+      <ForecastDateField label="訂單交期" min={today()} value={dueDate} onChange={setDueDate} />
       <label className="forecast-setting"><span>預計使用機台數</span><input type="number" inputMode="numeric" pattern="[0-9]*" min="1" step="1" value={machineCount || ''} onChange={(event) => setMachineCount(Math.max(0, Math.trunc(Number(event.target.value))))} /></label>
     </div>
     {historyRangeInvalid ? <p className="forecast-placeholder warning">歷史開始日期不能晚於歷史結束日期</p> : orderQuantity <= 0 ? <p className="forecast-placeholder">輸入訂單總數量後顯示預估結果</p> : !capacityHistory.historyDays || !capacityHistory.averageQuantityPerMachineDay ? <p className="forecast-placeholder warning">所選歷史產能依據沒有有效的加工數量與機台資料，暫時無法評估</p> : !machineCount ? <p className="forecast-placeholder warning">預計使用機台數必須大於 0</p> : <>
