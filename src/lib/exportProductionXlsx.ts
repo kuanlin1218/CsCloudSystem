@@ -141,7 +141,7 @@ export async function exportProductionXlsx(productCode: string, records: Product
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `${safeFileName(productCode)}_加工數量查詢.xlsx`
+  link.download = `${safeFileName(productCode)}_加工數量.xlsx`
   document.body.appendChild(link)
   link.click()
   link.remove()
