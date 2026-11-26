@@ -2188,6 +2188,18 @@ GitHub Summary：讓管理清單高度樣式相容主畫面 PWA 的既有版面�
 SQL：不需要執行。
 GitHub Summary：主畫面 PWA 開啟時自動嘗試 Face ID 登入。
 
+2026-11-26
+修改內容：機台管理的基本資料表單移除啟用日期與狀態，儲存時沿用既有值，並更新機台管理提示與刪除保護訊息。
+修改檔案：src/App.tsx、src/lib/repository.ts、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：移除機台基本資料表單的啟用日期與狀態欄位。
+
+2026-11-26
+修改內容：保養維修紀錄可勾選自行處理或廠商，勾選廠商時顯示名稱欄。停機時數以小時輸入及顯示，儲存時換算為最接近的整分鐘。
+修改檔案：src/App.tsx、src/lib/repository.ts、src/styles.css、README.md、工作交接紀錄.md、專案修改紀錄.txt。
+SQL：不需要執行。
+GitHub Summary：新增維修人員核取選項並改用小時輸入停機時間。
+
 YYYY-MM-DD
 修改內容：簡短說明這次改了什麼。
 修改檔案：

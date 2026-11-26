@@ -1722,7 +1722,7 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
      關閉 iPhone 原生欄位會撐開寬度的外觀限制，強制日期框跟隨父層縮放。 */
   .production-edit-modal input[type="date"], /* 手機版｜加工數量查詢 → 編輯加工紀錄 → 日期輸入框 */
   .production-order-modal input[type="date"], /* 手機版｜基礎資料設定 → 訂單管理 → 交期 */
-  .machine-management-detail input[type="date"], /* 手機版｜基礎資料設定 → 機台管理 → 購入、啟用及保養維修日期 */
+  .machine-management-detail input[type="date"], /* 手機版｜基礎資料設定 → 機台管理 → 購入日期及保養維修日期 */
   .inventory-shell input[type="date"] { /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 選取此元件 */
       display: block; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 顯示與排版方式 */
       width: 100%; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框： → 寬度 */
@@ -1740,7 +1740,7 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
      讓 Safari／Chrome 使用的 iOS 日期文字區可以縮小，不再撐開輸入框。 */
   .production-edit-modal input[type="date"]::-webkit-date-and-time-value, /* 手機版｜加工數量查詢 → 編輯加工紀錄 → 日期輸入框內的文字 */
   .production-order-modal input[type="date"]::-webkit-date-and-time-value, /* 手機版｜訂單管理 → 交期欄內文字 */
-  .machine-management-detail input[type="date"]::-webkit-date-and-time-value, /* 手機版｜機台管理 → 購入、啟用及保養維修日期欄內文字 */
+  .machine-management-detail input[type="date"]::-webkit-date-and-time-value, /* 手機版｜機台管理 → 購入日期及保養維修日期欄內文字 */
   .inventory-shell input[type="date"]::-webkit-date-and-time-value { /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 選取此元件 */
       width: 100%; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 寬度 */
       min-width: 0; /* 手機版｜網站共用按鈕、表單與彈出視窗 → 整個庫存管理系統｜所有日期輸入框內的日期文字： → 最小寬度 */
@@ -4225,11 +4225,38 @@ textarea:focus-visible { /* 手機與電腦共用｜全站基本元件 → 聚�
   color: #6de0f4; /* 機台資料入口的文字與圖示顏色 */
 }
 
-.machine-management-detail .field > :is(select, textarea) { /* 機台管理 → 狀態、維修類型、處理內容及備註 */
+.machine-management-detail .field > :is(select, textarea) { /* 機台管理 → 基本資料備註、保養維修類型及處理內容 */
   min-width: 0; /* 較長的內容可在右側輸入區內縮放 */
 }
 
-.machine-service-record > div { /* 機台管理 → 保養維修紀錄 → 單筆日期、內容及費用 */
+.machine-service-technicians { /* 機台管理 → 保養維修紀錄 → 維修人員核取選項列 */
+  display: flex; /* 自行處理與廠商並排 */
+  flex-wrap: wrap; /* 版面較窄時允許換行 */
+  gap: 0 14px; /* 兩個核取選項的水平間距 */
+}
+
+.machine-service-technicians label { /* 機台管理 → 保養維修紀錄 → 自行處理與廠商標籤 */
+  display: flex; /* 方塊與選項文字並排 */
+  align-items: center; /* 方塊與文字垂直置中 */
+  gap: 6px; /* 方塊與文字的距離 */
+  min-height: 44px; /* 手機可點按整個標籤 */
+}
+
+.machine-service-technicians input[type="checkbox"] { /* 機台管理 → 保養維修紀錄 → 自行處理與廠商核取方塊 */
+  width: 18px; /* 核取方塊寬度 */
+  height: 18px; /* 核取方塊高度 */
+  min-height: 0; /* 取消共用文字輸入框的最小高度 */
+  margin: 0; /* 使用標籤設定的間距 */
+  padding: 0; /* 取消共用文字輸入框的內距 */
+  accent-color: #3dccb3; /* 勾選時的顏色 */
+}
+
+.machine-service-technicians input[type="checkbox"]:focus-visible { /* 機台管理 → 保養維修紀錄 → 鍵盤聚焦維修人員核取方塊 */
+  outline: 2px solid #3dccb3; /* 顯示鍵盤焦點 */
+  outline-offset: 2px; /* 焦點框與方塊的距離 */
+}
+
+.machine-service-record > div { /* 機台管理 → 保養維修紀錄 → 單筆日期、內容、維修人員、費用及停機時數 */
   min-width: 0; /* 長維修內容不會擠掉右側編輯按鈕 */
   overflow-wrap: anywhere; /* 料號或無空格文字可正常換行 */
 }

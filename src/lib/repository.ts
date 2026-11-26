@@ -205,7 +205,7 @@ export async function deleteProductionOption(optionType: ProductionOptionType, v
     const options = readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions)
     const option = options.find((item) => item.option_type === optionType && item.value === value)
     if (optionType === 'machine' && option && readLocal<MachineServiceRecord[]>(MACHINE_SERVICE_KEY, []).some((record) => record.machine_id === option.id)) {
-      throw new Error('機台已有保養維修紀錄，請到基本資料設為停用。')
+      throw new Error('機台已有保養維修紀錄，無法刪除。')
     }
     writeLocal(PRODUCTION_OPTION_KEY, options.filter((option) => !(option.option_type === optionType && option.value === value)))
     if (optionType === 'machine' && option) {
@@ -222,7 +222,7 @@ export async function deleteProductionOption(optionType: ProductionOptionType, v
     await runAdminDelete('admin_delete_production_option', { p_option_type: optionType, p_value: value })
   } catch (error) {
     if (optionType === 'machine' && (error as { code?: string })?.code === '23503') {
-      throw new Error('機台已有保養維修紀錄，請到基本資料設為停用。')
+      throw new Error('機台已有保養維修紀錄，無法刪除。')
     }
     throw error
   }
@@ -291,7 +291,7 @@ export async function saveMachineServiceRecord(machineId: string, input: Machine
   if (!input.service_date || input.service_date > todayInTaipei() || !input.description.trim() ||
     (input.cost !== null && (!Number.isFinite(input.cost) || input.cost < 0 || input.cost > 999999999999.99)) ||
     (input.downtime_minutes !== null && (!Number.isInteger(input.downtime_minutes) || input.downtime_minutes < 0 || input.downtime_minutes > 2147483647))) {
-    throw new Error('請檢查保養維修日期、處理內容、費用及停機分鐘。')
+    throw new Error('請檢查保養維修日期、處理內容、費用及停機時數。')
   }
   if (isLocalDataMode) {
     if (!readLocal(PRODUCTION_OPTION_KEY, seedProductionOptions).some((item) => item.id === machineId && item.option_type === 'machine')) {

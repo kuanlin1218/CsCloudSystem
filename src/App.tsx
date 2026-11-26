@@ -1674,7 +1674,7 @@ function ProductionOptionModal({ type, values, orders, machines, close, save, re
         productInput={<input value={value} onChange={(event) => setValue(event.target.value)} placeholder="產品編號<訂單編號>" />}
         draft={newSettings} setDraft={setNewSettings}
       /> : <Field label={label} wide><input value={value} onChange={(event) => setValue(event.target.value)} placeholder="例如 MT04" /></Field>}
-      <p className="option-help">{type === 'product' ? '訂單數量與交期可稍後補填。更改產品編號會同步更新既有加工紀錄。' : '在基本資料可停用機台。停用後不出現在加工登記，可繼續查閱歷史紀錄。'}</p>
+      <p className="option-help">{type === 'product' ? '訂單數量與交期可稍後補填。更改產品編號會同步更新既有加工紀錄。' : '更改機台編號會同步更新既有加工紀錄。已有保養維修紀錄的機台無法刪除。'}</p>
       {error && <div className="form-error">{error}</div>}
       <button className="button primary option-add-button" disabled={saving || !!removing || updating} type="submit"><Plus />{saving ? '新增中…' : `新增${label}`}</button>
     </form>
@@ -1706,7 +1706,6 @@ function ProductionOptionModal({ type, values, orders, machines, close, save, re
 
 function MachineProfileModal({ machine, back, onSaved }: { machine: ProductionOption; back: () => void; onSaved: () => Promise<void> }) {
   const [code, setCode] = useState(machine.value)
-  const [active, setActive] = useState(machine.machine_active !== false)
   const [profile, setProfile] = useState<MachineProfile | null>(null)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -1724,7 +1723,7 @@ function MachineProfileModal({ machine, back, onSaved }: { machine: ProductionOp
     if (!profile || saving) return
     setSaving(true); setError('')
     try {
-      await saveMachineProfile(machine, code, active, profile)
+      await saveMachineProfile(machine, code, machine.machine_active !== false, profile)
       await onSaved()
       back()
     } catch (failure) { setError(messageFor(failure)) }
@@ -1740,9 +1739,7 @@ function MachineProfileModal({ machine, back, onSaved }: { machine: ProductionOp
         <Field label="廠牌"><input value={profile.brand} onChange={(event) => setProfile({ ...profile, brand: event.target.value })} /></Field>
         <Field label="型號"><input value={profile.model} onChange={(event) => setProfile({ ...profile, model: event.target.value })} /></Field>
         <Field label="出廠序號"><input value={profile.serial_number} onChange={(event) => setProfile({ ...profile, serial_number: event.target.value })} /></Field>
-        <Field label="購入日期"><input type="date" value={profile.purchased_on ?? ''} onChange={(event) => setProfile({ ...profile, purchased_on: event.target.value || null })} /></Field>
-        <Field label="啟用日期"><input type="date" value={profile.started_on ?? ''} onChange={(event) => setProfile({ ...profile, started_on: event.target.value || null })} /></Field>
-        <Field label="狀態"><select value={active ? 'active' : 'inactive'} onChange={(event) => setActive(event.target.value === 'active')}><option value="active">使用中</option><option value="inactive">停用</option></select></Field>
+        <Field label="入廠日期"><input type="date" value={profile.purchased_on ?? ''} onChange={(event) => setProfile({ ...profile, purchased_on: event.target.value || null })} /></Field>
         <Field label="備註"><textarea rows={2} value={profile.notes} onChange={(event) => setProfile({ ...profile, notes: event.target.value })} /></Field>
       </div>
       <div className="modal-tool-actions">
@@ -1753,7 +1750,21 @@ function MachineProfileModal({ machine, back, onSaved }: { machine: ProductionOp
   </Modal>
 }
 
-type MachineServiceDraft = Omit<MachineServiceInput, 'cost' | 'downtime_minutes'> & { cost: string; downtime_minutes: string; recordId: string | null }
+type MachineServiceDraft = Omit<MachineServiceInput, 'technician' | 'cost' | 'downtime_minutes'> & {
+  technicianType: '' | 'self' | 'vendor'
+  vendorName: string
+  cost: string
+  downtimeHours: string
+  recordId: string | null
+}
+
+const selfServiceTechnician = '自行處理'
+const serviceVendorPrefix = '廠商：'
+const machineServiceHours = (minutes: number) => Number((minutes / 60).toFixed(2))
+const machineServiceVendorName = (technician: string) =>
+  technician.startsWith(serviceVendorPrefix) && technician.length > serviceVendorPrefix.length
+    ? technician.slice(serviceVendorPrefix.length)
+    : technician
 
 function MachineServiceModal({ machine, back }: { machine: ProductionOption; back: () => void }) {
   const [records, setRecords] = useState<MachineServiceRecord[] | null>(null)
@@ -1773,15 +1784,26 @@ function MachineServiceModal({ machine, back }: { machine: ProductionOption; bac
     event.preventDefault()
     if (!draft || saving) return
     setError('')
-    const { recordId, ...fields } = draft
+    const { recordId, technicianType, vendorName, downtimeHours, ...fields } = draft
     const description = fields.description.trim()
     if (!description) { setError('請輸入處理內容'); return }
     if (!fields.service_date || fields.service_date > todayInTaipei()) { setError('請輸入不晚於今天的日期'); return }
+    const vendor = vendorName.trim()
+    if (technicianType === 'vendor' && !vendor) { setError('請輸入廠商名稱'); return }
+    let technician = ''
+    if (technicianType === 'self') technician = selfServiceTechnician
+    if (technicianType === 'vendor') {
+      const previous = records?.find((record) => record.id === recordId)?.technician
+      // 編輯其他欄位時，沿用舊紀錄原本的維修人員文字。
+      technician = previous && previous !== selfServiceTechnician && machineServiceVendorName(previous) === vendor
+        ? previous
+        : serviceVendorPrefix + vendor
+    }
     setSaving(true)
     try {
       const saved = await saveMachineServiceRecord(machine.id, {
-        ...fields, description, technician: fields.technician.trim(), cost: fields.cost === '' ? null : Number(fields.cost),
-        downtime_minutes: fields.downtime_minutes === '' ? null : Number(fields.downtime_minutes),
+        ...fields, description, technician, cost: fields.cost === '' ? null : Number(fields.cost),
+        downtime_minutes: downtimeHours === '' ? null : Math.round(Number(downtimeHours) * 60),
       }, recordId)
       setRecords((current) => [...(current ?? []).filter((record) => record.id !== saved.id), saved]
         .sort((a, b) => b.service_date.localeCompare(a.service_date) || b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id)))
@@ -1797,9 +1819,16 @@ function MachineServiceModal({ machine, back }: { machine: ProductionOption; bac
         <Field label="日期"><input required type="date" max={todayInTaipei()} value={draft.service_date} onChange={(event) => setDraft({ ...draft, service_date: event.target.value })} /></Field>
         <Field label="類型"><select value={draft.service_type} onChange={(event) => setDraft({ ...draft, service_type: event.target.value as MachineServiceInput['service_type'] })}><option value="maintenance">保養</option><option value="repair">維修</option></select></Field>
         <Field label="處理內容"><textarea required rows={3} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></Field>
-        <Field label="人員／廠商"><input value={draft.technician} onChange={(event) => setDraft({ ...draft, technician: event.target.value })} /></Field>
+        <div className="field">
+          <span>維修人員</span>
+          <div className="machine-service-technicians" role="group" aria-label="維修人員">
+            <label><input type="checkbox" checked={draft.technicianType === 'self'} onChange={(event) => setDraft({ ...draft, technicianType: event.target.checked ? 'self' : '' })} />自行處理</label>
+            <label><input type="checkbox" checked={draft.technicianType === 'vendor'} onChange={(event) => setDraft({ ...draft, technicianType: event.target.checked ? 'vendor' : '' })} />廠商</label>
+          </div>
+        </div>
+        {draft.technicianType === 'vendor' && <Field label="廠商名稱"><input required value={draft.vendorName} onChange={(event) => setDraft({ ...draft, vendorName: event.target.value })} /></Field>}
         <Field label="費用"><input type="number" inputMode="decimal" min="0" max="999999999999.99" step="0.01" value={draft.cost} onChange={(event) => setDraft({ ...draft, cost: event.target.value })} /></Field>
-        <Field label="停機分鐘"><input type="number" inputMode="numeric" min="0" max="2147483647" step="1" value={draft.downtime_minutes} onChange={(event) => setDraft({ ...draft, downtime_minutes: event.target.value })} /></Field>
+        <Field label="停機時數"><input type="number" inputMode="decimal" min="0" step="any" placeholder="小時" value={draft.downtimeHours} onChange={(event) => setDraft({ ...draft, downtimeHours: event.target.value })} /></Field>
       </div>
       <div className="modal-tool-actions">
         <button className="button" type="button" disabled={saving} onClick={() => { setDraft(null); setError('') }}>取消</button>
@@ -1814,13 +1843,16 @@ function MachineServiceModal({ machine, back }: { machine: ProductionOption; bac
             <p>{record.description}</p>
             {(record.technician || record.cost !== null || record.downtime_minutes !== null) && <small className="production-order-summary">{[
               record.technician, record.cost === null ? '' : `費用 ${formatNumber(record.cost)}`,
-              record.downtime_minutes === null ? '' : `停機 ${formatNumber(record.downtime_minutes)} 分鐘`,
+              record.downtime_minutes === null ? '' : `停機 ${formatNumber(machineServiceHours(record.downtime_minutes))} 小時`,
             ].filter(Boolean).join(' · ')}</small>}
           </div>
           <button type="button" aria-label={`編輯 ${record.service_date} 的紀錄`} title="編輯紀錄" onClick={() => {
             setError('')
             const { id: recordId, service_date, service_type, description, technician, cost, downtime_minutes } = record
-            setDraft({ recordId, service_date, service_type, description, technician, cost: String(cost ?? ''), downtime_minutes: String(downtime_minutes ?? '') })
+            const technicianType = technician === selfServiceTechnician ? 'self' : technician ? 'vendor' : ''
+            const vendorName = technicianType === 'vendor' ? machineServiceVendorName(technician) : ''
+            setDraft({ recordId, service_date, service_type, description, technicianType, vendorName,
+              cost: String(cost ?? ''), downtimeHours: downtime_minutes === null ? '' : String(machineServiceHours(downtime_minutes)) })
           }}><Pencil /></button>
         </div>)}
       </div>
@@ -1828,7 +1860,7 @@ function MachineServiceModal({ machine, back }: { machine: ProductionOption; bac
         <button className="button" type="button" onClick={back}>返回機台管理</button>
         <button className="button primary" type="button" onClick={() => {
           setError('')
-          setDraft({ recordId: null, service_date: todayInTaipei(), service_type: 'maintenance', description: '', technician: '', cost: '', downtime_minutes: '' })
+          setDraft({ recordId: null, service_date: todayInTaipei(), service_type: 'maintenance', description: '', technicianType: '', vendorName: '', cost: '', downtimeHours: '' })
         }}><Plus />新增紀錄</button>
       </div>
     </>}
