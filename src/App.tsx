@@ -1943,17 +1943,26 @@ function matchesProductName(name: string | undefined, query: string) {
   return Boolean(withoutHyphens && name?.toLowerCase().replaceAll('-', '').includes(withoutHyphens))
 }
 
+// 庫存三頁的搜尋框要求同一筆資料符合每個關鍵字，關鍵字可分別命中不同欄位。
+function inventorySearch(query: string) {
+  const keywords = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
+  return (fields: string, productName: string | undefined) =>
+    keywords.every((keyword) => fields.includes(keyword) || matchesProductName(productName, keyword))
+}
+
+const inventorySearchPlaceholder = '掃描條碼或搜尋（關鍵字用空格分隔）'
+
 function MovementsPage({ products, movements, loading, openStock, openScanner, readOnly, onDelete }: { products: Product[]; movements: Movement[]; loading: boolean; openStock: (t: MovementType) => void; openScanner: () => void; readOnly: boolean; onDelete: (movement: Movement) => void }) {
   const [query, setQuery] = useState('')
   const [type, setType] = useState<'all' | MovementType>('all')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
-  const normalizedQuery = query.trim().toLowerCase()
+  const matchesSearch = inventorySearch(query)
   const filtered = movements.filter((m) => {
     const product = products.find((p) => p.id === m.product_id) || m.product
     /* 「出入庫」的「搜尋輸入框」：條碼掃描或手動輸入後，同時比對條碼、編號、品名、廠牌、供應商與備註。 */
     const haystack = `${product?.barcode || ''} ${product?.code || ''} ${product?.name || ''} ${product?.brand || ''} ${m.supplier || ''} ${m.notes || ''} ${isInitialStockNote(m.notes) ? INITIAL_STOCK_NOTE : ''}`.toLowerCase()
-    return (haystack.includes(normalizedQuery) || matchesProductName(product?.name, normalizedQuery)) && (type === 'all' || m.movement_type === type) && (!from || m.movement_date >= from) && (!to || m.movement_date <= to)
+    return matchesSearch(haystack, product?.name) && (type === 'all' || m.movement_type === type) && (!from || m.movement_date >= from) && (!to || m.movement_date <= to)
   })
   const inQty = filtered.filter((m) => m.movement_type === 'in').reduce((s, m) => s + m.quantity, 0)
   const outQty = filtered.filter((m) => m.movement_type === 'out').reduce((s, m) => s + m.quantity, 0)
@@ -1961,7 +1970,7 @@ function MovementsPage({ products, movements, loading, openStock, openScanner, r
   return <section className="page-content">
     <PageTitle eyebrow="STOCK MOVEMENTS" title="出入庫" actions={!readOnly ? <><ScanButton openScanner={openScanner}/><StockButtons openStock={openStock} /></> : undefined} />
     <div className="filter-card">
-      <SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商、備註" scanProducts={products} />
+      <SearchField value={query} setValue={setQuery} placeholder={inventorySearchPlaceholder} scanProducts={products} />
       <div className="filter-row">
         <label className="select-wrap"><select value={type} onChange={(e) => setType(e.target.value as 'all' | MovementType)}><option value="all">全部類型</option><option value="in">入庫</option><option value="out">出庫</option></select><ChevronDown /></label>
         <label className="date-wrap"><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="開始日期"/><CalendarDays /></label>
@@ -2006,12 +2015,12 @@ function StocktakePage({ products, loading, add, openScanner, onAdjust }: { prod
   const [savingId, setSavingId] = useState('')
   const [pageError, setPageError] = useState('')
   const categories = ['全部分類', ...PRODUCT_CATEGORIES]
-  const normalizedQuery = query.toLowerCase()
+  const matchesSearch = inventorySearch(query)
   /* 「庫存盤點」的「表格資料順序」：依刀具最後更新時間由新到舊排列；時間相同時再依編號由新到舊。 */
   const filtered = products
     .filter((product) => {
       const haystack = `${product.code} ${product.barcode || ''} ${product.name} ${product.brand} ${product.supplier}`.toLowerCase()
-      return (haystack.includes(normalizedQuery) || matchesProductName(product.name, normalizedQuery)) && (category === '全部分類' || product.category === category)
+      return matchesSearch(haystack, product.name) && (category === '全部分類' || product.category === category)
     })
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at) || b.code.localeCompare(a.code))
   const actualFor = (product: Product) => drafts[product.id] ?? ''
@@ -2059,7 +2068,7 @@ function StocktakePage({ products, loading, add, openScanner, onAdjust }: { prod
       <div><span>未設定單價</span><strong>{formatNumber(noPriceCount)}</strong><small>仍可盤點</small></div>
       <div className={pendingCount ? 'attention' : ''}><span>待儲存差異</span><strong>{formatNumber(pendingCount)}</strong><small>個品項</small></div>
     </div>
-    <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商" scanProducts={products}/><label className="select-wrap"><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((value) => <option key={value}>{value}</option>)}</select><ChevronDown /></label></div>
+    <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder={inventorySearchPlaceholder} scanProducts={products}/><label className="select-wrap"><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((value) => <option key={value}>{value}</option>)}</select><ChevronDown /></label></div>
     {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table stocktake-table"><thead><tr><th>編號</th><th>品名</th><th>分類</th><th>單價</th><th className="number">庫存</th><th className="number">實際數量</th><th aria-label="操作" /></tr></thead><tbody>
       {filtered.length === 0 ? <EmptyRow colSpan={7} label="沒有符合條件的刀具"/> : filtered.map((product) => {
         const difference = differenceFor(product)
@@ -2186,11 +2195,11 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, open
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('全部分類')
   const categories = ['全部分類', ...PRODUCT_CATEGORIES]
-  const normalizedQuery = query.toLowerCase()
+  const matchesSearch = inventorySearch(query)
   const filtered = products
     .filter((product) => {
       const haystack = `${product.code} ${product.barcode || ''} ${product.name} ${product.brand} ${product.supplier}`.toLowerCase()
-      return (haystack.includes(normalizedQuery) || matchesProductName(product.name, normalizedQuery)) && (category === '全部分類' || product.category === category)
+      return matchesSearch(haystack, product.name) && (category === '全部分類' || product.category === category)
     })
     .sort((a, b) => {
       const updatedA = Date.parse(a.updated_at) || Date.parse(a.created_at) || 0
@@ -2201,7 +2210,7 @@ function ProductsPage({ products, movements, loading, add, edit, openStock, open
     })
   return <section className="page-content">
     <PageTitle eyebrow="TOOLS" title="刀具資料" actions={!readOnly ? <><ScanButton openScanner={openScanner}/><button className="button primary" onClick={add}><Plus />新增品項</button></> : undefined} />
-    <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder="掃描條碼或搜尋編號、品名、廠牌、供應商" scanProducts={products}/><label className="select-wrap"><select value={category} onChange={(e) => setCategory(e.target.value)}>{categories.map((c) => <option key={c}>{c}</option>)}</select><ChevronDown /></label></div>
+    <div className="filter-card product-filter"><SearchField value={query} setValue={setQuery} placeholder={inventorySearchPlaceholder} scanProducts={products}/><label className="select-wrap"><select value={category} onChange={(e) => setCategory(e.target.value)}>{categories.map((c) => <option key={c}>{c}</option>)}</select><ChevronDown /></label></div>
     {loading ? <PageSkeleton /> : <div className="table-card"><table className="data-table product-table"><thead><tr><th>編號</th><th>品名</th><th>廠牌</th><th>供應商</th><th>分類</th><th className="number">數量</th><th className="number">單價</th><th className="number" aria-label="漲幅" /><th>購入日期</th><th aria-label="操作" /></tr></thead><tbody>
       {filtered.length === 0 ? <EmptyRow colSpan={10} label="沒有符合條件的刀具"/> : filtered.map((p) => {
         const prices = priceEntriesFor(p.id, movements)
@@ -2236,6 +2245,12 @@ function SearchField({ value, setValue, placeholder, scanProducts = [] }: { valu
     const barcode = inputValue.trim()
     if (!barcode) return
     const matchedProduct = scanProducts.find((product) => product.barcode?.trim().toLowerCase() === barcode.toLowerCase())
+    // 多個關鍵字按 Enter 後保留輸入，方便繼續修改。
+    if (!matchedProduct && /\s/.test(barcode)) {
+      if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current)
+      clearTimerRef.current = null
+      return
+    }
     setScanResult(matchedProduct
       ? { success: true, message: `掃碼成功：${matchedProduct.code} ${matchedProduct.name}` }
       : { success: false, message: `掃碼失敗：找不到條碼 ${barcode}` })
